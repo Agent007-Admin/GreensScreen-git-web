@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+@import "tailwindcss";
+
+:root {
+  --gs-green: #00ff88;
+  --gs-green-dim: #00cc6a;
+  --gs-dark: #050a07;
+  --gs-surface: #0a1410;
+  --gs-card: #0f1e16;
+  --gs-text: #e8f5ee;
+  --gs-muted: #6b9a7a;
+  --gs-accent: #aaff44;
+}
+
+@theme {
+  --font-sans: "Rajdhani", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bebas Neue", sans-serif;
+  --font-mono: "Share Tech Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-gs-green: var(--gs-green);
+  --color-gs-green-dim: var(--gs-green-dim);
+  --color-gs-dark: var(--gs-dark);
+  --color-gs-surface: var(--gs-surface);
+  --color-gs-card: var(--gs-card);
+  --color-gs-text: var(--gs-text);
+  --color-gs-muted: var(--gs-muted);
+  --color-gs-accent: var(--gs-accent);
+  --color-gs-border: rgba(0, 255, 136, 0.15);
+  --color-gs-border-bright: rgba(0, 255, 136, 0.4);
+}
+
+@layer base {
+  body {
+    @apply bg-gs-dark text-gs-text font-sans overflow-x-hidden selection:bg-gs-green selection:text-gs-dark;
+    background-color: #050a07; /* Fallback */
+  }
+}
+
+@layer components {
+  .gs-page {
+    @apply min-h-screen bg-gs-dark text-gs-text relative;
+  }
+
+  .scanlines {
+    @apply fixed inset-0 pointer-events-none z-[100];
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+  }
+
+  .grid-bg {
+    @apply fixed inset-0 pointer-events-none z-0;
+    background-image: linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  .neon-text {
+    text-shadow: 0 0 20px rgba(0,255,136,0.5);
+  }
+
+  .neon-text-strong {
+    text-shadow: 0 0 40px rgba(0,255,136,0.4);
+  }
+
+  .btn-clip {
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+  }
+  
+  .nav-btn-clip {
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+
+  .founder-card-accent {
+    @apply relative overflow-hidden;
+  }
+  
+  .founder-card-accent::before {
+    content: '';
+    @apply absolute left-0 top-0 bottom-0 w-[3px] bg-gs-green;
+  }
+}
+
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-ticker {
+  animation: ticker 22s linear infinite;
+}
+
+.blink {
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}

@@ -1,0 +1,67 @@
+{
+  "entities": {
+    "subscribers": {
+      "title": "Newsletter Subscriber",
+      "description": "A user who has subscribed to the newsletter",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The email address of the subscriber"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the subscriber"
+        },
+        "subscribedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the user subscribed"
+        }
+      },
+      "required": ["email", "subscribedAt"]
+    },
+    "discord_requests": {
+      "title": "Discord Join Request",
+      "description": "A request from a user to join the Discord server",
+      "type": "object",
+      "properties": {
+        "discordId": { "type": "string" },
+        "username": { "type": "string" },
+        "discriminator": { "type": "string" },
+        "avatar": { "type": "string" },
+        "requestedAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "approved", "denied"] }
+      },
+      "required": ["discordId", "username", "requestedAt", "status"]
+    },
+    "newsletters": {
+      "title": "Monthly Newsletter",
+      "description": "A newsletter to be sent to all subscribers",
+      "type": "object",
+      "properties": {
+        "subject": { "type": "string" },
+        "content": { "type": "string" },
+        "scheduledAt": { "type": "string", "format": "date-time" },
+        "sentAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["draft", "scheduled", "sent"] }
+      },
+      "required": ["subject", "content", "status"]
+    }
+  },
+  "firestore": {
+    "subscribers/{subscriberId}": {
+      "schema": "subscribers",
+      "description": "Collection of newsletter subscribers"
+    },
+    "discord_requests/{requestId}": {
+      "schema": "discord_requests",
+      "description": "Collection of Discord join requests"
+    },
+    "newsletters/{newsletterId}": {
+      "schema": "newsletters",
+      "description": "Collection of monthly newsletters"
+    }
+  }
+}

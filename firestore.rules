@@ -1,0 +1,84 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: subscribers
+// Fields:
+//   - email: string (required, email format)
+//   - name: string (optional)
+//   - subscribedAt: string (required, ISO 8601)
+//
+// Collection: discord_requests
+// Fields:
+//   - discordId: string (required)
+//   - username: string (required)
+//   - requestedAt: string (required, ISO 8601)
+//   - status: string (required, enum: pending, approved, denied)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "agent007@greensscreensent.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr is string && dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+
+    // --- Collection: subscribers ---
+    match /subscribers/{subscriberId} {
+      // Public can subscribe, but cannot read the list
+      allow create: if 
+        request.resource.data.keys().hasAll(['email', 'subscribedAt']) &&
+        isValidEmail(request.resource.data.email) &&
+        isValidDateString(request.resource.data.subscribedAt) &&
+        request.resource.data.email.size() < 256;
+      
+      allow read, update, delete: if isAdmin();
+    }
+
+    // --- Collection: discord_requests ---
+    match /discord_requests/{requestId} {
+      // Public can submit requests via OAuth flow
+      allow create: if
+        request.resource.data.keys().hasAll(['discordId', 'username', 'requestedAt', 'status']) &&
+        request.resource.data.status == 'pending' &&
+        isValidDateString(request.resource.data.requestedAt);
+      
+      allow read, update, delete: if isAdmin();
+    }
+
+    // --- Collection: newsletters ---
+    match /newsletters/{newsletterId} {
+      // Only admins can manage newsletters
+      allow read, write: if isAdmin();
+    }
+
+    // --- Collection: health ---
+    match /health/{docId} {
+      // Allow the client-side health check to run
+      allow read, write: if true;
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
