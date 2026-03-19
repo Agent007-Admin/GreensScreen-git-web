@@ -3,33 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark">
+<meta name="supported-color-schemes" content="dark">
 <title>Greens Screens Ent — The Frequency | {{MONTH}} {{YEAR}}</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
 <style>
-  :root {
-    --mc: {{ACCENT_COLOR}};
-    --mc-dim: {{ACCENT_COLOR_DIM}};
-    --mc-border: {{ACCENT_COLOR_BORDER}};
-    --dark: {{BG_DARK}};
-    --surface: {{BG_SURFACE}};
-    --card: {{BG_CARD}};
-    --text: {{TEXT_COLOR}};
-    --muted: {{MUTED_COLOR}};
-    --gs-green: #00ff88;
-    --gs-accent: #aaff44;
-    --indie-c: #aaff44;
-    --indie-dim: rgba(170,255,68,0.08);
-    --indie-border: rgba(170,255,68,0.2);
-    --screen-c: #ff9944;
-    --screen-dim: rgba(255,153,68,0.08);
-    --screen-border: rgba(255,153,68,0.2);
-    --industry-c: #cc88ff;
-    --industry-dim: rgba(204,136,255,0.08);
-    --industry-border: rgba(204,136,255,0.2);
-  }
-
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:#0d0d0d; font-family:'Rajdhani',sans-serif; padding:32px 20px; }
+  body { background:#050a0d; font-family:'Rajdhani',sans-serif; padding:32px 20px; color: #ddeef8; }
 
   .client-bar {
     max-width:660px; margin:0 auto;
@@ -42,41 +22,41 @@
 
   .wrap {
     max-width:660px; margin:0 auto;
-    background:var(--dark); border:1px solid var(--mc-border);
+    background:{{BG_DARK}}; border:1px solid {{ACCENT_COLOR_BORDER}};
     border-radius:0 0 8px 8px; overflow:hidden;
   }
 
   .hdr {
-    background:var(--dark); border-bottom:1px solid var(--mc-border);
+    background:{{BG_DARK}}; border-bottom:1px solid {{ACCENT_COLOR_BORDER}};
     padding:24px 40px 20px; position:relative; overflow:hidden;
   }
   .hdr-grid {
     position:absolute; inset:0;
-    background-image:linear-gradient(rgba(255,45,120,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,45,120,0.03) 1px,transparent 1px);
+    background-image:linear-gradient(rgba(0,255,136,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.03) 1px,transparent 1px);
     background-size:32px 32px;
   }
   .hdr-top { display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; }
-  .logo { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:3px; color:var(--gs-green); }
-  .logo span { color:var(--text); } .logo .acc { color:var(--gs-accent); }
+  .logo { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:3px; color:#00ff88; }
+  .logo span { color:{{TEXT_COLOR}}; } .logo .acc { color:#aaff44; }
   .edition-badge {
     font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:2px;
-    color:var(--mc); background:var(--mc-dim); border:1px solid var(--mc-border); padding:4px 12px;
+    color:{{ACCENT_COLOR}}; background:{{ACCENT_COLOR_DIM}}; border:1px solid {{ACCENT_COLOR_BORDER}}; padding:4px 12px;
   }
-  .hdr-rule { height:1px; background:var(--mc); margin-top:16px; position:relative; z-index:1; opacity:0.3; }
+  .hdr-rule { height:1px; background:{{ACCENT_COLOR}}; margin-top:16px; position:relative; z-index:1; opacity:0.3; }
 
-  .hero { background:var(--surface); border-bottom:1px solid var(--mc-border); padding:32px 40px 28px; }
-  .issue-tag { font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:4px; color:var(--mc); margin-bottom:10px; }
-  .hero-title { font-family:'Bebas Neue',sans-serif; font-size:52px; letter-spacing:4px; color:var(--text); line-height:0.95; margin-bottom:6px; }
-  .hero-title span { color:var(--mc); }
-  .hero-sub { font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:5px; color:var(--muted); margin-bottom:16px; }
-  .hero-intro { font-size:14px; color:var(--text); line-height:1.7; font-weight:500; max-width:480px; opacity: 0.8; }
+  .hero { background:{{BG_SURFACE}}; border-bottom:1px solid {{ACCENT_COLOR_BORDER}}; padding:32px 40px 28px; }
+  .issue-tag { font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:4px; color:{{ACCENT_COLOR}}; margin-bottom:10px; }
+  .hero-title { font-family:'Bebas Neue',sans-serif; font-size:52px; letter-spacing:4px; color:{{TEXT_COLOR}}; line-height:0.95; margin-bottom:6px; }
+  .hero-title span { color:{{ACCENT_COLOR}}; }
+  .hero-sub { font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:5px; color:{{MUTED_COLOR}}; margin-bottom:16px; }
+  .hero-intro { font-size:14px; color:{{TEXT_COLOR}}; line-height:1.7; font-weight:500; max-width:480px; opacity: 0.8; }
   .window-pill {
     display:inline-block; margin-top:14px;
     font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:2px;
-    color:var(--mc); border:1px solid var(--mc-border); padding:4px 12px; background:var(--mc-dim);
+    color:{{ACCENT_COLOR}}; border:1px solid {{ACCENT_COLOR_BORDER}}; padding:4px 12px; background:{{ACCENT_COLOR_DIM}};
   }
 
-  .body { background:var(--dark); }
+  .body { background:{{BG_DARK}}; }
   .sec { border-top:1px solid rgba(255,255,255,0.04); padding:0 40px 28px; }
 
   .sec-header {
@@ -91,36 +71,36 @@
   .sec-name { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:3px; }
   .sec-desc { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:2px; opacity:0.6; margin-top:1px; }
 
-  .sec-releases .sec-header { border-color:var(--mc-border); }
-  .sec-releases .sec-icon { color:var(--mc); border-color:var(--mc-border); background:var(--mc-dim); }
-  .sec-releases .sec-name { color:var(--mc); }
-  .sec-releases .sec-desc { color:var(--mc); }
-  .sec-releases .story-link { color:var(--mc); }
+  .sec-releases .sec-header { border-color:{{ACCENT_COLOR_BORDER}}; }
+  .sec-releases .sec-icon { color:{{ACCENT_COLOR}}; border-color:{{ACCENT_COLOR_BORDER}}; background:{{ACCENT_COLOR_DIM}}; }
+  .sec-releases .sec-name { color:{{ACCENT_COLOR}}; }
+  .sec-releases .sec-desc { color:{{ACCENT_COLOR}}; }
+  .sec-releases .story-link { color:{{ACCENT_COLOR}}; }
 
-  .sec-indie .sec-header { border-color:var(--indie-border); }
-  .sec-indie .sec-icon { color:var(--indie-c); border-color:var(--indie-border); background:var(--indie-dim); }
-  .sec-indie .sec-name { color:var(--indie-c); }
-  .sec-indie .sec-desc { color:var(--indie-c); }
-  .sec-indie .story-link { color:var(--indie-c); }
+  .sec-indie .sec-header { border-color:rgba(170,255,68,0.2); }
+  .sec-indie .sec-icon { color:#aaff44; border-color:rgba(170,255,68,0.2); background:rgba(170,255,68,0.08); }
+  .sec-indie .sec-name { color:#aaff44; }
+  .sec-indie .sec-desc { color:#aaff44; }
+  .sec-indie .story-link { color:#aaff44; }
 
-  .sec-screen .sec-header { border-color:var(--screen-border); }
-  .sec-screen .sec-icon { color:var(--screen-c); border-color:var(--screen-border); background:var(--screen-dim); }
-  .sec-screen .sec-name { color:var(--screen-c); }
-  .sec-screen .sec-desc { color:var(--screen-c); }
-  .sec-screen .story-link { color:var(--screen-c); }
+  .sec-screen .sec-header { border-color:rgba(255,153,68,0.2); }
+  .sec-screen .sec-icon { color:#ff9944; border-color:rgba(255,153,68,0.2); background:rgba(255,153,68,0.08); }
+  .sec-screen .sec-name { color:#ff9944; }
+  .sec-screen .sec-desc { color:#ff9944; }
+  .sec-screen .story-link { color:#ff9944; }
 
-  .sec-industry .sec-header { border-color:var(--industry-border); }
-  .sec-industry .sec-icon { color:var(--industry-c); border-color:var(--industry-border); background:var(--industry-dim); }
-  .sec-industry .sec-name { color:var(--industry-c); }
-  .sec-industry .sec-desc { color:var(--industry-c); }
-  .sec-industry .story-link { color:var(--industry-c); }
+  .sec-industry .sec-header { border-color:rgba(204,136,255,0.2); }
+  .sec-industry .sec-icon { color:#cc88ff; border-color:rgba(204,136,255,0.2); background:rgba(204,136,255,0.08); }
+  .sec-industry .sec-name { color:#cc88ff; }
+  .sec-industry .sec-desc { color:#cc88ff; }
+  .sec-industry .story-link { color:#cc88ff; }
 
   .story {
     display:flex; gap:16px; align-items:flex-start;
     padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.04);
   }
   .story:last-child { border-bottom:none; }
-  .story-num { font-family:'Share Tech Mono',monospace; font-size:11px; min-width:24px; padding-top:2px; opacity:0.3; color:var(--text); }
+  .story-num { font-family:'Share Tech Mono',monospace; font-size:11px; min-width:24px; padding-top:2px; opacity:0.3; color:{{TEXT_COLOR}}; }
   .story-content { flex:1; }
   .story-meta {
     font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:2px;
@@ -128,14 +108,14 @@
   }
   .story-tag { padding:2px 7px; border:1px solid; font-size:8px; letter-spacing:1px; }
   .tag-hot { color:#ff6b6b; border-color:rgba(255,107,107,0.35); background:rgba(255,107,107,0.06); }
-  .tag-new { color:var(--mc); border-color:var(--mc-border); background:var(--mc-dim); }
-  .tag-indie { color:var(--indie-c); border-color:var(--indie-border); background:var(--indie-dim); }
-  .tag-screen { color:var(--screen-c); border-color:var(--screen-border); background:var(--screen-dim); }
-  .tag-industry { color:var(--industry-c); border-color:var(--industry-border); background:var(--industry-dim); }
+  .tag-new { color:{{ACCENT_COLOR}}; border-color:{{ACCENT_COLOR_BORDER}}; background:{{ACCENT_COLOR_DIM}}; }
+  .tag-indie { color:#aaff44; border-color:rgba(170,255,68,0.2); background:rgba(170,255,68,0.08); }
+  .tag-screen { color:#ff9944; border-color:rgba(255,153,68,0.2); background:rgba(255,153,68,0.08); }
+  .tag-industry { color:#cc88ff; border-color:rgba(204,136,255,0.2); background:rgba(204,136,255,0.08); }
   .tag-alert { color:#ff6b6b; border-color:rgba(255,107,107,0.35); background:rgba(255,107,107,0.06); }
 
-  .story-title { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:1.5px; color:var(--text); margin-bottom:5px; line-height:1.1; }
-  .story-blurb { font-size:13px; color:var(--muted); line-height:1.6; font-weight:500; margin-bottom:8px; }
+  .story-title { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:1.5px; color:{{TEXT_COLOR}}; margin-bottom:5px; line-height:1.1; }
+  .story-blurb { font-size:13px; color:{{MUTED_COLOR}}; line-height:1.6; font-weight:500; margin-bottom:8px; }
   .story-link {
     font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:1px;
     text-decoration:none; display:inline-flex; align-items:center; gap:6px; transition:opacity 0.2s;
@@ -143,21 +123,21 @@
   .story-link:hover { opacity:0.8; }
   .story-link .arr { opacity:0.6; }
 
-  .signoff { padding:24px 40px 0; background:var(--dark); border-top:1px solid rgba(255,255,255,0.04); }
-  .signoff-text { font-size:14px; color:var(--text); line-height:1.7; font-weight:500; padding-bottom:24px; opacity: 0.8; }
-  .signoff-text strong { color:var(--mc); font-family:'Share Tech Mono',monospace; font-size:12px; letter-spacing:1px; }
+  .signoff { padding:24px 40px 0; background:{{BG_DARK}}; border-top:1px solid rgba(255,255,255,0.04); }
+  .signoff-text { font-size:14px; color:{{TEXT_COLOR}}; line-height:1.7; font-weight:500; padding-bottom:24px; opacity: 0.8; }
+  .signoff-text strong { color:{{ACCENT_COLOR}}; font-family:'Share Tech Mono',monospace; font-size:12px; letter-spacing:1px; }
 
-  .ftr { background:var(--surface); border-top:1px solid var(--mc-border); padding:20px 40px; text-align:center; }
-  .ftr-logo { font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:2px; color:var(--gs-green); margin-bottom:12px; }
-  .ftr-logo span { color:var(--text); } .ftr-logo .acc { color:var(--gs-accent); }
+  .ftr { background:{{BG_SURFACE}}; border-top:1px solid {{ACCENT_COLOR_BORDER}}; padding:20px 40px; text-align:center; }
+  .ftr-logo { font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:2px; color:#00ff88; margin-bottom:12px; }
+  .ftr-logo span { color:{{TEXT_COLOR}}; } .ftr-logo .acc { color:#aaff44; }
   .unsub-btn {
     display:inline-block; font-family:'Share Tech Mono',monospace; font-size:10px;
-    letter-spacing:2px; color:var(--mc); background:transparent;
-    border:1px solid var(--mc-border); padding:6px 16px; text-decoration:none; margin-bottom:12px;
+    letter-spacing:2px; color:{{ACCENT_COLOR}}; background:transparent;
+    border:1px solid {{ACCENT_COLOR_BORDER}}; padding:6px 16px; text-decoration:none; margin-bottom:12px;
   }
-  .unsub-note { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--muted); letter-spacing:1px; line-height:1.8; margin-bottom:8px; }
-  .ftr-fine { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:1px; }
-  .signal { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--mc); opacity:0.2; letter-spacing:2px; margin-top:10px; }
+  .unsub-note { font-family:'Share Tech Mono',monospace; font-size:9px; color:{{MUTED_COLOR}}; letter-spacing:1px; line-height:1.8; margin-bottom:8px; }
+  .ftr-fine { font-family:'Share Tech Mono',monospace; font-size:10px; color:{{MUTED_COLOR}}; letter-spacing:1px; }
+  .signal { font-family:'Share Tech Mono',monospace; font-size:9px; color:{{ACCENT_COLOR}}; opacity:0.2; letter-spacing:2px; margin-top:10px; }
 </style>
 </head>
 <body>
@@ -199,7 +179,7 @@
 
   <div class="ftr">
     <div class="ftr-logo">Greens<span> Screens</span><span class="acc"> Ent</span></div>
-    <a href="#" class="unsub-btn">UNSUBSCRIBE</a>
+    <a href="{{UNSUBSCRIBE_LINK}}" class="unsub-btn">UNSUBSCRIBE</a>
     <div class="unsub-note">Clicking unsubscribe permanently removes your email from all Greens Screens Ent communications.</div>
     <div class="ftr-fine">&copy; {{YEAR}} Greens Screens Ent · All rights reserved</div>
     <div class="signal">SIGNAL_ALWAYS_GREEN</div>

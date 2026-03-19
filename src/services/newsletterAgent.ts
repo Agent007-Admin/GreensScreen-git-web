@@ -11,6 +11,7 @@ import {
   doc, 
   updateDoc, 
   addDoc,
+  runTransaction,
   Firestore
 } from "firebase/firestore";
 
@@ -21,15 +22,18 @@ export class NewsletterAgent {
   private ai: GoogleGenAI;
   private db: Firestore;
   private transporter: any;
+  private baseUrl: string;
 
-  constructor(apiKey: string, db: Firestore, transporter: any) {
+  constructor(apiKey: string, db: Firestore, transporter: any, baseUrl: string = "") {
     this.ai = new GoogleGenAI({ apiKey });
     this.db = db;
     this.transporter = transporter;
+    this.baseUrl = baseUrl;
   }
 
   /**
    * Proactively process new subscribers who haven't received a welcome email.
+   * Uses a transaction to ensure atomicity and prevent duplicate welcome emails.
    */
   async processNewSubscribers() {
     try {
@@ -42,8 +46,33 @@ export class NewsletterAgent {
       console.log(`NewsletterAgent: Processing ${snapshot.size} new subscribers...`);
 
       for (const docSnap of snapshot.docs) {
-        const subscriber = docSnap.data();
-        await this.sendWelcomeEmail(docSnap.id, subscriber);
+        const subscriberId = docSnap.id;
+        const subscriberData = docSnap.data();
+
+        // Use a transaction to mark as "processing" or just update status immediately
+        // Actually, simpler: update status to 'active' FIRST, then send email.
+        // If email fails, we might miss them, but better than spamming.
+        // Even better: use a transaction to check status and update it.
+        
+        await runTransaction(this.db, async (transaction) => {
+          const subRef = doc(this.db, "subscribers", subscriberId);
+          const subDoc = await transaction.get(subRef);
+          
+          if (!subDoc.exists()) return;
+          if (subDoc.data()?.status !== "pending_welcome") return;
+
+          // Update status immediately to prevent other cron runs from picking it up
+          transaction.update(subRef, { 
+            status: "active",
+            welcomeEmailSentAt: new Date().toISOString()
+          });
+          
+          // We can't easily await an async email send inside a transaction without blocking it,
+          // but we can trigger it after the transaction succeeds.
+        });
+
+        // Send email AFTER transaction succeeds
+        await this.sendWelcomeEmail(subscriberId, subscriberData);
       }
     } catch (error) {
       console.error("NewsletterAgent: Error processing new subscribers:", error);
@@ -63,23 +92,21 @@ export class NewsletterAgent {
       if (fs.existsSync(templatePath)) {
         htmlContent = fs.readFileSync(templatePath, "utf-8");
       } else {
-        htmlContent = `<h1>Welcome to Greens Screens Ent!</h1><p>Hi ${subscriber.name || "Player One"}, thanks for joining the frequency.</p>`;
+        htmlContent = `<h1>Welcome to Greens Screens Ent!</h1><p>Hi ${subscriber.name || "Player One"}, thanks for joining the frequency.</p><p><a href="{{UNSUBSCRIBE_LINK}}">Unsubscribe</a></p>`;
       }
 
       // Simple personalization
       htmlContent = htmlContent.replace(/PLAYER ONE/g, (subscriber.name || "PLAYER ONE").toUpperCase());
+      
+      // Add unsubscribe link
+      const unsubLink = `${this.baseUrl}/api/unsubscribe?email=${encodeURIComponent(subscriber.email)}`;
+      htmlContent = htmlContent.replace(/{{UNSUBSCRIBE_LINK}}/g, unsubLink);
 
       await this.transporter.sendMail({
         from: `"Greens Screens Ent" <${process.env.SMTP_USER}>`,
         to: subscriber.email,
         subject: "PLAYER ONE — WELCOME TO GREENS SCREENS ENT",
         html: htmlContent,
-      });
-
-      const subscriberRef = doc(this.db, "subscribers", id);
-      await updateDoc(subscriberRef, {
-        status: "active",
-        welcomeEmailSentAt: new Date().toISOString()
       });
 
       console.log(`NewsletterAgent: Welcome email sent to ${subscriber.email}`);
@@ -106,15 +133,18 @@ export class NewsletterAgent {
     }
 
     // 2. Build HTML from template
-    const html = this.buildMonthlyHtml(content, month, year);
+    const htmlTemplate = this.buildMonthlyHtml(content, month, year);
 
     // 3. Get all active subscribers
     const subscribersRef = collection(this.db, "subscribers");
     const q = query(subscribersRef, where("status", "==", "active"));
     const snapshot = await getDocs(q);
-    const emails = snapshot.docs.map((docSnap: any) => docSnap.data().email);
+    const subscribers = snapshot.docs.map((docSnap: any) => ({
+      id: docSnap.id,
+      ...docSnap.data()
+    }));
 
-    if (emails.length === 0) {
+    if (subscribers.length === 0) {
       console.log("NewsletterAgent: No active subscribers to send to.");
       return;
     }
@@ -122,16 +152,20 @@ export class NewsletterAgent {
     // 4. Send emails
     if (this.transporter) {
       const subject = `THE FREQUENCY | ${month.toUpperCase()} ${year}`;
-      for (const email of emails) {
+      for (const sub of subscribers) {
         try {
+          // Personalize unsubscribe link for each subscriber
+          const unsubLink = `${this.baseUrl}/api/unsubscribe?email=${encodeURIComponent(sub.email)}`;
+          const personalizedHtml = htmlTemplate.replace(/{{UNSUBSCRIBE_LINK}}/g, unsubLink);
+
           await this.transporter.sendMail({
             from: `"Greens Screens Ent" <${process.env.SMTP_USER}>`,
-            to: email,
+            to: sub.email,
             subject: subject,
-            html: html,
+            html: personalizedHtml,
           });
         } catch (e) {
-          console.error(`NewsletterAgent: Failed to send monthly to ${email}:`, e);
+          console.error(`NewsletterAgent: Failed to send monthly to ${sub.email}:`, e);
         }
       }
 
@@ -141,11 +175,41 @@ export class NewsletterAgent {
         subject,
         content: JSON.stringify(content),
         sentAt: new Date().toISOString(),
-        recipientCount: emails.length,
+        recipientCount: subscribers.length,
         status: "sent"
       });
 
-      console.log(`NewsletterAgent: Monthly newsletter sent to ${emails.length} subscribers.`);
+      console.log(`NewsletterAgent: Monthly newsletter sent to ${subscribers.length} subscribers.`);
+    }
+  }
+
+  /**
+   * Unsubscribe a user by email.
+   */
+  async unsubscribe(email: string) {
+    try {
+      const subscribersRef = collection(this.db, "subscribers");
+      const q = query(subscribersRef, where("email", "==", email.toLowerCase()));
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        console.warn(`NewsletterAgent: Unsubscribe failed - email ${email} not found.`);
+        return false;
+      }
+
+      for (const docSnap of snapshot.docs) {
+        const subRef = doc(this.db, "subscribers", docSnap.id);
+        await updateDoc(subRef, {
+          status: "inactive",
+          unsubscribedAt: new Date().toISOString()
+        });
+      }
+
+      console.log(`NewsletterAgent: Successfully unsubscribed ${email}`);
+      return true;
+    } catch (error) {
+      console.error(`NewsletterAgent: Error unsubscribing ${email}:`, error);
+      return false;
     }
   }
 

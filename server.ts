@@ -83,7 +83,8 @@ import {
   addDoc,
   query,
   where,
-  getDocs
+  getDocs,
+  updateDoc
 } from "firebase/firestore";
 
 // Initialize Gemini
@@ -134,15 +135,17 @@ async function startServer() {
   }
 
   // Initialize Newsletter Agent with Client DB
+  const baseUrl = process.env.APP_URL || `http://localhost:${PORT}`;
   const newsletterAgent = new NewsletterAgent(
     geminiKey?.trim() || "",
     clientDb,
-    transporter
+    transporter,
+    baseUrl
   );
 
   // --- CRON JOBS ---
-  // 1. Proactive processing of new subscribers (every minute)
-  cron.schedule("* * * * *", async () => {
+  // 1. Proactive processing of new subscribers (every 5 minutes)
+  cron.schedule("*/5 * * * *", async () => {
     try {
       await newsletterAgent.processNewSubscribers();
     } catch (e) {
@@ -329,6 +332,16 @@ async function startServer() {
         const q = query(subscribersRef, where("email", "==", email.toLowerCase()));
         const existing = await getDocs(q);
         if (!existing.empty) {
+          const sub = existing.docs[0].data();
+          if (sub.status === "inactive") {
+            // Reactivate
+            const subRef = doc(clientDb, "subscribers", existing.docs[0].id);
+            await updateDoc(subRef, { 
+              status: "pending_welcome",
+              subscribedAt: new Date().toISOString() 
+            });
+            return res.json({ success: true, message: "Welcome back! Subscription reactivated." });
+          }
           console.log("Subscriber already exists.");
           return res.status(400).json({ error: "This email is already subscribed." });
         }
@@ -337,6 +350,14 @@ async function startServer() {
         const subscribersRef = db.collection("subscribers");
         const existing = await subscribersRef.where("email", "==", email.toLowerCase()).get();
         if (!existing.empty) {
+          const sub = existing.docs[0].data();
+          if (sub.status === "inactive") {
+            await existing.docs[0].ref.update({ 
+              status: "pending_welcome",
+              subscribedAt: new Date().toISOString() 
+            });
+            return res.json({ success: true, message: "Welcome back! Subscription reactivated." });
+          }
           console.log("Subscriber already exists.");
           return res.status(400).json({ error: "This email is already subscribed." });
         }
@@ -348,6 +369,32 @@ async function startServer() {
     } catch (error: any) {
       console.error("Subscription error details:", error);
       res.status(500).json({ error: `Failed to subscribe: ${error.message || 'Unknown error'}` });
+    }
+  });
+
+  app.get("/api/unsubscribe", async (req, res) => {
+    const { email } = req.query;
+    if (!email || typeof email !== "string") {
+      return res.status(400).send("Invalid unsubscribe request.");
+    }
+
+    const success = await newsletterAgent.unsubscribe(email);
+    
+    if (success) {
+      res.send(`
+        <html>
+          <body style="background: #0a0a0a; color: #ff4444; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center;">
+            <div style="border: 1px solid #ff4444; padding: 40px; border-radius: 8px; background: #111;">
+              <h2 style="text-transform: uppercase; letter-spacing: 2px;">Unsubscribed</h2>
+              <p style="color: #fff; opacity: 0.8;">You have been successfully removed from our mailing list.</p>
+              <p style="font-size: 12px; color: #666; margin-top: 20px;">We're sorry to see you go. You can always re-subscribe on our website.</p>
+              <a href="/" style="display: inline-block; margin-top: 20px; color: #ff4444; text-decoration: none; border: 1px solid #ff4444; padding: 8px 16px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Back to Site</a>
+            </div>
+          </body>
+        </html>
+      `);
+    } else {
+      res.status(404).send("Email not found in our subscription list.");
     }
   });
 
