@@ -18,9 +18,19 @@
           "type": "string",
           "format": "date-time",
           "description": "The timestamp when the user subscribed"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending_welcome", "active", "unsubscribed"],
+          "description": "The subscription status"
+        },
+        "welcomeEmailSentAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the welcome email was sent"
         }
       },
-      "required": ["email", "subscribedAt"]
+      "required": ["email", "subscribedAt", "status"]
     },
     "discord_requests": {
       "title": "Discord Join Request",

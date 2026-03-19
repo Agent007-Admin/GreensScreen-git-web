@@ -5,6 +5,8 @@ import admin from "firebase-admin";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
+import { NewsletterAgent } from "./src/services/newsletterAgent.ts";
+import cron from "node-cron";
 import { fileURLToPath } from "url";
 import path from "path";
 import fs from "fs";
@@ -34,11 +36,9 @@ try {
 
 // Initialize Firebase Admin
 if (!admin.apps.length) {
-  const projectId = firebaseConfig.projectId || process.env.VITE_FIREBASE_PROJECT_ID || "gen-lang-client-0408745223";
-  console.log(`Initializing Firebase Admin for project: ${projectId}`);
   try {
+    console.log("Initializing Firebase Admin with default credentials...");
     admin.initializeApp({
-      projectId: projectId,
       credential: admin.credential.applicationDefault()
     });
     console.log("Firebase Admin initialized successfully");
@@ -75,20 +75,40 @@ try {
 }
 
 import { initializeApp as initializeClientApp } from "firebase/app";
-import { getFirestore as getClientFirestore, doc, setDoc } from "firebase/firestore";
-
-// Initialize Client SDK (as a fallback/test)
-const clientApp = initializeClientApp(firebaseConfig);
-const clientDb = getClientFirestore(clientApp, firebaseConfig.firestoreDatabaseId);
+import { 
+  getFirestore as getClientFirestore, 
+  doc, 
+  setDoc,
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs
+} from "firebase/firestore";
 
 // Initialize Gemini
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+let genAI: any = null;
+const rawGeminiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+const geminiKey = rawGeminiKey ? rawGeminiKey.trim().replace(/^["']|["']$/g, '') : null;
 
-// Nodemailer Transporter
-// Note: In a real app, you'd use a service like SendGrid, Mailgun, or a dedicated SMTP server.
-// For this demo, we'll assume SMTP env vars are provided.
+console.log(`DEBUG: GEMINI_API_KEY is ${process.env.GEMINI_API_KEY ? 'present' : 'absent'}`);
+console.log(`DEBUG: API_KEY is ${process.env.API_KEY ? 'present' : 'absent'}`);
+
+if (geminiKey && geminiKey.length > 0) {
+  try {
+    genAI = new GoogleGenAI({ apiKey: geminiKey });
+    const maskedKey = geminiKey.substring(0, 4) + "..." + geminiKey.substring(geminiKey.length - 4);
+    console.log(`Gemini AI initialized successfully (Key: ${maskedKey}, Length: ${geminiKey.length})`);
+  } catch (e) {
+    console.error("Failed to initialize Gemini AI:", e);
+  }
+} else {
+  console.warn("CRITICAL: No valid Gemini API key found in environment variables (GEMINI_API_KEY or API_KEY).");
+}
+
+// Initialize Nodemailer
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
   port: parseInt(process.env.SMTP_PORT || "587"),
   secure: process.env.SMTP_SECURE === "true",
   auth: {
@@ -99,161 +119,44 @@ const transporter = nodemailer.createTransport({
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = parseInt(process.env.PORT || "3000");
 
   app.use(express.json());
 
-  // API Route for Newsletter Subscription
-  app.post("/api/subscribe", async (req, res) => {
-    const { email, name } = req.body;
-    console.log(`Subscription request received for: ${email} (${name})`);
+  // Initialize Client SDK (Primary for this environment due to Admin SDK permission issues)
+  let clientDb: any = null;
+  try {
+    const clientApp = initializeClientApp(firebaseConfig);
+    clientDb = getClientFirestore(clientApp, firebaseConfig.firestoreDatabaseId);
+    console.log("Client SDK initialized successfully");
+  } catch (e) {
+    console.error("Client SDK initialization failed:", e);
+  }
 
-    if (!email || !email.includes("@")) {
-      console.error("Invalid email provided:", email);
-      return res.status(400).json({ error: "Invalid email address" });
-    }
+  // Initialize Newsletter Agent with Client DB
+  const newsletterAgent = new NewsletterAgent(
+    geminiKey?.trim() || "",
+    clientDb,
+    transporter
+  );
 
+  // --- CRON JOBS ---
+  // 1. Proactive processing of new subscribers (every minute)
+  cron.schedule("* * * * *", async () => {
     try {
-      if (!db) {
-        throw new Error("Database connection not initialized. Please check server logs.");
-      }
-
-      console.log("Attempting to save subscriber to Firestore...");
-      // 1. Save to Firestore
-      const subscriberRef = db.collection("subscribers").doc();
-      const data = {
-        email: email.trim().toLowerCase(),
-        name: name ? name.trim() : "Subscriber",
-        subscribedAt: new Date().toISOString(),
-      };
-      console.log("Data to save:", JSON.stringify(data));
-      
-      await subscriberRef.set(data);
-      console.log("Subscriber successfully saved to Firestore");
-
-      // 2. Send Thank You Email
-      // Only attempt if SMTP is configured
-      if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-        let welcomeMessage = `Welcome to the GreensScreensEnt newsletter, ${name || 'friend'}! We're excited to have you with us.`;
-        
-        // Try to generate a cool personalized message using Gemini
-        if (process.env.GEMINI_API_KEY) {
-          try {
-            const prompt = `Write a short, high-energy, futuristic welcome message for a new subscriber named '${name || 'Subscriber'}' to 'GreensScreensEnt'. We are a community focused on the intersection of Tech, Gaming, and Entertainment. Mention that they'll receive monthly catalogs of the latest news in these domains. Keep it under 3 sentences. Use a tone that feels like a system initialization or a high-tech transmission.`;
-            const response = await genAI.models.generateContent({
-              model: "gemini-3-flash-preview",
-              contents: prompt,
-            });
-            if (response.text) {
-              welcomeMessage = response.text;
-            }
-          } catch (aiError) {
-            console.error("Gemini welcome generation failed:", aiError);
-          }
-        }
-
-        const mailOptions = {
-          from: `"GreensScreensEnt" <${process.env.SMTP_USER}>`,
-          to: email,
-          subject: `Welcome to the Future, ${name || 'Subscriber'}!`,
-          text: welcomeMessage,
-          html: `
-            <div style="font-family: 'Space Grotesk', sans-serif; max-width: 600px; margin: auto; border: 1px solid #2ecc71; padding: 30px; background-color: #0a0a0a; color: #ffffff; border-radius: 8px;">
-              <h2 style="color: #2ecc71; text-transform: uppercase; letter-spacing: 2px;">System Initialized: Welcome ${name || ''}</h2>
-              <p style="font-size: 16px; line-height: 1.6;">${welcomeMessage}</p>
-              <p style="font-size: 14px; opacity: 0.8;">You'll be the first to hear about our new projects, gaming lounge updates, and community events.</p>
-              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #333;">
-                <p style="color: #2ecc71; font-weight: bold;">GreensScreensEnt</p>
-                <p style="font-size: 12px; color: #666;">Gaming | Technology | Entertainment</p>
-              </div>
-            </div>
-          `,
-        };
-
-        await transporter.sendMail(mailOptions);
-        console.log(`Sent thank you email to ${email}`);
-      } else {
-        console.warn("SMTP not configured. Skipping email send.");
-      }
-
-      res.status(200).json({ message: "Successfully subscribed!" });
-    } catch (error: any) {
-      console.error("Subscription error details:", error);
-      res.status(500).json({ error: `Failed to subscribe: ${error.message || 'Unknown error'}` });
+      await newsletterAgent.processNewSubscribers();
+    } catch (e) {
+      console.error("Cron: Error processing new subscribers:", e);
     }
   });
 
-  // Test endpoint to verify SMTP configuration
-  app.get("/api/test-email", async (req, res) => {
-    const testEmail = req.query.email as string;
-    if (!testEmail) {
-      return res.status(400).send("Please provide an email query parameter: ?email=your@email.com");
-    }
-
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      return res.status(500).send("SMTP credentials are NOT configured in environment variables.");
-    }
-
+  // 2. Monthly Newsletter (15th of every month at 10:00 AM)
+  cron.schedule("0 10 15 * *", async () => {
     try {
-      const mailOptions = {
-        from: `"GreensScreensEnt Test" <${process.env.SMTP_USER}>`,
-        to: testEmail,
-        subject: "SMTP Configuration Test",
-        text: "If you are reading this, your SMTP configuration for GreensScreensEnt is working correctly!",
-      };
-
-      await transporter.sendMail(mailOptions);
-      res.status(200).send(`Test email sent successfully to ${testEmail}`);
-    } catch (error: any) {
-      console.error("SMTP Test failed:", error);
-      res.status(500).send(`SMTP Test failed: ${error.message}`);
+      await newsletterAgent.sendMonthlyNewsletter();
+    } catch (e) {
+      console.error("Cron: Error sending monthly newsletter:", e);
     }
-  });
-
-  // Health check to verify Firestore connectivity
-  app.get("/api/health", async (req, res) => {
-    let adminStatus = "unknown";
-    let adminError = null;
-    let clientStatus = "unknown";
-    let clientError = null;
-    
-    // Test Admin SDK
-    try {
-      console.log("Health check: Attempting Admin SDK write...");
-      const healthRef = db.collection("health").doc("admin-check");
-      await healthRef.set({ 
-        lastCheck: new Date().toISOString(),
-        status: "online"
-      });
-      adminStatus = "connected";
-    } catch (error: any) {
-      console.error("Admin SDK health check failed:", error);
-      adminStatus = "error";
-      adminError = error.message;
-    }
-
-    // Test Client SDK
-    try {
-      console.log("Health check: Attempting Client SDK write...");
-      const healthRef = doc(clientDb, "health", "client-check");
-      await setDoc(healthRef, {
-        lastCheck: new Date().toISOString(),
-        status: "online"
-      });
-      clientStatus = "connected";
-    } catch (error: any) {
-      console.error("Client SDK health check failed:", error);
-      clientStatus = "error";
-      clientError = error.message;
-    }
-
-    res.json({ 
-      status: "ok", 
-      admin: { status: adminStatus, error: adminError },
-      client: { status: clientStatus, error: clientError },
-      projectId: firebaseConfig.projectId,
-      databaseId: databaseId || "(default)"
-    });
   });
 
   // --- DISCORD OAUTH ROUTES ---
@@ -261,12 +164,14 @@ async function startServer() {
   // 1. Get Discord Auth URL
   app.get("/api/auth/discord/url", (req, res) => {
     const clientId = process.env.DISCORD_CLIENT_ID;
-    const baseUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
-    const redirectUri = process.env.DISCORD_REDIRECT_URI || `${baseUrl}/auth/discord/callback`;
-    
     if (!clientId) {
       return res.status(500).json({ error: "Discord Client ID not configured" });
     }
+    // Prioritize APP_URL from platform, fallback to request host
+    const baseUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+    const redirectUri = process.env.DISCORD_REDIRECT_URI || `${baseUrl}/auth/discord/callback`;
+    
+    console.log(`Generating Discord Auth URL with redirect: ${redirectUri}`);
 
     const params = new URLSearchParams({
       client_id: clientId,
@@ -284,6 +189,12 @@ async function startServer() {
     const { code } = req.query;
     const clientId = process.env.DISCORD_CLIENT_ID;
     const clientSecret = process.env.DISCORD_CLIENT_SECRET;
+    
+    if (!clientId || !clientSecret) {
+      console.error("Discord credentials missing in environment");
+      return res.status(500).send("Discord integration not configured correctly.");
+    }
+
     const baseUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
     const redirectUri = process.env.DISCORD_REDIRECT_URI || `${baseUrl}/auth/discord/callback`;
     const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
@@ -318,7 +229,6 @@ async function startServer() {
       const discordUser = userResponse.data;
 
       // C. Save request to Firestore
-      const requestRef = db.collection("discord_requests").doc();
       const requestData = {
         discordId: discordUser.id,
         username: discordUser.username,
@@ -327,7 +237,14 @@ async function startServer() {
         requestedAt: new Date().toISOString(),
         status: "pending",
       };
-      await requestRef.set(requestData);
+      
+      if (clientDb) {
+        const requestsRef = collection(clientDb, "discord_requests");
+        await addDoc(requestsRef, requestData);
+      } else {
+        const requestRef = db.collection("discord_requests").doc();
+        await requestRef.set(requestData);
+      }
 
       // D. Send Webhook Notification to Discord Server
       if (webhookUrl) {
@@ -382,6 +299,58 @@ async function startServer() {
     }
   });
 
+  // --- NEWSLETTER ROUTES ---
+
+  app.post("/api/subscribe", async (req, res) => {
+    const { email, name } = req.body;
+    console.log(`Subscription request for: ${email}`);
+
+    if (!email || !email.includes("@")) {
+      return res.status(400).json({ error: "Invalid email address" });
+    }
+
+    try {
+      const activeDb = clientDb || db;
+      if (!activeDb) {
+        console.error("Firestore database instance is not initialized.");
+        return res.status(500).json({ error: "Database connection error. Please try again later." });
+      }
+
+      const subscriberData = {
+        email: email.toLowerCase(),
+        name: name || "Subscriber",
+        subscribedAt: new Date().toISOString(),
+        status: "pending_welcome"
+      };
+      
+      console.log("Adding new subscriber to Firestore...");
+      if (clientDb) {
+        const subscribersRef = collection(clientDb, "subscribers");
+        const q = query(subscribersRef, where("email", "==", email.toLowerCase()));
+        const existing = await getDocs(q);
+        if (!existing.empty) {
+          console.log("Subscriber already exists.");
+          return res.status(400).json({ error: "This email is already subscribed." });
+        }
+        await addDoc(subscribersRef, subscriberData);
+      } else {
+        const subscribersRef = db.collection("subscribers");
+        const existing = await subscribersRef.where("email", "==", email.toLowerCase()).get();
+        if (!existing.empty) {
+          console.log("Subscriber already exists.");
+          return res.status(400).json({ error: "This email is already subscribed." });
+        }
+        await subscribersRef.add(subscriberData);
+      }
+      
+      console.log("Subscriber added successfully.");
+      res.json({ success: true, message: "Subscription received. Welcome email incoming." });
+    } catch (error: any) {
+      console.error("Subscription error details:", error);
+      res.status(500).json({ error: `Failed to subscribe: ${error.message || 'Unknown error'}` });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -392,7 +361,7 @@ async function startServer() {
   } else {
     // Serve static files in production
     app.use(express.static(path.join(__dirname, "dist")));
-    app.get("*", (req, res) => {
+    app.get("*all", (req, res) => {
       res.sendFile(path.join(__dirname, "dist", "index.html"));
     });
   }

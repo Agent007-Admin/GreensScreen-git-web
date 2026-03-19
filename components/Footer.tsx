@@ -9,8 +9,8 @@ export const Footer: React.FC = () => {
       <div className="font-mono text-[11px] text-gs-muted opacity-60 tracking-[1px]">
         © 2026 GREENS SCREENS ENT · ALL RIGHTS RESERVED
       </div>
-      <div className="font-mono text-[11px] text-gs-green tracking-[1px] opacity-60">
-        SIGNAL_ALWAYS_GREEN
+      <div className="font-mono text-[11px] flex items-center gap-4">
+        <span className="text-gs-green tracking-[1px] opacity-60">SIGNAL_ALWAYS_GREEN</span>
       </div>
     </footer>
   );

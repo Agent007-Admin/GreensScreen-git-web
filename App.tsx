@@ -9,6 +9,7 @@ import { FounderCard } from './components/FounderCard';
 import { Footer } from './components/Footer';
 
 const App: React.FC = () => {
+
   return (
     <div className="gs-page selection:bg-gs-green selection:text-gs-dark">
       <div className="scanlines" />
