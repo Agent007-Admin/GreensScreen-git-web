@@ -8,6 +8,8 @@ import {
   where, 
   limit, 
   getDocs, 
+  getDoc,
+  setDoc,
   doc, 
   updateDoc, 
   addDoc,
@@ -25,10 +27,31 @@ export class NewsletterAgent {
   private baseUrl: string;
 
   constructor(apiKey: string, db: Firestore, transporter: any, baseUrl: string = "") {
-    this.ai = new GoogleGenAI({ apiKey });
     this.db = db;
     this.transporter = transporter;
     this.baseUrl = baseUrl;
+    
+    // Initialize AI with provided key or fallback to environment
+    // Prioritize API_KEY as it's the most reliable in this environment
+    const finalKey = process.env.API_KEY || process.env.GEMINI_API_KEY || apiKey || "";
+    this.ai = new GoogleGenAI({ apiKey: finalKey.trim() });
+    
+    if (finalKey) {
+      const masked = finalKey.trim().substring(0, 4) + "..." + finalKey.trim().substring(finalKey.trim().length - 4);
+      console.log(`NewsletterAgent: Initialized with key ${masked}`);
+    } else {
+      console.warn("NewsletterAgent: No API key found during initialization!");
+    }
+  }
+
+  /**
+   * Re-initialize the AI instance with the latest key from environment if needed.
+   */
+  private refreshAI() {
+    const key = process.env.API_KEY || process.env.GEMINI_API_KEY || "";
+    if (key) {
+      this.ai = new GoogleGenAI({ apiKey: key.trim() });
+    }
   }
 
   /**
@@ -125,15 +148,15 @@ export class NewsletterAgent {
     const month = targetMonth || now.toLocaleDateString('en-US', { month: 'long' });
     const year = targetYear || now.getFullYear().toString();
     
-    // 1. Generate content using Gemini
-    const content = await this.generateMonthlyContent(month, year);
+    // 1. Get or generate content
+    const content = await this.getMonthlyContent(month, year, false, false);
     if (!content) {
       console.error("NewsletterAgent: Monthly content generation failed.");
       return;
     }
 
     // 2. Build HTML from template
-    const htmlTemplate = this.buildMonthlyHtml(content, month, year);
+    const htmlTemplate = this.buildMonthlyHtml(content, month, year, false);
 
     // 3. Get all active subscribers
     const subscribersRef = collection(this.db, "subscribers");
@@ -184,6 +207,78 @@ export class NewsletterAgent {
   }
 
   /**
+   * Send a test newsletter to a specific email.
+   */
+  async sendTestNewsletter(email: string, targetMonth?: string, targetYear?: string, forceRefresh: boolean = false) {
+    console.log(`NewsletterAgent: Sending test newsletter to ${email}...`);
+    
+    const now = new Date();
+    const month = targetMonth || now.toLocaleDateString('en-US', { month: 'long' });
+    const year = targetYear || now.getFullYear().toString();
+    
+    // 1. Get or generate content
+    const content = await this.getMonthlyContent(month, year, forceRefresh, true);
+    if (!content) {
+      console.error("NewsletterAgent: Monthly content generation failed.");
+      return false;
+    }
+
+    // 2. Build HTML from template
+    const htmlTemplate = this.buildMonthlyHtml(content, month, year, true);
+
+    // 3. Send email
+    if (this.transporter) {
+      const subject = `[TEST] THE FREQUENCY | ${month.toUpperCase()} ${year}`;
+      try {
+        const unsubLink = `${this.baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}`;
+        const personalizedHtml = htmlTemplate.replace(/{{UNSUBSCRIBE_LINK}}/g, unsubLink);
+
+        await this.transporter.sendMail({
+          from: `"Greens Screens Ent" <${process.env.SMTP_USER}>`,
+          to: email,
+          subject: subject,
+          html: personalizedHtml,
+        });
+        console.log(`NewsletterAgent: Test newsletter sent to ${email}`);
+        return true;
+      } catch (e) {
+        console.error(`NewsletterAgent: Failed to send test to ${email}:`, e);
+        return false;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Mark a subscriber as a test user.
+   */
+  async markAsTestUser(email: string) {
+    try {
+      const subscribersRef = collection(this.db, "subscribers");
+      const q = query(subscribersRef, where("email", "==", email.toLowerCase()));
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        console.warn(`NewsletterAgent: Mark as test failed - email ${email} not found.`);
+        return false;
+      }
+
+      for (const docSnap of snapshot.docs) {
+        const subRef = doc(this.db, "subscribers", docSnap.id);
+        await updateDoc(subRef, {
+          isTestUser: true
+        });
+      }
+
+      console.log(`NewsletterAgent: Successfully marked ${email} as test user`);
+      return true;
+    } catch (error) {
+      console.error(`NewsletterAgent: Error marking ${email} as test user:`, error);
+      return false;
+    }
+  }
+
+  /**
    * Unsubscribe a user by email.
    */
   async unsubscribe(email: string) {
@@ -213,14 +308,79 @@ export class NewsletterAgent {
     }
   }
 
-  private async generateMonthlyContent(month: string, year: string) {
+  /**
+   * Get or generate monthly content. Checks Firestore for a draft first.
+   */
+  async getMonthlyContent(month: string, year: string, forceRefresh: boolean = false, isTest: boolean = false) {
+    const draftId = isTest ? `${month.toLowerCase()}-${year}-test` : `${month.toLowerCase()}-${year}`;
+    const draftRef = doc(this.db, "newsletter_drafts", draftId);
+
+    if (!forceRefresh) {
+      try {
+        const draftSnap = await getDoc(draftRef);
+        if (draftSnap.exists()) {
+          console.log(`NewsletterAgent: Using existing ${isTest ? 'test ' : ''}draft for ${month} ${year}`);
+          return draftSnap.data().content;
+        }
+      } catch (e) {
+        console.error("NewsletterAgent: Error fetching draft:", e);
+      }
+    }
+
+    // Generate new content
+    const content = await this.generateMonthlyContent(month, year, isTest);
+    if (content) {
+      try {
+        await setDoc(draftRef, {
+          month,
+          year,
+          content,
+          updatedAt: new Date().toISOString()
+        });
+        console.log(`NewsletterAgent: Saved new draft for ${month} ${year}`);
+      } catch (e) {
+        console.error("NewsletterAgent: Error saving draft:", e);
+      }
+    }
+    return content;
+  }
+
+  private async withRetry<T>(fn: () => Promise<T>, retries: number = 3, delay: number = 2000): Promise<T> {
+    try {
+      return await fn();
+    } catch (error: any) {
+      // Check if it's a 503 or 429 error
+      const isRetryable = error?.status === 503 || error?.status === 429 || error?.message?.includes("503") || error?.message?.includes("429");
+      
+      if (retries > 0 && isRetryable) {
+        console.warn(`NewsletterAgent: AI call failed (${error?.status || 'unknown'}). Retrying in ${delay}ms... (${retries} retries left)`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return this.withRetry(fn, retries - 1, delay * 2);
+      }
+      throw error;
+    }
+  }
+
+  async generateMonthlyContent(month: string, year: string, isTest: boolean = false) {
+    this.refreshAI(); // Ensure we use the latest key
     const prompt = `
       Generate a high-energy, technical monthly newsletter for "Greens Screens Ent" for ${month} ${year}.
       The theme is "SIGNAL_ALWAYS_GREEN".
       
-      Reference the following structure and tone:
-      - February 2026 used a Pink/Dark theme.
-      - March 2026 used a Blue/Dark theme.
+      CRITICAL INSTRUCTIONS:
+      1. Use the googleSearch tool to find REAL, CURRENT gaming and tech news from ${month} ${year}.
+      2. Every link MUST be a valid, working URL to a reputable news site (e.g., IGN, Kotaku, Polygon, The Verge).
+      3. LINK RELIABILITY: Always prefer a valid "Read More" link with a true landing page. ONLY if a valid link cannot be found after searching, set "hasLink" to false and provide a "fullSummary" (approx 100 words) for "Digest Mode".
+      4. DO NOT use placeholder links or links that lead to 404 errors.
+      5. Limit the output to 4 sections, with 2-3 stories per section to ensure the JSON is not truncated.
+      6. Tone: Futuristic, cyber-industrial, high-energy.
+      7. STRICT: DO NOT include any internal monologue, thought process, or commentary inside the JSON values. 
+      8. STRICT: windowStart and windowEnd MUST be short strings (e.g., "FEB 16", "MAR 15"). DO NOT include years or timestamps in these fields.
+      9. STRICT: Output ONLY the raw JSON object. NO PREAMBLE. NO POSTAMBLE.
+      10. IMAGES: Provide a "imageUrl" for exactly 2 stories in the entire newsletter. 
+          - CRITICAL: Only 1 image is allowed per section (subject). If you provide 2 images, they MUST be in different sections.
+          - IMAGE QUALITY: Images must be public, high-quality, and highly relevant to the specific story. Ensure they are working URLs that display correctly.
+      11. One section MUST be of type "indie", highlighting high-anticipation games from smaller teams/developers that people may not be aware of but that are showing good promise.
       
       I need the following sections in JSON format:
       1. heroIntro: A brief overview (approx 50 words) of the current state of gaming and tech.
@@ -238,14 +398,14 @@ export class NewsletterAgent {
            - blurb: 2-3 sentence description
            - meta: Date/Platform info (e.g., "FEB 12 · PS5")
            - tag: "HOT" | "NEW" | "REMAKE" | "INDIE" | "SCREEN" | "INDUSTRY" | "ALERT"
-           - link: A placeholder link (e.g., "https://gameinformer.com/2026")
-
-      Focus on real or highly plausible gaming news for ${month} ${year}. Use a futuristic, cyber-industrial tone.
+           - link: A REAL, VERIFIED URL to the news story.
     `;
 
     try {
-      const response = await this.ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+      console.log(`NewsletterAgent: Requesting Gemini generation for ${month} ${year}...`);
+      
+      const response = await this.withRetry(() => this.ai.models.generateContent({
+        model: "gemini-3.1-pro-preview",
         contents: prompt,
         config: {
           tools: [{ googleSearch: {} }],
@@ -276,7 +436,10 @@ export class NewsletterAgent {
                           blurb: { type: Type.STRING },
                           meta: { type: Type.STRING },
                           tag: { type: Type.STRING },
-                          link: { type: Type.STRING }
+                          link: { type: Type.STRING },
+                          imageUrl: { type: Type.STRING },
+                          hasLink: { type: Type.BOOLEAN },
+                          fullSummary: { type: Type.STRING }
                         }
                       }
                     }
@@ -286,17 +449,39 @@ export class NewsletterAgent {
             }
           }
         }
-      });
+      }));
 
-      return JSON.parse(response.text);
+      console.log("NewsletterAgent: Gemini generation complete. Parsing response...");
+      const text = response.text;
+      if (!text) throw new Error("Empty response from Gemini");
+      
+      try {
+        const parsed = JSON.parse(text);
+        if (!parsed.sections || !Array.isArray(parsed.sections)) {
+          console.warn("NewsletterAgent: Parsed JSON is missing 'sections' array. Keys found:", Object.keys(parsed));
+          console.warn("NewsletterAgent: Raw JSON:", text);
+          parsed.sections = parsed.sections || [];
+        }
+        return parsed;
+      } catch (parseError) {
+        console.error("NewsletterAgent: JSON Parse Error. Raw text length:", text.length);
+        console.error("NewsletterAgent: Raw text snippet:", text.substring(0, 500) + "...");
+        throw parseError;
+      }
     } catch (error) {
       console.error("NewsletterAgent: Gemini generation failed:", error);
       return null;
     }
   }
 
-  private buildMonthlyHtml(data: any, month: string, year: string) {
-    const templatePath = path.join(process.cwd(), "templates", "monthly-newsletter.html");
+  private buildMonthlyHtml(data: any, month: string, year: string, isTest: boolean = false) {
+    const templateName = isTest ? "test-newsletter.html" : "monthly-newsletter.html";
+    let templatePath = path.join(process.cwd(), "templates", templateName);
+    
+    if (!fs.existsSync(templatePath)) {
+      templatePath = path.join(process.cwd(), "templates", "monthly-newsletter.html");
+    }
+    
     if (!fs.existsSync(templatePath)) return "Template not found";
 
     let html = fs.readFileSync(templatePath, "utf-8");
@@ -331,39 +516,62 @@ export class NewsletterAgent {
 
     // Build sections
     let sectionsHtml = "";
-    data.sections.forEach((sec: any, idx: number) => {
-      let storiesHtml = "";
-      sec.stories.forEach((story: any, sIdx: number) => {
-        const tagClass = `tag-${sec.type === 'releases' ? 'new' : sec.type}`;
-        storiesHtml += `
-          <div class="story">
-            <span class="story-num">${(sIdx + 1).toString().padStart(2, '0')}</span>
-            <div class="story-content">
-              <div class="story-meta">
-                <span class="story-tag ${tagClass}">${story.tag}</span> 
-                ${story.meta}
+    if (data && data.sections && Array.isArray(data.sections)) {
+      data.sections.forEach((sec: any, idx: number) => {
+        let storiesHtml = "";
+        if (sec.stories && Array.isArray(sec.stories)) {
+          sec.stories.forEach((story: any, sIdx: number) => {
+            const tagClass = `tag-${sec.type === 'releases' ? 'new' : sec.type}`;
+            const imageHtml = story.imageUrl ? `
+              <div class="story-image">
+                <img src="${story.imageUrl}" alt="${story.title}" referrerPolicy="no-referrer">
               </div>
-              <div class="story-title">${story.title}</div>
-              <p class="story-blurb">${story.blurb}</p>
+            ` : "";
+            
+            const linkHtml = story.hasLink !== false ? `
               <a href="${story.link}" target="_blank" class="story-link">READ MORE <span class="arr">→</span></a>
+            ` : `
+              <div class="story-summary-box">
+                <div class="summary-label">DIGEST_MODE_ACTIVE</div>
+                <p class="story-full-summary">${story.fullSummary || story.blurb}</p>
+              </div>
+            `;
+
+            storiesHtml += `
+              <div class="story ${story.imageUrl ? 'has-img' : ''}">
+                <span class="story-num">${(sIdx + 1).toString().padStart(2, '0')}</span>
+                <div class="story-content">
+                  <div class="story-meta">
+                    <span class="story-tag ${tagClass}">${story.tag}</span> 
+                    ${story.meta}
+                  </div>
+                  ${imageHtml}
+                  <div class="story-title">${story.title}</div>
+                  <p class="story-blurb">${story.blurb}</p>
+                  ${linkHtml}
+                </div>
+              </div>
+            `;
+          });
+        }
+
+        sectionsHtml += `
+          <div class="sec sec-${sec.type}">
+            <div class="sec-header">
+              <div class="sec-icon">${sec.icon}</div>
+              <div class="sec-title-wrap">
+                <div class="sec-name">${sec.name}</div>
+                <div class="sec-desc">${sec.desc}</div>
+              </div>
             </div>
+            ${storiesHtml}
           </div>
         `;
       });
-
-      sectionsHtml += `
-        <div class="sec sec-${sec.type}">
-          <div class="sec-header">
-            <div class="sec-icon">${sec.icon}</div>
-            <div class="sec-title-wrap">
-              <div class="sec-name">${sec.name}</div>
-              <div class="sec-desc">${sec.desc}</div>
-            </div>
-          </div>
-          ${storiesHtml}
-        </div>
-      `;
-    });
+    } else {
+      console.warn("NewsletterAgent: No valid sections found in data for HTML build.");
+      sectionsHtml = "<div style='padding: 20px; color: #666; font-family: monospace;'>[NO SECTIONS GENERATED]</div>";
+    }
 
     html = html.replace(/{{SECTIONS}}/g, sectionsHtml);
 

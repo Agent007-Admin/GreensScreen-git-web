@@ -398,6 +398,72 @@ async function startServer() {
     }
   });
 
+  app.post("/api/newsletter/test", async (req, res) => {
+    const { email, secret, month, year, forceRefresh } = req.body;
+    console.log(`API: POST /api/newsletter/test for ${email} (${month} ${year}) - forceRefresh: ${forceRefresh}`);
+    
+    if (secret !== process.env.ADMIN_SECRET) {
+      console.warn(`API: Unauthorized test newsletter attempt for ${email}`);
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    if (!email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
+    try {
+      const success = await newsletterAgent.sendTestNewsletter(email, month, year, !!forceRefresh);
+      if (success) {
+        console.log(`API: Test newsletter sent successfully to ${email}`);
+        res.json({ success: true, message: `Test newsletter sent to ${email} for ${month || 'current'} ${year || ''}` });
+      } else {
+        console.error(`API: Failed to send test newsletter to ${email}`);
+        res.status(500).json({ error: "Failed to send test newsletter. Check server logs for API key or generation issues." });
+      }
+    } catch (err) {
+      console.error(`API: Error in test newsletter route:`, err);
+      res.status(500).json({ error: "Internal server error during newsletter generation." });
+    }
+  });
+
+  app.post("/api/newsletter/mark-test", async (req, res) => {
+    const { email, secret } = req.body;
+    
+    if (secret !== process.env.ADMIN_SECRET) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    if (!email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
+    const success = await newsletterAgent.markAsTestUser(email);
+    if (success) {
+      res.json({ success: true, message: `${email} marked as test user` });
+    } else {
+      res.status(500).json({ error: "Failed to mark as test user" });
+    }
+  });
+
+  app.post("/api/newsletter/release-march", async (req, res) => {
+    const { secret } = req.body;
+    
+    if (secret !== process.env.ADMIN_SECRET) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    console.log("NewsletterAgent: Manual release of March 2026 newsletter triggered...");
+    
+    try {
+      // This sends to ALL active subscribers
+      await newsletterAgent.sendMonthlyNewsletter("March", "2026");
+      res.json({ success: true, message: "March 2026 newsletter release process started." });
+    } catch (error) {
+      console.error("NewsletterAgent: Manual release failed:", error);
+      res.status(500).json({ error: "Failed to release March newsletter" });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

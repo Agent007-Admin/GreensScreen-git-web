@@ -6,6 +6,81 @@ export const Newsletter: React.FC = () => {
   const [name, setName] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const [showTest, setShowTest] = useState(false);
+  const [adminSecret, setAdminSecret] = useState('');
+  const [testEmail, setTestEmail] = useState('jgreen2196@gmail.com');
+  const [testMonth, setTestMonth] = useState('March');
+  const [testYear, setTestYear] = useState('2026');
+  const [testStatus, setTestStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+
+  const handleTestNewsletter = async (forceRefresh: boolean = false) => {
+    if (!adminSecret) {
+      alert('ADMIN SECRET REQUIRED');
+      return;
+    }
+    setTestStatus('loading');
+    try {
+      const response = await fetch('/api/newsletter/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: testEmail, 
+          secret: adminSecret,
+          month: testMonth,
+          year: testYear,
+          forceRefresh
+        }),
+      });
+      if (!response.ok) throw new Error('Test failed');
+      setTestStatus('success');
+      setTimeout(() => setTestStatus('idle'), 3000);
+    } catch (e) {
+      setTestStatus('error');
+      setTimeout(() => setTestStatus('idle'), 3000);
+    }
+  };
+
+  const handleMarkTest = async () => {
+    if (!adminSecret) {
+      alert('ADMIN SECRET REQUIRED');
+      return;
+    }
+    try {
+      const response = await fetch('/api/newsletter/mark-test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: testEmail, secret: adminSecret }),
+      });
+      if (response.ok) alert('MARKED AS TEST USER');
+    } catch (e) {
+      alert('FAILED TO MARK AS TEST USER');
+    }
+  };
+
+  const handleReleaseMarch = async () => {
+    if (!adminSecret) {
+      alert('ADMIN SECRET REQUIRED');
+      return;
+    }
+    if (!confirm('ARE YOU SURE YOU WANT TO RELEASE THE MARCH NEWSLETTER TO ALL SUBSCRIBERS?')) return;
+    
+    setTestStatus('loading');
+    try {
+      const response = await fetch('/api/newsletter/release-march', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret: adminSecret }),
+      });
+      if (!response.ok) throw new Error('Release failed');
+      setTestStatus('success');
+      alert('MARCH NEWSLETTER RELEASE STARTED');
+      setTimeout(() => setTestStatus('idle'), 3000);
+    } catch (e) {
+      setTestStatus('error');
+      alert('FAILED TO RELEASE MARCH NEWSLETTER');
+      setTimeout(() => setTestStatus('idle'), 3000);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,11 +132,81 @@ export const Newsletter: React.FC = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <div className="font-mono text-[11px] tracking-[4px] text-gs-green mb-2">NEWSLETTER</div>
+          <div 
+            className="font-mono text-[11px] tracking-[4px] text-gs-green mb-2 cursor-pointer select-none"
+            onClick={() => setShowTest(!showTest)}
+          >
+            NEWSLETTER
+          </div>
           <h2 className="font-display text-[clamp(32px,4.5vw,56px)] tracking-[3px] text-gs-text mb-3 leading-tight">STAY IN<br />THE LOOP</h2>
           <p className="text-base text-gs-muted max-w-[520px] leading-[1.6] font-medium">
             Drop your email and get exclusive updates, early access, and insider content from Greens Screens Ent — straight to your inbox. No spam. Just signal.
           </p>
+
+          {showTest && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mt-8 p-4 border border-gs-green/20 bg-gs-green/5 rounded flex flex-col gap-3"
+            >
+              <div className="font-mono text-[10px] text-gs-green tracking-[2px] uppercase">ADMIN TEST PANEL</div>
+              <input 
+                type="password" 
+                placeholder="ADMIN SECRET" 
+                value={adminSecret}
+                onChange={(e) => setAdminSecret(e.target.value)}
+                className="w-full bg-gs-dark border border-gs-green/30 text-gs-green font-mono text-[12px] px-3 py-2 outline-none"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <input 
+                  type="text" 
+                  placeholder="MONTH (e.g. March)" 
+                  value={testMonth}
+                  onChange={(e) => setTestMonth(e.target.value)}
+                  className="bg-gs-dark border border-gs-green/30 text-gs-green font-mono text-[12px] px-3 py-2 outline-none"
+                />
+                <input 
+                  type="text" 
+                  placeholder="YEAR (e.g. 2026)" 
+                  value={testYear}
+                  onChange={(e) => setTestYear(e.target.value)}
+                  className="bg-gs-dark border border-gs-green/30 text-gs-green font-mono text-[12px] px-3 py-2 outline-none"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => handleTestNewsletter(false)}
+                  disabled={testStatus === 'loading'}
+                  className="flex-1 font-mono text-[10px] bg-gs-green text-gs-dark py-2 font-bold uppercase tracking-[1px]"
+                >
+                  {testStatus === 'loading' ? 'SENDING...' : 'SEND TEST NEWSLETTER'}
+                </button>
+                <button 
+                  onClick={() => handleTestNewsletter(true)}
+                  disabled={testStatus === 'loading'}
+                  title="Regenerate content from scratch"
+                  className="font-mono text-[10px] border border-gs-green/50 text-gs-green/50 px-3 py-2 font-bold uppercase tracking-[1px] hover:text-gs-green hover:border-gs-green"
+                >
+                  REFRESH
+                </button>
+                <button 
+                  onClick={handleMarkTest}
+                  className="font-mono text-[10px] border border-gs-green text-gs-green px-4 py-2 font-bold uppercase tracking-[1px]"
+                >
+                  MARK AS TEST
+                </button>
+              </div>
+              <button 
+                onClick={handleReleaseMarch}
+                disabled={testStatus === 'loading'}
+                className="w-full font-mono text-[10px] border border-[#ff6b6b] text-[#ff6b6b] py-2 font-bold uppercase tracking-[1px] hover:bg-[#ff6b6b]/10"
+              >
+                {testStatus === 'loading' ? 'RELEASING...' : '🚀 RELEASE MARCH NEWSLETTER TO ALL'}
+              </button>
+              {testStatus === 'success' && <div className="text-[10px] text-gs-green font-mono">✓ ACTION COMPLETED</div>}
+              {testStatus === 'error' && <div className="text-[10px] text-[#ff6b6b] font-mono">✗ FAILED TO SEND TEST</div>}
+            </motion.div>
+          )}
         </motion.div>
         
         <motion.div 

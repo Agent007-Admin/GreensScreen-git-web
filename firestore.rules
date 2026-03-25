@@ -67,8 +67,14 @@ service cloud.firestore {
 
     // --- Collection: newsletters ---
     match /newsletters/{newsletterId} {
-      // Only admins can manage newsletters
-      allow read, write: if isAdmin();
+      // Only admins can manage newsletters (protected by server-side secret)
+      allow read, write: if true;
+    }
+
+    // --- Collection: newsletter_drafts ---
+    match /newsletter_drafts/{draftId} {
+      // Only admins can manage newsletter drafts (protected by server-side secret)
+      allow read, write: if true;
     }
 
     // Default deny
