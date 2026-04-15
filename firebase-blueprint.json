@@ -55,9 +55,27 @@
         "content": { "type": "string" },
         "scheduledAt": { "type": "string", "format": "date-time" },
         "sentAt": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["draft", "scheduled", "sent"] }
+        "status": { "type": "string", "enum": ["draft", "scheduled", "sent"] },
+        "month": { "type": "string" },
+        "year": { "type": "string" },
+        "recipientCount": { "type": "number" },
+        "successCount": { "type": "number" },
+        "failCount": { "type": "number" }
       },
       "required": ["subject", "content", "status"]
+    },
+    "system_logs": {
+      "title": "System Log",
+      "description": "A log entry for system events",
+      "type": "object",
+      "properties": {
+        "timestamp": { "type": "string", "format": "date-time" },
+        "level": { "type": "string", "enum": ["info", "warn", "error"] },
+        "message": { "type": "string" },
+        "details": { "type": "string" },
+        "source": { "type": "string" }
+      },
+      "required": ["timestamp", "level", "message"]
     }
   },
   "firestore": {
@@ -72,6 +90,10 @@
     "newsletters/{newsletterId}": {
       "schema": "newsletters",
       "description": "Collection of monthly newsletters"
+    },
+    "system_logs/{logId}": {
+      "schema": "system_logs",
+      "description": "Collection of system logs"
     }
   }
 }

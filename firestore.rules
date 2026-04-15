@@ -77,6 +77,11 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // --- Collection: system_logs ---
+    match /system_logs/{logId} {
+      allow read, write: if true;
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;

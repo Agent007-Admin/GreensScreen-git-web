@@ -9,7 +9,7 @@ export const Newsletter: React.FC = () => {
   const [showTest, setShowTest] = useState(false);
   const [adminSecret, setAdminSecret] = useState('');
   const [testEmail, setTestEmail] = useState('jgreen2196@gmail.com');
-  const [testMonth, setTestMonth] = useState('March');
+  const [testMonth, setTestMonth] = useState('April');
   const [testYear, setTestYear] = useState('2026');
   const [testStatus, setTestStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
@@ -57,27 +57,31 @@ export const Newsletter: React.FC = () => {
     }
   };
 
-  const handleReleaseMarch = async () => {
+  const handleReleaseNewsletter = async () => {
     if (!adminSecret) {
       alert('ADMIN SECRET REQUIRED');
       return;
     }
-    if (!confirm('ARE YOU SURE YOU WANT TO RELEASE THE MARCH NEWSLETTER TO ALL SUBSCRIBERS?')) return;
+    if (!confirm(`ARE YOU SURE YOU WANT TO RELEASE THE ${testMonth.toUpperCase()} ${testYear} NEWSLETTER TO ALL SUBSCRIBERS?`)) return;
     
     setTestStatus('loading');
     try {
-      const response = await fetch('/api/newsletter/release-march', {
+      const response = await fetch('/api/newsletter/release', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ secret: adminSecret }),
+        body: JSON.stringify({ 
+          secret: adminSecret,
+          month: testMonth,
+          year: testYear
+        }),
       });
       if (!response.ok) throw new Error('Release failed');
       setTestStatus('success');
-      alert('MARCH NEWSLETTER RELEASE STARTED');
+      alert(`${testMonth.toUpperCase()} NEWSLETTER RELEASE STARTED`);
       setTimeout(() => setTestStatus('idle'), 3000);
     } catch (e) {
       setTestStatus('error');
-      alert('FAILED TO RELEASE MARCH NEWSLETTER');
+      alert(`FAILED TO RELEASE ${testMonth.toUpperCase()} NEWSLETTER`);
       setTimeout(() => setTestStatus('idle'), 3000);
     }
   };
@@ -197,11 +201,11 @@ export const Newsletter: React.FC = () => {
                 </button>
               </div>
               <button 
-                onClick={handleReleaseMarch}
+                onClick={handleReleaseNewsletter}
                 disabled={testStatus === 'loading'}
                 className="w-full font-mono text-[10px] border border-[#ff6b6b] text-[#ff6b6b] py-2 font-bold uppercase tracking-[1px] hover:bg-[#ff6b6b]/10"
               >
-                {testStatus === 'loading' ? 'RELEASING...' : '🚀 RELEASE MARCH NEWSLETTER TO ALL'}
+                {testStatus === 'loading' ? 'RELEASING...' : `🚀 RELEASE ${testMonth.toUpperCase()} NEWSLETTER TO ALL`}
               </button>
               {testStatus === 'success' && <div className="text-[10px] text-gs-green font-mono">✓ ACTION COMPLETED</div>}
               {testStatus === 'error' && <div className="text-[10px] text-[#ff6b6b] font-mono">✗ FAILED TO SEND TEST</div>}

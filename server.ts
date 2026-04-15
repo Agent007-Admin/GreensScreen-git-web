@@ -37,10 +37,17 @@ try {
 // Initialize Firebase Admin
 if (!admin.apps.length) {
   try {
-    console.log("Initializing Firebase Admin with default credentials...");
-    admin.initializeApp({
+    console.log("Initializing Firebase Admin...");
+    const adminConfig: any = {
       credential: admin.credential.applicationDefault()
-    });
+    };
+    
+    if (firebaseConfig.projectId) {
+      adminConfig.projectId = firebaseConfig.projectId;
+      console.log(`Using project ID from config: ${firebaseConfig.projectId}`);
+    }
+
+    admin.initializeApp(adminConfig);
     console.log("Firebase Admin initialized successfully");
   } catch (initError) {
     console.error("Firebase Admin initialization failed:", initError);
@@ -134,11 +141,11 @@ async function startServer() {
     console.error("Client SDK initialization failed:", e);
   }
 
-  // Initialize Newsletter Agent with Client DB
+  // Initialize Newsletter Agent with Client DB (more reliable in this environment)
   const baseUrl = process.env.APP_URL || `http://localhost:${PORT}`;
   const newsletterAgent = new NewsletterAgent(
     geminiKey?.trim() || "",
-    clientDb,
+    clientDb, 
     transporter,
     baseUrl
   );
@@ -153,14 +160,55 @@ async function startServer() {
     }
   });
 
-  // 2. Monthly Newsletter (15th of every month at 10:00 AM)
+  // 2. Monthly Newsletter (DISABLED - REQUIRES MANUAL PERMISSION)
+  /*
   cron.schedule("0 10 15 * *", async () => {
     try {
       await newsletterAgent.sendMonthlyNewsletter();
     } catch (e) {
       console.error("Cron: Error sending monthly newsletter:", e);
     }
+  }, {
+    timezone: "America/Chicago"
   });
+  */
+
+  // 3. Startup Check (DISABLED - REQUIRES MANUAL PERMISSION)
+  /*
+  const runStartupCheck = async () => {
+    console.log("NewsletterAgent: Running startup check...");
+    try {
+      const now = new Date();
+      // Get current time in Chicago to check against 10 AM CT
+      const chicagoString = now.toLocaleString("en-US", { timeZone: "America/Chicago" });
+      const chicagoDate = new Date(chicagoString);
+      
+      const day = chicagoDate.getDate();
+      const hour = chicagoDate.getHours();
+      const month = chicagoDate.toLocaleDateString('en-US', { month: 'long', timeZone: 'America/Chicago' });
+      const year = chicagoDate.getFullYear().toString();
+
+      console.log(`NewsletterAgent: Startup check for ${month} ${year} (Day: ${day}, Hour: ${hour} CT)`);
+
+      if (day === 15 && hour >= 10) {
+        console.log("NewsletterAgent: It is the 15th and past 10 AM CT. Checking if newsletter was sent...");
+        const sent = await newsletterAgent.isNewsletterSent(month, year);
+        if (!sent) {
+          console.log(`NewsletterAgent: 10 AM CT window passed on the 15th but newsletter not sent. Triggering automatic distribution...`);
+          await newsletterAgent.sendMonthlyNewsletter(month, year);
+        } else {
+          console.log(`NewsletterAgent: ${month} ${year} newsletter already confirmed as sent.`);
+        }
+      } else {
+        console.log("NewsletterAgent: Startup check condition not met (not the 15th or before 10 AM CT).");
+      }
+    } catch (e: any) {
+      console.error("NewsletterAgent: Error during startup check:", e);
+    }
+  };
+
+  runStartupCheck();
+  */
 
   // --- DISCORD OAUTH ROUTES ---
 
@@ -445,22 +493,26 @@ async function startServer() {
     }
   });
 
-  app.post("/api/newsletter/release-march", async (req, res) => {
-    const { secret } = req.body;
+  app.post("/api/newsletter/release", async (req, res) => {
+    const { secret, month, year, forceRefresh } = req.body;
     
     if (secret !== process.env.ADMIN_SECRET) {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    console.log("NewsletterAgent: Manual release of March 2026 newsletter triggered...");
+    const now = new Date();
+    const targetMonth = month || now.toLocaleDateString('en-US', { month: 'long' });
+    const targetYear = year || now.getFullYear().toString();
+
+    console.log(`NewsletterAgent: Manual release of ${targetMonth} ${targetYear} newsletter triggered (forceRefresh: ${forceRefresh})...`);
     
     try {
       // This sends to ALL active subscribers
-      await newsletterAgent.sendMonthlyNewsletter("March", "2026");
-      res.json({ success: true, message: "March 2026 newsletter release process started." });
+      await newsletterAgent.sendMonthlyNewsletter(targetMonth, targetYear, !!forceRefresh);
+      res.json({ success: true, message: `${targetMonth} ${targetYear} newsletter release process started.` });
     } catch (error) {
-      console.error("NewsletterAgent: Manual release failed:", error);
-      res.status(500).json({ error: "Failed to release March newsletter" });
+      console.error(`NewsletterAgent: Manual release failed:`, error);
+      res.status(500).json({ error: `Failed to release ${targetMonth} newsletter` });
     }
   });
 

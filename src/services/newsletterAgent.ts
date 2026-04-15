@@ -26,7 +26,7 @@ export class NewsletterAgent {
   private transporter: any;
   private baseUrl: string;
 
-  constructor(apiKey: string, db: Firestore, transporter: any, baseUrl: string = "") {
+  constructor(apiKey: string, db: any, transporter: any, baseUrl: string = "") {
     this.db = db;
     this.transporter = transporter;
     this.baseUrl = baseUrl;
@@ -51,6 +51,27 @@ export class NewsletterAgent {
     const key = process.env.API_KEY || process.env.GEMINI_API_KEY || "";
     if (key) {
       this.ai = new GoogleGenAI({ apiKey: key.trim() });
+    }
+  }
+
+  /**
+   * Log a system event to Firestore for debugging.
+   */
+  private async logEvent(level: "info" | "warn" | "error", message: string, details?: any) {
+    const timestamp = new Date().toISOString();
+    console.log(`[${level.toUpperCase()}] NewsletterAgent: ${message}`, details || "");
+    
+    try {
+      const logsRef = collection(this.db, "system_logs");
+      await addDoc(logsRef, {
+        timestamp,
+        level,
+        message,
+        details: details ? JSON.stringify(details) : null,
+        source: "NewsletterAgent"
+      });
+    } catch (e) {
+      console.error("NewsletterAgent: Failed to write to system_logs:", e);
     }
   }
 
@@ -141,68 +162,130 @@ export class NewsletterAgent {
   /**
    * Generate and send the monthly newsletter.
    */
-  async sendMonthlyNewsletter(targetMonth?: string, targetYear?: string) {
-    console.log(`NewsletterAgent: Starting ${targetMonth || 'current'} monthly newsletter generation...`);
-    
+  async sendMonthlyNewsletter(targetMonth?: string, targetYear?: string, forceRefresh: boolean = false, isTestOnly: boolean = false) {
     const now = new Date();
     const month = targetMonth || now.toLocaleDateString('en-US', { month: 'long' });
     const year = targetYear || now.getFullYear().toString();
+
+    await this.logEvent("info", `Starting monthly newsletter distribution for ${month} ${year} (forceRefresh: ${forceRefresh}, isTestOnly: ${isTestOnly})`);
     
     // 1. Get or generate content
-    const content = await this.getMonthlyContent(month, year, false, false);
+    let content;
+    try {
+      content = await this.getMonthlyContent(month, year, forceRefresh, isTestOnly);
+    } catch (e: any) {
+      await this.logEvent("error", `Content generation failed for ${month} ${year}`, { error: e.message });
+      return;
+    }
+
     if (!content) {
-      console.error("NewsletterAgent: Monthly content generation failed.");
+      await this.logEvent("error", `Monthly content generation returned null for ${month} ${year}`);
       return;
     }
 
     // 2. Build HTML from template
-    const htmlTemplate = this.buildMonthlyHtml(content, month, year, false);
+    let htmlTemplate;
+    try {
+      htmlTemplate = this.buildMonthlyHtml(content, month, year, isTestOnly);
+    } catch (e: any) {
+      await this.logEvent("error", `HTML build failed for ${month} ${year}`, { error: e.message });
+      return;
+    }
 
-    // 3. Get all active subscribers
-    const subscribersRef = collection(this.db, "subscribers");
-    const q = query(subscribersRef, where("status", "==", "active"));
-    const snapshot = await getDocs(q);
-    const subscribers = snapshot.docs.map((docSnap: any) => ({
-      id: docSnap.id,
-      ...docSnap.data()
-    }));
+    // 3. Get subscribers
+    let subscribers = [];
+    try {
+      const subscribersRef = collection(this.db, "subscribers");
+      let q;
+      if (isTestOnly) {
+        q = query(subscribersRef, where("status", "==", "active"), where("isTestUser", "==", true));
+      } else {
+        q = query(subscribersRef, where("status", "==", "active"));
+      }
+      const snapshot = await getDocs(q);
+      subscribers = snapshot.docs.map((docSnap: any) => ({
+        id: docSnap.id,
+        ...docSnap.data()
+      }));
+    } catch (e: any) {
+      await this.logEvent("error", `Failed to fetch subscribers for ${month} ${year}`, { error: e.message });
+      return;
+    }
 
     if (subscribers.length === 0) {
-      console.log("NewsletterAgent: No active subscribers to send to.");
+      await this.logEvent("info", `No ${isTestOnly ? 'test ' : ''}subscribers found for ${month} ${year}`);
       return;
     }
 
     // 4. Send emails
     if (this.transporter) {
       const subject = `THE FREQUENCY | ${month.toUpperCase()} ${year}`;
+      let successCount = 0;
+      let failCount = 0;
+
       for (const sub of subscribers) {
         try {
-          // Personalize unsubscribe link for each subscriber
           const unsubLink = `${this.baseUrl}/api/unsubscribe?email=${encodeURIComponent(sub.email)}`;
           const personalizedHtml = htmlTemplate.replace(/{{UNSUBSCRIBE_LINK}}/g, unsubLink);
 
           await this.transporter.sendMail({
             from: `"Greens Screens Ent" <${process.env.SMTP_USER}>`,
             to: sub.email,
-            subject: subject,
+            subject: isTestOnly ? `[TEST] ${subject}` : subject,
             html: personalizedHtml,
           });
-        } catch (e) {
+          successCount++;
+        } catch (e: any) {
+          failCount++;
           console.error(`NewsletterAgent: Failed to send monthly to ${sub.email}:`, e);
         }
       }
 
-      // Log the newsletter
-      const newslettersRef = collection(this.db, "newsletters");
-      await addDoc(newslettersRef, {
-        subject,
-        content: JSON.stringify(content),
-        sentAt: new Date().toISOString(),
-        recipientCount: subscribers.length,
-        status: "sent"
-      });
+      // Log the newsletter record (only if not a test)
+      if (!isTestOnly) {
+        try {
+          const newsletterId = `${month.toLowerCase()}-${year}`;
+          const newsletterRef = doc(this.db, "newsletters", newsletterId);
+          await setDoc(newsletterRef, {
+            subject,
+            content: JSON.stringify(content),
+            sentAt: new Date().toISOString(),
+            recipientCount: subscribers.length,
+            successCount,
+            failCount,
+            status: "sent",
+            month,
+            year
+          });
+          await this.logEvent("info", `Monthly newsletter distribution complete for ${month} ${year}`, { successCount, failCount });
+        } catch (e: any) {
+          await this.logEvent("error", `Failed to log newsletter record for ${month} ${year}`, { error: e.message });
+        }
+      } else {
+        await this.logEvent("info", `Test newsletter distribution complete for ${month} ${year}`, { successCount, failCount });
+      }
+    } else {
+      await this.logEvent("warn", `Transporter not configured. Skipping email send for ${month} ${year}`);
+    }
+  }
 
-      console.log(`NewsletterAgent: Monthly newsletter sent to ${subscribers.length} subscribers.`);
+  /**
+   * Check if a newsletter has already been sent for a given month and year.
+   */
+  async isNewsletterSent(month: string, year: string) {
+    try {
+      const newslettersRef = collection(this.db, "newsletters");
+      const q = query(
+        newslettersRef, 
+        where("month", "==", month),
+        where("year", "==", year),
+        where("status", "==", "sent")
+      );
+      const snapshot = await getDocs(q);
+      return !snapshot.empty;
+    } catch (error) {
+      console.error(`NewsletterAgent: Error checking if newsletter sent for ${month} ${year}:`, error);
+      return false;
     }
   }
 
@@ -363,6 +446,8 @@ export class NewsletterAgent {
 
   async generateMonthlyContent(month: string, year: string, isTest: boolean = false) {
     this.refreshAI(); // Ensure we use the latest key
+    await this.logEvent("info", `Requesting Gemini generation for ${month} ${year}...`);
+    
     const prompt = `
       Generate a high-energy, technical monthly newsletter for "Greens Screens Ent" for ${month} ${year}.
       The theme is "SIGNAL_ALWAYS_GREEN".
@@ -371,16 +456,20 @@ export class NewsletterAgent {
       1. Use the googleSearch tool to find REAL, CURRENT gaming and tech news from ${month} ${year}.
       2. Every link MUST be a valid, working URL to a reputable news site (e.g., IGN, Kotaku, Polygon, The Verge).
       3. LINK RELIABILITY: Always prefer a valid "Read More" link with a true landing page. ONLY if a valid link cannot be found after searching, set "hasLink" to false and provide a "fullSummary" (approx 100 words) for "Digest Mode".
-      4. DO NOT use placeholder links or links that lead to 404 errors.
-      5. Limit the output to 4 sections, with 2-3 stories per section to ensure the JSON is not truncated.
-      6. Tone: Futuristic, cyber-industrial, high-energy.
-      7. STRICT: DO NOT include any internal monologue, thought process, or commentary inside the JSON values. 
-      8. STRICT: windowStart and windowEnd MUST be short strings (e.g., "FEB 16", "MAR 15"). DO NOT include years or timestamps in these fields.
-      9. STRICT: Output ONLY the raw JSON object. NO PREAMBLE. NO POSTAMBLE.
-      10. IMAGES: Provide a "imageUrl" for exactly 2 stories in the entire newsletter. 
-          - CRITICAL: Only 1 image is allowed per section (subject). If you provide 2 images, they MUST be in different sections.
-          - IMAGE QUALITY: Images must be public, high-quality, and highly relevant to the specific story. Ensure they are working URLs that display correctly.
-      11. One section MUST be of type "indie", highlighting high-anticipation games from smaller teams/developers that people may not be aware of but that are showing good promise.
+      4. BLURB vs FULL SUMMARY (CRITICAL): 
+         - "blurb": A ultra-concise, 1-sentence "hook" (max 15 words).
+         - "fullSummary": ONLY provided if "hasLink" is false. It MUST be a 3-4 sentence deep-dive (approx 80-100 words) containing specific research, technical details, and unique insights.
+         - PROHIBITION: The "fullSummary" MUST NOT contain the text of the "blurb". They must be completely distinct narratives.
+      5. DO NOT use placeholder links or links that lead to 404 errors.
+      6. Limit the output to 4 sections, with exactly 2 stories per section to ensure the newsletter fits within a single email view.
+      7. Tone: Futuristic, cyber-industrial, high-energy.
+      8. STRICT: DO NOT include any internal monologue, thought process, or commentary inside the JSON values. 
+      9. STRICT: windowStart and windowEnd MUST be short strings (e.g., "FEB 16", "MAR 15"). DO NOT include years or timestamps in these fields.
+      10. STRICT: Output ONLY the raw JSON object. NO PREAMBLE. NO POSTAMBLE.
+      11. NO IMAGES: Do not provide any image URLs.
+      12. One section MUST be of type "indie", highlighting high-anticipation games from smaller teams/developers that people may not be aware of but that are showing good promise.
+      
+      13. LINK VERIFICATION: You MUST use the googleSearch tool to find the EXACT URL for each story. DO NOT default to the homepage of a news site. If you cannot find a direct link to the article, ONLY then use "hasLink": false.
       
       I need the following sections in JSON format:
       1. heroIntro: A brief overview (approx 50 words) of the current state of gaming and tech.
@@ -402,44 +491,47 @@ export class NewsletterAgent {
     `;
 
     try {
-      console.log(`NewsletterAgent: Requesting Gemini generation for ${month} ${year}...`);
-      
-      const response = await this.withRetry(() => this.ai.models.generateContent({
-        model: "gemini-3.1-pro-preview",
-        contents: prompt,
-        config: {
-          tools: [{ googleSearch: {} }],
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              heroIntro: { type: Type.STRING },
-              windowStart: { type: Type.STRING },
-              windowEnd: { type: Type.STRING },
-              signoffText: { type: Type.STRING },
-              accentColor: { type: Type.STRING },
-              sections: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    type: { type: Type.STRING },
-                    name: { type: Type.STRING },
-                    desc: { type: Type.STRING },
-                    icon: { type: Type.STRING },
-                    stories: {
-                      type: Type.ARRAY,
-                      items: {
-                        type: Type.OBJECT,
-                        properties: {
-                          title: { type: Type.STRING },
-                          blurb: { type: Type.STRING },
-                          meta: { type: Type.STRING },
-                          tag: { type: Type.STRING },
-                          link: { type: Type.STRING },
-                          imageUrl: { type: Type.STRING },
-                          hasLink: { type: Type.BOOLEAN },
-                          fullSummary: { type: Type.STRING }
+      const response = await this.withRetry(async () => {
+        console.log("NewsletterAgent: Calling Gemini API with googleSearch...");
+        return await this.ai.models.generateContent({
+          model: "gemini-3.1-pro-preview",
+          contents: prompt,
+          config: {
+            tools: [{ googleSearch: {} }],
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              required: ["heroIntro", "windowStart", "windowEnd", "signoffText", "accentColor", "sections"],
+              properties: {
+                heroIntro: { type: Type.STRING },
+                windowStart: { type: Type.STRING },
+                windowEnd: { type: Type.STRING },
+                signoffText: { type: Type.STRING },
+                accentColor: { type: Type.STRING },
+                sections: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    required: ["type", "name", "desc", "icon", "stories"],
+                    properties: {
+                      type: { type: Type.STRING },
+                      name: { type: Type.STRING },
+                      desc: { type: Type.STRING },
+                      icon: { type: Type.STRING },
+                      stories: {
+                        type: Type.ARRAY,
+                        items: {
+                          type: Type.OBJECT,
+                          required: ["title", "blurb", "meta", "tag", "link"],
+                          properties: {
+                            title: { type: Type.STRING },
+                            blurb: { type: Type.STRING },
+                            meta: { type: Type.STRING },
+                            tag: { type: Type.STRING },
+                            link: { type: Type.STRING },
+                            hasLink: { type: Type.BOOLEAN },
+                            fullSummary: { type: Type.STRING }
+                          }
                         }
                       }
                     }
@@ -448,27 +540,59 @@ export class NewsletterAgent {
               }
             }
           }
-        }
-      }));
+        });
+      });
 
-      console.log("NewsletterAgent: Gemini generation complete. Parsing response...");
+      await this.logEvent("info", "Gemini generation complete. Parsing response...");
       const text = response.text;
       if (!text) throw new Error("Empty response from Gemini");
       
       try {
         const parsed = JSON.parse(text);
-        if (!parsed.sections || !Array.isArray(parsed.sections)) {
-          console.warn("NewsletterAgent: Parsed JSON is missing 'sections' array. Keys found:", Object.keys(parsed));
-          console.warn("NewsletterAgent: Raw JSON:", text);
-          parsed.sections = parsed.sections || [];
+        
+        // Validation: Ensure we have actual content
+        if (!parsed.sections || !Array.isArray(parsed.sections) || parsed.sections.length === 0) {
+          throw new Error("Generated content is missing sections or sections are empty.");
         }
+        
+        const totalStories = parsed.sections.reduce((acc: number, sec: any) => acc + (sec.stories?.length || 0), 0);
+        if (totalStories === 0) {
+          throw new Error("Generated content has sections but NO stories. Tool usage likely failed.");
+        }
+
+        if (!parsed.windowStart || parsed.windowStart === "undefined") {
+          throw new Error("Generated content is missing windowStart.");
+        }
+
+        // Validation: Ensure blurb and fullSummary are distinct
+        parsed.sections.forEach((sec: any) => {
+          sec.stories.forEach((story: any) => {
+            if (story.hasLink === false && story.fullSummary) {
+              // If they are too similar (e.g. one is a substring of another or very short)
+              const b = story.blurb.toLowerCase().trim();
+              const s = story.fullSummary.toLowerCase().trim();
+              if (s.includes(b) && s.length < b.length + 20) {
+                throw new Error(`Duplication detected in story: ${story.title}. Blurb and Summary are too similar.`);
+              }
+            }
+            if (story.hasLink === false && !story.fullSummary) {
+              throw new Error(`Missing fullSummary for digest-mode story: ${story.title}`);
+            }
+          });
+        });
+
         return parsed;
       } catch (parseError) {
         console.error("NewsletterAgent: JSON Parse Error. Raw text length:", text.length);
         console.error("NewsletterAgent: Raw text snippet:", text.substring(0, 500) + "...");
         throw parseError;
       }
-    } catch (error) {
+    } catch (error: any) {
+      await this.logEvent("error", `Gemini generation failed: ${error.message}`, { 
+        stack: error.stack,
+        month,
+        year
+      });
       console.error("NewsletterAgent: Gemini generation failed:", error);
       return null;
     }
@@ -522,11 +646,6 @@ export class NewsletterAgent {
         if (sec.stories && Array.isArray(sec.stories)) {
           sec.stories.forEach((story: any, sIdx: number) => {
             const tagClass = `tag-${sec.type === 'releases' ? 'new' : sec.type}`;
-            const imageHtml = story.imageUrl ? `
-              <div class="story-image">
-                <img src="${story.imageUrl}" alt="${story.title}" referrerPolicy="no-referrer">
-              </div>
-            ` : "";
             
             const linkHtml = story.hasLink !== false ? `
               <a href="${story.link}" target="_blank" class="story-link">READ MORE <span class="arr">→</span></a>
@@ -538,14 +657,13 @@ export class NewsletterAgent {
             `;
 
             storiesHtml += `
-              <div class="story ${story.imageUrl ? 'has-img' : ''}">
+              <div class="story">
                 <span class="story-num">${(sIdx + 1).toString().padStart(2, '0')}</span>
                 <div class="story-content">
                   <div class="story-meta">
                     <span class="story-tag ${tagClass}">${story.tag}</span> 
                     ${story.meta}
                   </div>
-                  ${imageHtml}
                   <div class="story-title">${story.title}</div>
                   <p class="story-blurb">${story.blurb}</p>
                   ${linkHtml}
