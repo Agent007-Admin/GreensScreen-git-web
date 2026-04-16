@@ -33,11 +33,11 @@ export class NewsletterAgent {
     
     // Initialize AI with provided key or fallback to environment
     // Prioritize API_KEY as it's the most reliable in this environment
-    const finalKey = process.env.API_KEY || process.env.GEMINI_API_KEY || apiKey || "";
-    this.ai = new GoogleGenAI({ apiKey: finalKey.trim() });
+    const key = process.env.API_KEY || process.env.GEMINI_API_KEY || apiKey || "";
+    this.ai = new GoogleGenAI({ apiKey: key.trim() });
     
-    if (finalKey) {
-      const masked = finalKey.trim().substring(0, 4) + "..." + finalKey.trim().substring(finalKey.trim().length - 4);
+    if (key) {
+      const masked = key.trim().substring(0, 4) + "..." + key.trim().substring(key.trim().length - 4);
       console.log(`NewsletterAgent: Initialized with key ${masked}`);
     } else {
       console.warn("NewsletterAgent: No API key found during initialization!");
@@ -457,24 +457,24 @@ export class NewsletterAgent {
       2. Every link MUST be a valid, working URL to a reputable news site (e.g., IGN, Kotaku, Polygon, The Verge).
       3. LINK RELIABILITY: Always prefer a valid "Read More" link with a true landing page. ONLY if a valid link cannot be found after searching, set "hasLink" to false and provide a "fullSummary" (approx 100 words) for "Digest Mode".
       4. BLURB vs FULL SUMMARY (CRITICAL): 
-         - "blurb": A ultra-concise, 1-sentence "hook" (max 15 words).
-         - "fullSummary": ONLY provided if "hasLink" is false. It MUST be a 3-4 sentence deep-dive (approx 80-100 words) containing specific research, technical details, and unique insights.
-         - PROHIBITION: The "fullSummary" MUST NOT contain the text of the "blurb". They must be completely distinct narratives.
+         - "blurb": A ultra-concise, 1-sentence "hook" (max 15 words) that grabs attention.
+         - "fullSummary": A 3-4 sentence deep-dive "Research Digest" (approx 80-100 words). It MUST contain specific research data, technical details, and unique insights not found in the blurb.
+         - PROHIBITION: The "fullSummary" MUST NOT contain the text of the "blurb". They must be unique, complementary narratives.
       5. DO NOT use placeholder links or links that lead to 404 errors.
       6. Limit the output to 4 sections, with exactly 2 stories per section to ensure the newsletter fits within a single email view.
       7. Tone: Futuristic, cyber-industrial, high-energy.
       8. STRICT: DO NOT include any internal monologue, thought process, or commentary inside the JSON values. 
-      9. STRICT: windowStart and windowEnd MUST be short strings (e.g., "FEB 16", "MAR 15"). DO NOT include years or timestamps in these fields.
+      9. STRICT: windowStart and windowEnd MUST be short strings (e.g., "APR 01", "APR 30"). DO NOT include years or timestamps in these fields.
       10. STRICT: Output ONLY the raw JSON object. NO PREAMBLE. NO POSTAMBLE.
       11. NO IMAGES: Do not provide any image URLs.
       12. One section MUST be of type "indie", highlighting high-anticipation games from smaller teams/developers that people may not be aware of but that are showing good promise.
       
-      13. LINK VERIFICATION: You MUST use the googleSearch tool to find the EXACT URL for each story. DO NOT default to the homepage of a news site. If you cannot find a direct link to the article, ONLY then use "hasLink": false.
+      13. LINK RELIABILITY: You MUST use the googleSearch tool to find a direct, valid URL for each story. If the story is about a video game that has already been released, PRIORITIZE the official Steam Store page as the source link. If you find a valid article or store link, set "hasLink" to true. If you absolutely cannot find a direct link after searching, set "hasLink": false and use a reputable homepage as the "link" fallback.
       
       I need the following sections in JSON format:
       1. heroIntro: A brief overview (approx 50 words) of the current state of gaming and tech.
-      2. windowStart: The start date of coverage (e.g., "FEB 16").
-      3. windowEnd: The end date of coverage (e.g., "MAR 15").
+      2. windowStart: The start date of coverage (e.g., "APR 01").
+      3. windowEnd: The end date of coverage (e.g., "APR 30").
       4. signoffText: A closing message (approx 30 words).
       5. accentColor: A hex color code (e.g., "#ff2d78" for pink or "#00cfff" for blue).
       6. sections: An array of objects, each with:
@@ -484,17 +484,19 @@ export class NewsletterAgent {
          - icon: A hex code for an icon entity (e.g., "&#9654;" for play or "&#9670;" for diamond)
          - stories: Array of objects:
            - title: Story title
-           - blurb: 2-3 sentence description
-           - meta: Date/Platform info (e.g., "FEB 12 · PS5")
+           - blurb: A ultra-concise, 1-sentence "hook" (max 15 words).
+           - meta: Date/Platform info (e.g., "APR 12 · PS5")
            - tag: "HOT" | "NEW" | "REMAKE" | "INDIE" | "SCREEN" | "INDUSTRY" | "ALERT"
            - link: A REAL, VERIFIED URL to the news story.
+           - hasLink: boolean (true if a direct article link was found)
+           - fullSummary: string (ONLY if hasLink is false, provide 3-4 deep-dive sentences with unique data points)
     `;
 
     try {
       const response = await this.withRetry(async () => {
         console.log("NewsletterAgent: Calling Gemini API with googleSearch...");
         return await this.ai.models.generateContent({
-          model: "gemini-3.1-pro-preview",
+          model: "gemini-flash-latest",
           contents: prompt,
           config: {
             tools: [{ googleSearch: {} }],
@@ -522,7 +524,7 @@ export class NewsletterAgent {
                         type: Type.ARRAY,
                         items: {
                           type: Type.OBJECT,
-                          required: ["title", "blurb", "meta", "tag", "link"],
+                          required: ["title", "blurb", "meta", "tag", "link", "hasLink", "fullSummary"],
                           properties: {
                             title: { type: Type.STRING },
                             blurb: { type: Type.STRING },
@@ -647,13 +649,15 @@ export class NewsletterAgent {
           sec.stories.forEach((story: any, sIdx: number) => {
             const tagClass = `tag-${sec.type === 'releases' ? 'new' : sec.type}`;
             
-            const linkHtml = story.hasLink !== false ? `
-              <a href="${story.link}" target="_blank" class="story-link">READ MORE <span class="arr">→</span></a>
-            ` : `
+            const summaryHtml = `
               <div class="story-summary-box">
-                <div class="summary-label">DIGEST_MODE_ACTIVE</div>
-                <p class="story-full-summary">${story.fullSummary || story.blurb}</p>
+                <div class="summary-label">RESEARCH_DIGEST</div>
+                <p class="story-full-summary">${story.fullSummary}</p>
               </div>
+            `;
+            
+            const linkHtml = `
+              <a href="${story.link}" target="_blank" class="story-link">SOURCE ACCESS <span class="arr">→</span></a>
             `;
 
             storiesHtml += `
@@ -666,6 +670,7 @@ export class NewsletterAgent {
                   </div>
                   <div class="story-title">${story.title}</div>
                   <p class="story-blurb">${story.blurb}</p>
+                  ${summaryHtml}
                   ${linkHtml}
                 </div>
               </div>
