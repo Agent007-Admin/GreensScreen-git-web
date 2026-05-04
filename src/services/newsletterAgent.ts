@@ -142,6 +142,9 @@ export class NewsletterAgent {
       // Simple personalization
       htmlContent = htmlContent.replace(/PLAYER ONE/g, (subscriber.name || "PLAYER ONE").toUpperCase());
       
+      // Update year and accent
+      htmlContent = htmlContent.replace(/2025/g, "2026");
+      
       // Add unsubscribe link
       const unsubLink = `${this.baseUrl}/api/unsubscribe?email=${encodeURIComponent(subscriber.email)}`;
       htmlContent = htmlContent.replace(/{{UNSUBSCRIBE_LINK}}/g, unsubLink);
@@ -267,6 +270,33 @@ export class NewsletterAgent {
     } else {
       await this.logEvent("warn", `Transporter not configured. Skipping email send for ${month} ${year}`);
     }
+  }
+
+  /**
+   * Preview a newsletter without sending it. Returns the rendered HTML.
+   */
+  async previewMonthlyNewsletter(targetMonth?: string, targetYear?: string, forceRefresh: boolean = false) {
+    const now = new Date();
+    const month = targetMonth || now.toLocaleDateString('en-US', { month: 'long' });
+    const year = targetYear || now.getFullYear().toString();
+
+    // 1. Get or generate content
+    const content = await this.getMonthlyContent(month, year, forceRefresh, true);
+    if (!content) {
+      throw new Error("Content generation failed");
+    }
+
+    // 2. Build HTML from template
+    const htmlTemplate = this.buildMonthlyHtml(content, month, year, true);
+    
+    // Add a preview badge
+    const previewBadge = `
+      <div style="background: #ff4455; color: white; text-align: center; padding: 10px; font-family: monospace; font-weight: bold; position: sticky; top: 0; z-index: 9999;">
+        PREVIEW_MODE · ${month.toUpperCase()} ${year} · NOT_SENT_TO_SUBSCRIBERS
+      </div>
+    `;
+    
+    return previewBadge + htmlTemplate;
   }
 
   /**
@@ -461,7 +491,7 @@ export class NewsletterAgent {
          - "fullSummary": A 3-4 sentence deep-dive "Research Digest" (approx 80-100 words). It MUST contain specific research data, technical details, and unique insights not found in the blurb.
          - PROHIBITION: The "fullSummary" MUST NOT contain the text of the "blurb". They must be unique, complementary narratives.
       5. DO NOT use placeholder links or links that lead to 404 errors.
-      6. Limit the output to 4 sections, with exactly 2 stories per section to ensure the newsletter fits within a single email view.
+      6. Limit the output to 4 sections. The "releases" and "indie" sections MUST have exactly 3 stories each. All other sections should have exactly 2 stories.
       7. Tone: Futuristic, cyber-industrial, high-energy.
       8. STRICT: DO NOT include any internal monologue, thought process, or commentary inside the JSON values. 
       9. STRICT: windowStart and windowEnd MUST be short strings (e.g., "APR 01", "APR 30"). DO NOT include years or timestamps in these fields.
@@ -469,7 +499,11 @@ export class NewsletterAgent {
       11. NO IMAGES: Do not provide any image URLs.
       12. One section MUST be of type "indie", highlighting high-anticipation games from smaller teams/developers that people may not be aware of but that are showing good promise.
       
-      13. LINK RELIABILITY: You MUST use the googleSearch tool to find a direct, valid URL for each story. If the story is about a video game that has already been released, PRIORITIZE the official Steam Store page as the source link. If you find a valid article or store link, set "hasLink" to true. If you absolutely cannot find a direct link after searching, set "hasLink": false and use a reputable homepage as the "link" fallback.
+      13. LINK VERIFICATION (CRITICAL): You MUST use the googleSearch tool for EVERY game. 
+          - Query specifically for: "site:steampowered.com/app/ [EXACT GAME TITLE]".
+          - VERIFICATION: You MUST manually (AI-logic) verify that the URL slug or App ID in the link belongs to the EXACT game mentioned in the story title. 
+          - PROHIBITION: If the link points to a DLC, a different game in a series (e.g., Forza 5 vs Forza 4), or a search results page, you MUST set "hasLink": false. 
+          - ACCURACY > COVERAGE: It is better to have NO link than an INCORRECT link. If there is ANY ambiguity, set "hasLink": false. NEVER guess.
       
       I need the following sections in JSON format:
       1. heroIntro: A brief overview (approx 50 words) of the current state of gaming and tech.
@@ -487,9 +521,9 @@ export class NewsletterAgent {
            - blurb: A ultra-concise, 1-sentence "hook" (max 15 words).
            - meta: Date/Platform info (e.g., "APR 12 · PS5")
            - tag: "HOT" | "NEW" | "REMAKE" | "INDIE" | "SCREEN" | "INDUSTRY" | "ALERT"
-           - link: A REAL, VERIFIED URL to the news story.
-           - hasLink: boolean (true if a direct article link was found)
-           - fullSummary: string (ONLY if hasLink is false, provide 3-4 deep-dive sentences with unique data points)
+           - link: A direct Steam Store URL (ONLY if found).
+           - hasLink: boolean (true ONLY if a Steam Store link was found)
+           - fullSummary: string (REQUIRED for ALL stories; provide 3-4 deep-dive sentences with unique data points)
     `;
 
     try {
@@ -569,16 +603,16 @@ export class NewsletterAgent {
         // Validation: Ensure blurb and fullSummary are distinct
         parsed.sections.forEach((sec: any) => {
           sec.stories.forEach((story: any) => {
-            if (story.hasLink === false && story.fullSummary) {
-              // If they are too similar (e.g. one is a substring of another or very short)
-              const b = story.blurb.toLowerCase().trim();
-              const s = story.fullSummary.toLowerCase().trim();
-              if (s.includes(b) && s.length < b.length + 20) {
-                throw new Error(`Duplication detected in story: ${story.title}. Blurb and Summary are too similar.`);
-              }
+            // Validation: Ensure blurb and fullSummary are distinct and high quality
+            const b = story.blurb.toLowerCase().trim();
+            const s = story.fullSummary.toLowerCase().trim();
+            
+            if (!story.fullSummary || story.fullSummary.length < 50) {
+              throw new Error(`Summary too short for story: ${story.title}. Must be a deep-dive.`);
             }
-            if (story.hasLink === false && !story.fullSummary) {
-              throw new Error(`Missing fullSummary for digest-mode story: ${story.title}`);
+
+            if (s.includes(b) && s.length < b.length + 20) {
+              throw new Error(`Duplication detected in story: ${story.title}. Blurb and Summary are too similar.`);
             }
           });
         });
@@ -621,16 +655,18 @@ export class NewsletterAgent {
     };
 
     const accent = data.accentColor || "#00ff88";
+    const accentLime = "#aaff44";
     
     // Replace theme variables
     html = html.replace(/{{ACCENT_COLOR}}/g, accent);
     html = html.replace(/{{ACCENT_COLOR_DIM}}/g, hexToRgba(accent, 0.1));
     html = html.replace(/{{ACCENT_COLOR_BORDER}}/g, hexToRgba(accent, 0.22));
-    html = html.replace(/{{BG_DARK}}/g, "#050a0d");
-    html = html.replace(/{{BG_SURFACE}}/g, "#080f14");
-    html = html.replace(/{{BG_CARD}}/g, "#0c1820");
-    html = html.replace(/{{TEXT_COLOR}}/g, "#ddeef8");
-    html = html.replace(/{{MUTED_COLOR}}/g, "#5a8aa8");
+    html = html.replace(/{{ACCENT_LIME}}/g, accentLime);
+    html = html.replace(/{{BG_DARK}}/g, "#050a07");
+    html = html.replace(/{{BG_SURFACE}}/g, "#0a1410");
+    html = html.replace(/{{BG_CARD}}/g, "#0f1e16");
+    html = html.replace(/{{TEXT_COLOR}}/g, "#e8f5ee");
+    html = html.replace(/{{MUTED_COLOR}}/g, "#6b9a7a");
     
     // Replace content variables
     html = html.replace(/{{MONTH}}/g, month.toUpperCase());
@@ -656,9 +692,9 @@ export class NewsletterAgent {
               </div>
             `;
             
-            const linkHtml = `
-              <a href="${story.link}" target="_blank" class="story-link">SOURCE ACCESS <span class="arr">→</span></a>
-            `;
+            const linkHtml = story.hasLink && story.link ? `
+              <a href="${story.link}" target="_blank" class="story-link">STEAM STORE ACCESS <span class="arr">→</span></a>
+            ` : "";
 
             storiesHtml += `
               <div class="story">

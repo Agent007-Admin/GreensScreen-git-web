@@ -446,6 +446,23 @@ async function startServer() {
     }
   });
 
+  app.post("/api/newsletter/preview", async (req, res) => {
+    const { secret, month, year, forceRefresh } = req.body;
+    
+    if (secret !== process.env.ADMIN_SECRET) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const html = await newsletterAgent.previewMonthlyNewsletter(month, year, !!forceRefresh);
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (err: any) {
+      console.error(`API: Error in preview newsletter route:`, err);
+      res.status(500).send(`Error generating preview: ${err.message}`);
+    }
+  });
+
   app.post("/api/newsletter/test", async (req, res) => {
     const { email, secret, month, year, forceRefresh } = req.body;
     console.log(`API: POST /api/newsletter/test for ${email} (${month} ${year}) - forceRefresh: ${forceRefresh}`);

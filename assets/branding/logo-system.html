@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GSE Logo System</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --gs-green:  #00ff88;
+    --gs-accent: #aaff44;
+    --gs-dark:   #050a07;
+    --gs-card:   #0f1e16;
+    --gs-text:   #e8f5ee;
+    --gs-muted:  #6b9a7a;
+    --gs-border: rgba(0,255,136,0.18);
+    --fd: 'Bebas Neue', sans-serif;
+    --fm: 'Share Tech Mono', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #080e0a;
+    color: var(--gs-text);
+    font-family: var(--fm);
+    padding: 48px 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* HEADER */
+  .page-header { margin-bottom: 56px; padding-bottom: 24px; border-bottom: 1px solid var(--gs-border); }
+  .page-title { font-family: var(--fd); font-size: 42px; letter-spacing: 5px; color: var(--gs-green); text-shadow: 0 0 30px rgba(0,255,136,0.3); line-height: 1; }
+  .page-title span { color: var(--gs-text); }
+  .page-sub { font-size: 11px; letter-spacing: 3px; color: var(--gs-muted); margin-top: 8px; text-transform: uppercase; }
+
+  /* SECTION */
+  .section { margin-bottom: 64px; }
+  .section-label { font-size: 9px; letter-spacing: 3.5px; color: var(--gs-green); text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, var(--gs-border), transparent); }
+
+  /* TILES */
+  .logo-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 52px 40px 24px;
+    border: 1px solid var(--gs-border);
+    background: var(--gs-dark);
+    transition: border-color 0.2s;
+  }
+  .logo-tile:hover { border-color: rgba(0,255,136,0.45); }
+  .logo-tile-wide {
+    position: relative;
+    padding: 52px 48px 24px;
+    border: 1px solid var(--gs-border);
+    background: var(--gs-dark);
+    transition: border-color 0.2s;
+  }
+  .logo-tile-wide:hover { border-color: rgba(0,255,136,0.45); }
+  .logo-tile-wide svg { width: 100%; max-width: 640px; display: block; }
+  .tile-name { font-size: 8px; letter-spacing: 2.5px; color: var(--gs-muted); text-transform: uppercase; margin-top: 20px; align-self: flex-start; }
+
+  /* DOWNLOAD BTN */
+  .download-btn {
+    position: absolute; top: 12px; right: 12px;
+    font-family: var(--fm); font-size: 8px; letter-spacing: 1.5px;
+    color: var(--gs-green); background: transparent;
+    border: 1px solid rgba(0,255,136,0.25);
+    padding: 5px 13px; cursor: pointer; text-transform: uppercase;
+    transition: all 0.15s;
+    clip-path: polygon(5px 0%,100% 0%,calc(100% - 5px) 100%,0% 100%);
+  }
+  .download-btn:hover { background: rgba(0,255,136,0.1); border-color: var(--gs-green); }
+
+  /* ICON GRID */
+  .icon-wrap { display: inline-flex; flex-direction: column; align-items: center; }
+
+  /* COLOR PALETTE */
+  .color-row { display: flex; flex-wrap: wrap; gap: 2px; }
+  .color-chip { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 88px; }
+  .chip-swatch { height: 72px; border: 1px solid rgba(255,255,255,0.04); }
+  .chip-name { font-size: 8px; letter-spacing: 1.5px; color: var(--gs-muted); text-transform: uppercase; line-height: 1.6; }
+  .chip-hex  { font-size: 10px; letter-spacing: 1px; color: var(--gs-text); }
+
+  /* USAGE */
+  .usage-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2px; }
+  .usage-card { background: var(--gs-card); border: 1px solid var(--gs-border); padding: 26px; }
+  .usage-title { font-family: var(--fd); font-size: 20px; letter-spacing: 3px; margin-bottom: 16px; }
+  .usage-title.do   { color: var(--gs-green); }
+  .usage-title.dont { color: #ff4455; }
+  .usage-title.when { color: var(--gs-accent); }
+  .usage-item { font-size: 10px; letter-spacing: 1.5px; color: var(--gs-muted); line-height: 2.3; display: flex; gap: 10px; }
+  .bullet { font-size: 7px; margin-top: 5px; flex-shrink: 0; }
+  .bullet-do   { color: var(--gs-green); }
+  .bullet-dont { color: #ff4455; }
+  .bullet-when { color: var(--gs-accent); }
+
+  /* FOOTER */
+  .page-footer { border-top: 1px solid var(--gs-border); padding-top: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+  .footer-logo { font-family: var(--fd); font-size: 16px; letter-spacing: 3px; color: var(--gs-green); }
+  .footer-logo span { color: var(--gs-text); }
+  .footer-logo em   { font-style: normal; color: var(--gs-accent); }
+  .footer-note { font-size: 9px; letter-spacing: 2px; color: var(--gs-muted); }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="page-title"><span>GSE</span> LOGO SYSTEM</div>
+  <div class="page-sub">Greens Screens Entertainment · Selected brand assets · 2026</div>
+</div>
+
+
+<!-- 01 PRIMARY STACKED -->
+<div class="section">
+  <div class="section-label">01 · Primary logo — full stacked</div>
+  <div class="logo-tile" style="max-width:400px;">
+    <button class="download-btn" onclick="dl('primary-dark')">↓ Download SVG</button>
+    <svg id="primary-dark" width="300" height="186" viewBox="0 0 300 186" xmlns="http://www.w3.org/2000/svg">
+      <line x1="36" y1="100" x2="264" y2="100" stroke="rgba(0,255,136,0.14)" stroke-width="0.5"/>
+      <text font-family="'Share Tech Mono',monospace" font-size="11" letter-spacing="3" fill="#aaff44" x="263" y="24" text-anchor="end">ENT</text>
+      <circle cx="277" cy="20" r="4.5" fill="#00ff88" style="filter:drop-shadow(0 0 7px #00ff88)"/>
+      <text font-family="'Bebas Neue',sans-serif" font-size="84" letter-spacing="6" fill="#00ff88" x="150" y="96" text-anchor="middle" style="filter:drop-shadow(0 0 24px rgba(0,255,136,0.55))">GREENS</text>
+      <text font-family="'Bebas Neue',sans-serif" font-size="84" letter-spacing="6" fill="#e8f5ee" x="150" y="178" text-anchor="middle">SCREENS</text>
+      <text font-family="'Share Tech Mono',monospace" font-size="9" letter-spacing="3.5" fill="#6b9a7a" x="150" y="186" text-anchor="middle" dy="0">SIGNAL_ALWAYS_GREEN</text>
+    </svg>
+    <div class="tile-name">Primary · Dark background · greensscreensent.com</div>
+  </div>
+</div>
+
+
+<!-- 02 HORIZONTAL -->
+<div class="section">
+  <div class="section-label">02 · Horizontal lockup</div>
+  <div class="logo-tile-wide">
+    <button class="download-btn" onclick="dl('horiz-dark')">↓ Download SVG</button>
+    <svg id="horiz-dark" viewBox="0 0 640 80" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="40" r="5.5" fill="#00ff88" style="filter:drop-shadow(0 0 8px #00ff88)"/>
+      <line x1="27" y1="40" x2="40" y2="40" stroke="#00ff88" stroke-width="1.2" opacity="0.5"/>
+      <text font-family="'Bebas Neue',sans-serif" font-size="58" letter-spacing="5" fill="#00ff88" x="48" y="62" style="filter:drop-shadow(0 0 18px rgba(0,255,136,0.5))">GREENS</text>
+      <text font-family="'Bebas Neue',sans-serif" font-size="58" letter-spacing="5" fill="#e8f5ee" x="222" y="62">SCREENS</text>
+      <line x1="422" y1="12" x2="422" y2="68" stroke="rgba(0,255,136,0.2)" stroke-width="0.5"/>
+      <text font-family="'Bebas Neue',sans-serif" font-size="26" letter-spacing="4" fill="#aaff44" x="438" y="40">ENT</text>
+      <text font-family="'Share Tech Mono',monospace" font-size="8.5" letter-spacing="1.8" fill="#6b9a7a" x="438" y="59">SIGNAL_GREEN</text>
+    </svg>
+    <div class="tile-name">Horizontal · Dark background</div>
+  </div>
+</div>
+
+
+<!-- 03 ICON MARK -->
+<div class="section">
+  <div class="section-label">03 · Icon mark — square</div>
+  <div class="logo-tile" style="max-width:240px;">
+    <button class="download-btn" onclick="dl('icon-sq')">↓ Download SVG</button>
+    <svg id="icon-sq" width="140" height="140" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="4" width="92" height="92" rx="8" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.3"/>
+      <polygon points="18,82 18,28 38,18 62,18 82,28 82,72 62,82" fill="none" stroke="#00ff88" stroke-width="1.2" opacity="0.45"/>
+      <text font-family="'Bebas Neue',sans-serif" font-size="38" letter-spacing="1" fill="#00ff88" x="50" y="62" text-anchor="middle" style="filter:drop-shadow(0 0 14px rgba(0,255,136,0.75))">GSE</text>
+      <circle cx="38" cy="88" r="2.2" fill="#00ff88" opacity="0.8"/>
+      <circle cx="50" cy="88" r="2.2" fill="#aaff44" opacity="0.6"/>
+      <circle cx="62" cy="88" r="2.2" fill="#00ff88" opacity="0.35"/>
+    </svg>
+    <div class="tile-name">Icon · Square · Dark · Discord / App icons</div>
+  </div>
+</div>
+
+
+<!-- 04 BRAND COLORS -->
+<div class="section">
+  <div class="section-label">04 · Brand color palette</div>
+  <div class="color-row">
+    <div class="color-chip">
+      <div class="chip-swatch" style="background:#00ff88;box-shadow:0 0 20px rgba(0,255,136,0.25)"></div>
+      <div class="chip-name">Primary Green</div>
+      <div class="chip-hex">#00FF88</div>
+    </div>
+    <div class="color-chip">
+      <div class="chip-swatch" style="background:#aaff44"></div>
+      <div class="chip-name">Accent Lime</div>
+      <div class="chip-hex">#AAFF44</div>
+    </div>
+    <div class="color-chip">
+      <div class="chip-swatch" style="background:#00cc6a"></div>
+      <div class="chip-name">Green Dim</div>
+      <div class="chip-hex">#00CC6A</div>
+    </div>
+    <div class="color-chip">
+      <div class="chip-swatch" style="background:#050a07;border:1px solid rgba(0,255,136,0.2)"></div>
+      <div class="chip-name">Background</div>
+      <div class="chip-hex">#050A07</div>
+    </div>
+    <div class="color-chip">
+      <div class="chip-swatch" style="background:#0f1e16;border:1px solid rgba(0,255,136,0.15)"></div>
+      <div class="chip-name">Card Surface</div>
+      <div class="chip-hex">#0F1E16</div>
+    </div>
+    <div class="color-chip">
+      <div class="chip-swatch" style="background:#e8f5ee"></div>
+      <div class="chip-name">Off-White Text</div>
+      <div class="chip-hex">#E8F5EE</div>
+    </div>
+    <div class="color-chip">
+      <div class="chip-swatch" style="background:#6b9a7a"></div>
+      <div class="chip-name">Muted</div>
+      <div class="chip-hex">#6B9A7A</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- 05 DO's & DON'Ts -->
+<div class="section">
+  <div class="section-label">05 · Usage guidelines — do's &amp; don'ts</div>
+  <div class="usage-grid">
+
+    <div class="usage-card">
+      <div class="usage-title do">DO</div>
+      <div class="usage-item"><span class="bullet bullet-do">◆</span>Use the primary logo on dark or black backgrounds</div>
+      <div class="usage-item"><span class="bullet bullet-do">◆</span>Maintain clear space equal to the height of the "G"</div>
+      <div class="usage-item"><span class="bullet bullet-do">◆</span>Use monochrome versions on light or print surfaces</div>
+      <div class="usage-item"><span class="bullet bullet-do">◆</span>Use the square icon for Discord, GitHub, and app icons</div>
+      <div class="usage-item"><span class="bullet bullet-do">◆</span>Keep the ENT tag and signal dot together at all times</div>
+      <div class="usage-item"><span class="bullet bullet-do">◆</span>Use Bebas Neue exclusively for the wordmark</div>
+    </div>
+
+    <div class="usage-card">
+      <div class="usage-title dont">DON'T</div>
+      <div class="usage-item"><span class="bullet bullet-dont">✕</span>Stretch, skew, or distort the logo proportions</div>
+      <div class="usage-item"><span class="bullet bullet-dont">✕</span>Place the logo on busy backgrounds without a dark overlay</div>
+      <div class="usage-item"><span class="bullet bullet-dont">✕</span>Swap Bebas Neue for any other typeface</div>
+      <div class="usage-item"><span class="bullet bullet-dont">✕</span>Use off-brand colors on the wordmark</div>
+      <div class="usage-item"><span class="bullet bullet-dont">✕</span>Remove the ENT designation or signal dot</div>
+      <div class="usage-item"><span class="bullet bullet-dont">✕</span>Recreate the logo by hand — always use the SVG files</div>
+    </div>
+
+    <div class="usage-card">
+      <div class="usage-title when">USE WHEN</div>
+      <div class="usage-item"><span class="bullet bullet-when">→</span>Full stacked → merch, thumbnails, stream alerts, posters</div>
+      <div class="usage-item"><span class="bullet bullet-when">→</span>Horizontal → email headers, stream overlays, banners</div>
+      <div class="usage-item"><span class="bullet bullet-when">→</span>Square icon → Discord, GitHub, app icons, favicon</div>
+      <div class="usage-item"><span class="bullet bullet-when">→</span>Primary green → all digital, screens, dark backgrounds</div>
+      <div class="usage-item"><span class="bullet bullet-when">→</span>Monochrome → print, embroidery, watermarks, merch tags</div>
+      <div class="usage-item"><span class="bullet bullet-when">→</span>Accent lime → highlights, CTAs, secondary callouts</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="page-footer">
+  <div class="footer-logo"><span>GREENS </span>SCREENS<em> ENT</em></div>
+  <div class="footer-note">SIGNAL_ALWAYS_GREEN · BRAND ASSETS 2026</div>
+  <div class="footer-note">greensscreensent.com</div>
+</div>
+
+
+<script>
+  function dl(id) {
+    const svg = document.getElementById(id);
+    if (!svg) return;
+    const clone = svg.cloneNode(true);
+    const style = document.createElementNS('http://www.w3.org/2000/svg','style');
+    style.textContent = "@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap');";
+    clone.insertBefore(style, clone.firstChild);
+    const blob = new Blob([clone.outerHTML], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'gse-logo-' + id + '.svg';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>

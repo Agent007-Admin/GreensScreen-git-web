@@ -17,8 +17,9 @@ export const FounderCard: React.FC = () => {
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        className="bg-gs-card border border-gs-border p-10 md:px-12 md:py-10 flex flex-col md:flex-row items-start md:items-center gap-10 transition-colors hover:border-gs-green/40 founder-card-accent"
+        className="bg-gs-card border border-gs-border p-10 md:px-12 md:py-10 flex flex-col md:flex-row items-start md:items-center gap-10 transition-colors hover:border-gs-green/40 group relative overflow-hidden founder-card-accent"
       >
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gs-green scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100 z-20" />
         <div className="w-[88px] h-[88px] rounded-full flex-shrink-0 bg-gs-green/10 border-2 border-gs-green/40 flex items-center justify-center font-display text-[32px] text-gs-green">
           JG
         </div>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GSE Type C — Brand Content</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --g: #00ff88; --a: #aaff44; --dk: #050a07; --tx: #e8f5ee; --mu: #6b9a7a;
+    --fd: 'Bebas Neue', sans-serif; --fm: 'Share Tech Mono', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0f0b; display: flex; flex-direction: column; align-items: center; gap: 32px; padding: 40px 24px; font-family: var(--fm); }
+
+  .label { color: var(--mu); font-size: 9px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; }
+
+  .canvas { position: relative; overflow: hidden; }
+  .c169 { width: 640px; height: 360px; background: radial-gradient(ellipse at 35% 50%, #0d2016 0%, #050a07 65%); }
+  .c916 { width: 202px; height: 360px; background: radial-gradient(ellipse at 50% 40%, #0d2016 0%, #050a07 65%); }
+
+  /* ── GRID ── */
+  .grid { position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background-image: linear-gradient(rgba(0,255,136,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.03) 1px,transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* ── RADAR CONTAINER ── */
+  .radar-wrap {
+    position: absolute; z-index: 3;
+    border-radius: 50%;
+  }
+
+  /* ── RADAR RINGS — pulse outward ── */
+  .radar-ring {
+    position: absolute; border-radius: 50%;
+    border: 1px solid rgba(0,255,136,0.15);
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+  }
+  .radar-ring-pulse {
+    position: absolute; border-radius: 50%;
+    border: 1px solid rgba(0,255,136,0.35);
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    animation: ringPulse 3s ease-out infinite;
+  }
+  .radar-ring-pulse:nth-child(2) { animation-delay: 1s; }
+  .radar-ring-pulse:nth-child(3) { animation-delay: 2s; }
+  @keyframes ringPulse {
+    0%   { transform: translate(-50%,-50%) scale(0.3); opacity: 0.8; border-color: rgba(0,255,136,0.5); }
+    100% { transform: translate(-50%,-50%) scale(1);   opacity: 0;   border-color: rgba(0,255,136,0); }
+  }
+
+  /* ── RADAR SWEEP LINE ── */
+  .radar-sweep-wrap {
+    position: absolute; border-radius: 50%;
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    overflow: hidden;
+  }
+  .radar-sweep {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 300deg,
+      rgba(0,255,136,0.04) 300deg,
+      rgba(0,255,136,0.18) 355deg,
+      rgba(0,255,136,0.3) 358deg,
+      transparent 360deg
+    );
+    animation: radarRotate 4s linear infinite;
+  }
+  @keyframes radarRotate {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  /* ── RADAR TICK MARKS ── */
+  .radar-tick {
+    position: absolute; z-index: 4;
+    width: 1px; background: rgba(0,255,136,0.2);
+    top: 50%; left: 50%; transform-origin: 0 0;
+  }
+
+  /* ── STATIC RINGS (background depth) ── */
+  .static-ring {
+    position: absolute; border-radius: 50%;
+    border: 1px solid rgba(0,255,136,0.08);
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+  }
+
+  /* ── CROSS HAIRS ── */
+  .crosshair-h {
+    position: absolute; z-index: 4;
+    height: 1px; background: linear-gradient(to right, transparent, rgba(0,255,136,0.15), transparent);
+    top: 50%; transform: translateY(-50%);
+  }
+  .crosshair-v {
+    position: absolute; z-index: 4;
+    width: 1px; background: linear-gradient(to bottom, transparent, rgba(0,255,136,0.15), transparent);
+    left: 50%; transform: translateX(-50%);
+  }
+
+
+
+  /* ── BLIP DOTS scattered on radar ── */
+  .blip {
+    position: absolute; z-index: 5; border-radius: 50%;
+    background: var(--g); box-shadow: 0 0 5px rgba(0,255,136,0.8);
+    animation: blipFade 4s ease-in-out infinite;
+  }
+  @keyframes blipFade {
+    0%,100% { opacity: 0; }
+    50%      { opacity: 0.9; }
+  }
+
+  /* ── MAIN BRAND TEXT ── */
+  .brand-title {
+    position: absolute; z-index: 15;
+    font-family: var(--fd); letter-spacing: 5px; line-height: 0.88;
+    text-align: center; width: 100%;
+    animation: brandReveal 1.2s cubic-bezier(0.22,1,0.36,1) forwards 0.5s;
+    opacity: 0;
+  }
+  @keyframes brandReveal {
+    from { opacity: 0; transform: translateY(12px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .brand-title .g { display: block; color: var(--g); text-shadow: 0 0 40px rgba(0,255,136,0.5); }
+  .brand-title .w { display: block; color: var(--tx); }
+  .brand-title .s { display: block; color: var(--a); font-size: 0.42em; letter-spacing: 10px; margin-top: 6px; }
+
+  /* ── SIGNAL ACTIVE BLINK ── */
+  .signal-active {
+    position: absolute; z-index: 20;
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--fm); letter-spacing: 2.5px; text-transform: uppercase;
+  }
+  .sdot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--g);
+    box-shadow: 0 0 8px rgba(0,255,136,1);
+    animation: blinkDot 1.2s step-end infinite;
+  }
+  @keyframes blinkDot {
+    0%, 49%  { opacity: 1; box-shadow: 0 0 8px rgba(0,255,136,1); }
+    50%, 100% { opacity: 0.15; box-shadow: none; }
+  }
+
+  /* ── TAGLINE ── */
+  .tagline {
+    position: absolute; z-index: 20;
+    font-family: var(--fm); text-transform: uppercase; letter-spacing: 3px;
+    color: var(--g); display: flex; align-items: center; gap: 10px;
+    animation: fadeIn 1s ease forwards 1s; opacity: 0;
+  }
+  .tagline::before, .tagline::after { content:''; height:1px; width:16px; background: rgba(0,255,136,0.4); }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* ── PILLARS ── */
+  .pillars {
+    position: absolute; z-index: 20;
+    display: flex; gap: 6px; align-items: center;
+    animation: fadeIn 1.2s ease forwards 1.2s; opacity: 0;
+  }
+  .bp {
+    font-family: var(--fm); font-size: 8px; letter-spacing: 2px;
+    color: var(--g); border: 1px solid rgba(0,255,136,0.25);
+    padding: 3px 9px; text-transform: uppercase; opacity: 0.85;
+    clip-path: polygon(4px 0%,100% 0%,calc(100% - 4px) 100%,0% 100%);
+  }
+  .bp-sep { color: rgba(0,255,136,0.25); font-size: 7px; }
+
+  /* ── SCANLINES ── */
+  .scanlines { position: absolute; inset: 0; z-index: 40; pointer-events: none;
+    background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 3px);
+  }
+  .tbar { position: absolute; top:0;left:0;right:0;height:1px;z-index:20;background:linear-gradient(to right,rgba(0,255,136,0.5),transparent); }
+  .bbar { position: absolute; bottom:0;left:0;right:0;height:3px;z-index:20;background:linear-gradient(to right,var(--g),var(--a),transparent); }
+
+  .replay-btn {
+    font-family: var(--fm); font-size: 9px; letter-spacing: 2px; color: var(--g);
+    background: transparent; border: 1px solid rgba(0,255,136,0.3); padding: 6px 18px;
+    cursor: pointer; text-transform: uppercase;
+    clip-path: polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);
+    transition: all 0.15s; margin-top: 6px;
+  }
+  .replay-btn:hover { background: rgba(0,255,136,0.1); border-color: var(--g); }
+</style>
+</head>
+<body>
+
+<!-- 16:9 -->
+<div>
+  <div class="label">Type C · Brand Content · 16:9 Desktop — Radar active</div>
+  <div class="canvas c169" id="canvas-c169">
+    <div class="grid"></div>
+
+    <!-- RADAR SYSTEM — centered, large -->
+    <div style="position:absolute;width:560px;height:560px;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;">
+      <!-- static rings -->
+      <div class="static-ring" style="width:560px;height:560px;"></div>
+      <div class="static-ring" style="width:420px;height:420px;border-color:rgba(0,255,136,0.1);"></div>
+      <div class="static-ring" style="width:280px;height:280px;border-color:rgba(0,255,136,0.12);"></div>
+      <div class="static-ring" style="width:140px;height:140px;border-color:rgba(0,255,136,0.14);"></div>
+      <!-- crosshairs -->
+      <div class="crosshair-h" style="left:0;right:0;"></div>
+      <div class="crosshair-v" style="top:0;bottom:0;"></div>
+      <!-- sweep (clipped to the radar circle) -->
+      <div class="radar-sweep-wrap" style="width:560px;height:560px;top:50%;left:50%;transform:translate(-50%,-50%);">
+        <div class="radar-sweep"></div>
+      </div>
+      <!-- pulse rings -->
+      <div class="radar-ring-pulse" style="width:560px;height:560px;"></div>
+      <div class="radar-ring-pulse" style="width:560px;height:560px;"></div>
+      <div class="radar-ring-pulse" style="width:560px;height:560px;"></div>
+      <!-- blips -->
+      <div class="blip" style="width:5px;height:5px;top:28%;left:68%;animation-delay:0.8s;animation-duration:5s;"></div>
+      <div class="blip" style="width:4px;height:4px;top:62%;left:38%;animation-delay:2.1s;animation-duration:6s;"></div>
+      <div class="blip" style="width:3px;height:3px;top:38%;left:28%;animation-delay:3.5s;animation-duration:4.5s;"></div>
+      <div class="blip" style="width:4px;height:4px;top:72%;left:58%;animation-delay:1.2s;animation-duration:7s;"></div>
+      <!-- center removed -->
+    </div>
+
+    <!-- SIGNAL ACTIVE — top right -->
+    <div class="signal-active" style="top:16px;right:16px;font-size:10px;color:var(--g);">
+      <span class="sdot"></span>SIGNAL ACTIVE
+    </div>
+
+    <!-- TAGLINE — top center -->
+    <div class="tagline" style="top:18px;left:50%;transform:translateX(-50%);font-size:8px;white-space:nowrap;">
+      TECHNOLOGY · GAMING · ENTERTAINMENT
+    </div>
+
+    <!-- BRAND TITLE — shifted up to clear pillars -->
+    <div class="brand-title" style="top:38%;transform:translateY(-50%);font-size:72px;">
+      <span class="g">GREENS</span>
+      <span class="w">SCREENS</span>
+      <span class="s">ENT</span>
+    </div>
+
+    <!-- PILLARS — bottom -->
+    <div class="pillars" style="bottom:22px;left:50%;transform:translateX(-50%);">
+      <div class="bp">TECH</div><div class="bp-sep">◆</div>
+      <div class="bp">GAMING</div><div class="bp-sep">◆</div>
+      <div class="bp">ENT</div><div class="bp-sep">◆</div>
+      <div class="bp">COMMUNITY</div>
+    </div>
+
+    <div class="tbar"></div><div class="bbar"></div><div class="scanlines"></div>
+  </div>
+  <button class="replay-btn" onclick="replayC('canvas-c169')">↺ Replay</button>
+</div>
+
+<!-- 9:16 -->
+<div>
+  <div class="label">Type C · Brand Content · 9:16 Shorts / Reels</div>
+  <div class="canvas c916" id="canvas-c916">
+    <div class="grid" style="background-size:28px 28px;"></div>
+
+    <!-- RADAR SYSTEM — centered for vertical -->
+    <div style="position:absolute;width:320px;height:320px;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;">
+      <div class="static-ring" style="width:320px;height:320px;"></div>
+      <div class="static-ring" style="width:240px;height:240px;border-color:rgba(0,255,136,0.1);"></div>
+      <div class="static-ring" style="width:160px;height:160px;border-color:rgba(0,255,136,0.12);"></div>
+      <div class="static-ring" style="width:80px;height:80px;border-color:rgba(0,255,136,0.14);"></div>
+      <div class="crosshair-h" style="left:0;right:0;"></div>
+      <div class="crosshair-v" style="top:0;bottom:0;"></div>
+      <div class="radar-sweep-wrap" style="width:320px;height:320px;top:50%;left:50%;transform:translate(-50%,-50%);">
+        <div class="radar-sweep"></div>
+      </div>
+      <div class="radar-ring-pulse" style="width:320px;height:320px;"></div>
+      <div class="radar-ring-pulse" style="width:320px;height:320px;"></div>
+      <div class="radar-ring-pulse" style="width:320px;height:320px;"></div>
+      <div class="blip" style="width:4px;height:4px;top:30%;left:65%;animation-delay:0.9s;animation-duration:5s;"></div>
+      <div class="blip" style="width:3px;height:3px;top:65%;left:35%;animation-delay:2.5s;animation-duration:6s;"></div>
+
+    </div>
+
+    <!-- SIGNAL ACTIVE -->
+    <div class="signal-active" style="top:14px;right:8px;font-size:7px;gap:4px;color:var(--g);">
+      <span class="sdot" style="width:5px;height:5px;"></span>SIGNAL ACTIVE
+    </div>
+
+    <!-- TAGLINE -->
+    <div style="position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:20;font-family:var(--fm);font-size:5.5px;letter-spacing:1.5px;color:var(--g);white-space:nowrap;text-transform:uppercase;animation:fadeIn 1s ease forwards 1s;opacity:0;">TECH · GAMING · ENT</div>
+
+    <!-- BRAND TITLE -->
+    <div class="brand-title" style="top:50%;transform:translateY(-50%);font-size:44px;letter-spacing:3px;">
+      <span class="g">GREENS</span>
+      <span class="w">SCREENS</span>
+      <span class="s" style="font-size:0.36em;letter-spacing:6px;">ENT</span>
+    </div>
+
+    <!-- PILLARS -->
+    <div class="pillars" style="bottom:16px;left:50%;transform:translateX(-50%);white-space:nowrap;">
+      <div class="bp" style="font-size:6px;padding:2px 6px;">TECH</div><div class="bp-sep">◆</div>
+      <div class="bp" style="font-size:6px;padding:2px 6px;">GAMING</div><div class="bp-sep">◆</div>
+      <div class="bp" style="font-size:6px;padding:2px 6px;">ENT</div>
+    </div>
+
+    <div class="tbar"></div><div class="bbar"></div><div class="scanlines"></div>
+  </div>
+  <button class="replay-btn" onclick="replayC('canvas-c916')">↺ Replay</button>
+</div>
+
+<script>
+function replayC(id) {
+  const canvas = document.getElementById(id);
+  canvas.querySelectorAll('.brand-title, .tagline, .pillars, [style*="animation:fadeIn"]').forEach(el => {
+    const prev = el.style.animation;
+    el.style.animation = 'none';
+    el.offsetHeight;
+    el.style.animation = prev || '';
+  });
+}
+</script>
+</body>
+</html>

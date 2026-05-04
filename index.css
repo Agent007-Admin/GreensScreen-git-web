@@ -91,6 +91,15 @@
   animation: blink 1s step-end infinite;
 }
 
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
 @keyframes blink {
   50% { opacity: 0; }
+}
+
+@keyframes pulse { 
+  0%, 100% { opacity: 0.8; transform: scale(1); filter: drop-shadow(0 0 5px var(--gs-green)); } 
+  50% { opacity: 1; transform: scale(1.2); filter: drop-shadow(0 0 12px var(--gs-green)); } 
 }

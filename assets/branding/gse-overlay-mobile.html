@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GSE Mobile Overlay — 9:16</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+  /* =============================================
+     GSE MOBILE OVERLAY — 9:16 VERTICAL
+     1080 × 1920 — TikTok / Reels / Shorts
+     OBS Browser Source: 1080 x 1920
+  ============================================= */
+
+  :root {
+    --gs-green:   #00ff88;
+    --gs-accent:  #aaff44;
+    --gs-dark:    #050a07;
+    --gs-text:    #e8f5ee;
+    --gs-muted:   #6b9a7a;
+    --gs-border:  rgba(0,255,136,0.25);
+    --fd: 'Bebas Neue', sans-serif;
+    --fb: 'Rajdhani', sans-serif;
+    --fm: 'Share Tech Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1080px;
+    height: 1920px;
+    background: transparent;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* =============================================
+     SCANLINES
+  ============================================= */
+  .scanlines {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.04) 3px,
+      rgba(0,0,0,0.04) 4px
+    );
+  }
+
+  /* =============================================
+     CORNER WATERMARK — top right
+     Larger for vertical format
+  ============================================= */
+  .corner-watermark {
+    position: absolute;
+    top: 48px;
+    right: 44px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    opacity: 0;
+    animation: appear 1s ease forwards 0.6s;
+  }
+
+  @keyframes appear {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .cw-logo {
+    font-family: var(--fd);
+    font-size: 28px;
+    letter-spacing: 3px;
+    line-height: 1;
+    color: var(--gs-green);
+    text-shadow: 0 0 20px rgba(0,255,136,0.6);
+  }
+  .cw-logo span { color: var(--gs-text); }
+  .cw-logo em   { font-style: normal; color: var(--gs-accent); }
+
+  .cw-line {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to left, var(--gs-green), transparent);
+  }
+
+  .cw-sub {
+    font-family: var(--fm);
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    color: var(--gs-muted);
+  }
+
+  /* =============================================
+     LOWER THIRD — vertical format
+     Sits high enough to clear TikTok UI chrome
+     (likes, comments, share buttons on right)
+     Position: bottom ~22% of screen
+  ============================================= */
+  .lower-third {
+    position: absolute;
+    bottom: 320px; /* clears TikTok/IG UI buttons */
+    left: 0;
+    z-index: 20;
+    transform: translateX(-100%);
+    opacity: 0;
+    animation: lt-enter 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards 1.2s;
+  }
+
+  @keyframes lt-enter {
+    from { transform: translateX(-100%); opacity: 0; }
+    to   { transform: translateX(0);     opacity: 1; }
+  }
+
+  .lt-inner {
+    display: flex;
+    align-items: stretch;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 20px) 100%, 0 100%);
+  }
+
+  .lt-bar {
+    width: 6px;
+    background: var(--gs-green);
+    box-shadow: 0 0 16px rgba(0,255,136,0.9);
+    flex-shrink: 0;
+  }
+
+  .lt-body {
+    background: rgba(5,10,7,0.93);
+    border-top: 1px solid var(--gs-border);
+    border-bottom: 1px solid var(--gs-border);
+    padding: 14px 44px 14px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .lt-body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(0,255,136,0.07) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  .lt-name {
+    font-family: var(--fd);
+    font-size: 52px;
+    letter-spacing: 5px;
+    line-height: 1;
+    color: var(--gs-text);
+    white-space: nowrap;
+  }
+
+  .lt-name .h {
+    color: var(--gs-green);
+    text-shadow: 0 0 24px rgba(0,255,136,0.5);
+  }
+
+  .lt-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .lt-url {
+    font-family: var(--fm);
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    color: var(--gs-muted);
+  }
+
+  .lt-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--gs-muted);
+    flex-shrink: 0;
+  }
+
+  .lt-tag {
+    font-family: var(--fm);
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--gs-green);
+    opacity: 0.8;
+    text-transform: uppercase;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 10px;
+    height: 18px;
+    background: var(--gs-green);
+    margin-left: 3px;
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* =============================================
+     LOGO ALERT — center pop-in
+  ============================================= */
+  .logo-alert {
+    position: absolute;
+    top: 42%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.6);
+    opacity: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+  }
+
+  .logo-alert.fire {
+    animation: alert-pop 3.5s ease forwards;
+  }
+
+  @keyframes alert-pop {
+    0%   { transform: translate(-50%,-50%) scale(0.6);  opacity: 0; }
+    12%  { transform: translate(-50%,-50%) scale(1.06); opacity: 1; }
+    25%  { transform: translate(-50%,-50%) scale(0.98); opacity: 1; }
+    60%  { transform: translate(-50%,-50%) scale(1);    opacity: 1; }
+    85%  { transform: translate(-50%,-50%) scale(1);    opacity: 1; }
+    100% { transform: translate(-50%,-50%) scale(1.08); opacity: 0; }
+  }
+
+  .alert-backdrop {
+    position: absolute;
+    inset: -80px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,255,136,0.13) 0%, transparent 70%);
+  }
+
+  .alert-ring {
+    position: absolute;
+    inset: -100px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,255,136,0.18);
+  }
+
+  .alert-box {
+    position: relative;
+    z-index: 2;
+    background: rgba(5,10,7,0.96);
+    border: 1px solid var(--gs-border);
+    padding: 36px 72px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    clip-path: polygon(18px 0%, 100% 0%, calc(100% - 18px) 100%, 0% 100%);
+    box-shadow: 0 0 70px rgba(0,255,136,0.14);
+  }
+
+  .alert-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gs-green), var(--gs-accent), var(--gs-green), transparent);
+  }
+
+  .alert-box::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gs-border), transparent);
+  }
+
+  .ab-eye {
+    font-family: var(--fm);
+    font-size: 14px;
+    letter-spacing: 4px;
+    color: var(--gs-green);
+    opacity: 0.7;
+  }
+
+  .ab-logo {
+    font-family: var(--fd);
+    font-size: 100px;
+    letter-spacing: 8px;
+    line-height: 0.92;
+    text-align: center;
+    color: var(--gs-text);
+  }
+
+  .ab-logo .g {
+    color: var(--gs-green);
+    text-shadow: 0 0 50px rgba(0,255,136,0.6);
+  }
+
+  .ab-logo .e { color: var(--gs-accent); }
+
+  .ab-tag {
+    font-family: var(--fm);
+    font-size: 13px;
+    letter-spacing: 3px;
+    color: var(--gs-muted);
+    margin-top: 4px;
+  }
+
+  .ab-tag .s { color: var(--gs-green); }
+
+  /* =============================================
+     TICKER — bottom strip
+     Sits above the very bottom (TikTok audio bar)
+  ============================================= */
+  .ticker-strip {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 52px;
+    background: rgba(5,10,7,0.92);
+    border-top: 1px solid var(--gs-border);
+    overflow: hidden;
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    animation: appear 0.8s ease forwards 2s;
+  }
+
+  .ticker-inner {
+    display: flex;
+    white-space: nowrap;
+    animation: ticker 24s linear infinite;
+  }
+
+  @keyframes ticker {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .ticker-item {
+    font-family: var(--fm);
+    font-size: 16px;
+    letter-spacing: 2.5px;
+    color: var(--gs-muted);
+    padding: 0 40px;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .ticker-item .ti-accent { color: var(--gs-green); }
+  .ticker-sep { color: rgba(0,255,136,0.3); font-size: 12px; }
+
+  /* =============================================
+     CONTROL PANEL — fixed top left
+  ============================================= */
+  .ctrl-tab {
+    position: fixed;
+    top: 48px;
+    left: 44px;
+    z-index: 9999;
+  }
+
+  .ctrl-tab-handle { display: none; }
+
+  .ctrl-panel {
+    background: rgba(5,10,7,0.95);
+    border: 1px solid var(--gs-border);
+    padding: 24px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 200px;
+    border-radius: 6px;
+    box-shadow: 0 0 24px rgba(0,255,136,0.08);
+  }
+  .ctrl-title {
+    font-family: var(--fm);
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    color: var(--gs-muted);
+    text-transform: uppercase;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--gs-border);
+  }
+
+  .demo-btn {
+    background: transparent;
+    border: 1px solid var(--gs-border);
+    color: var(--gs-green);
+    font-family: var(--fm);
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 9px 16px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    width: 100%;
+    text-align: left;
+  }
+  .demo-btn:hover { background: rgba(0,255,136,0.1); border-color: var(--gs-green); }
+  .demo-btn.active { background: var(--gs-green); color: var(--gs-dark); border-color: var(--gs-green); }
+  .demo-btn.alert-btn { border-color: var(--gs-accent); color: var(--gs-accent); margin-top: 4px; }
+  .demo-btn.alert-btn:hover { background: rgba(170,255,68,0.1); }
+  .demo-btn.reset-btn { color: var(--gs-muted); border-color: rgba(107,154,122,0.3); font-size: 9px; }
+</style>
+</head>
+<body>
+
+<div class="scanlines"></div>
+
+<!-- CORNER WATERMARK -->
+<div class="corner-watermark" id="watermark">
+  <div class="cw-logo"><span style="color:var(--gs-green)">GREENS</span><span> SCREENS</span><em> ENT</em></div>
+  <div class="cw-line"></div>
+  <div class="cw-sub">greensscreensent.com</div>
+</div>
+
+<!-- LOWER THIRD -->
+<div class="lower-third" id="lower-third">
+  <div class="lt-inner">
+    <div class="lt-bar"></div>
+    <div class="lt-body">
+      <div class="lt-name"><span class="h">GREENS</span>.SCREENS<span class="cursor"></span></div>
+      <div class="lt-meta">
+        <span class="lt-url">greensscreensent.com</span>
+        <span class="lt-dot"></span>
+        <span class="lt-tag">Technology</span>
+        <span class="lt-dot"></span>
+        <span class="lt-tag">Gaming</span>
+        <span class="lt-dot"></span>
+        <span class="lt-tag">Entertainment</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGO ALERT -->
+<div class="logo-alert" id="logo-alert">
+  <div class="alert-backdrop"></div>
+  <div class="alert-ring"></div>
+  <div class="alert-box">
+    <div class="ab-eye">// signal incoming</div>
+    <div class="ab-logo">
+      <span class="g">GREENS</span><br>
+      SCREENS<br>
+      <span class="e">ENT</span>
+    </div>
+    <div class="ab-tag"><span class="s">SIGNAL</span>_ALWAYS_GREEN</div>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker-strip" id="ticker">
+  <div class="ticker-inner" id="ticker-inner"></div>
+</div>
+
+<!-- CONTROL TAB -->
+<div class="ctrl-tab" id="ctrl-tab">
+  <div class="ctrl-panel">
+    <div class="ctrl-title">GSE Mobile Controls</div>
+    <button class="demo-btn active" id="btn-lower" onclick="toggleLayer('lower-third','btn-lower')">Lower Third</button>
+    <button class="demo-btn active" id="btn-watermark" onclick="toggleLayer('watermark','btn-watermark')">Watermark</button>
+    <button class="demo-btn active" id="btn-ticker" onclick="toggleLayer('ticker','btn-ticker')">Ticker</button>
+    <button class="demo-btn alert-btn" id="btn-alert" onclick="triggerAlert()">⚡ Fire Alert</button>
+    <button class="demo-btn reset-btn" onclick="location.reload()">↺ Reset All</button>
+  </div>
+  <div class="ctrl-tab-handle" onclick="document.getElementById('ctrl-tab').classList.toggle('open')">CONTROLS</div>
+</div>
+
+<script>
+  // Ticker content
+  const tickerItems = [
+    { text: 'GREENS SCREENS ENT', accent: true },
+    { text: 'Technology · Gaming · Entertainment' },
+    { text: 'greensscreensent.com', accent: true },
+    { text: 'Signal Always Green' },
+    { text: '@greens.screens · Instagram', accent: true },
+    { text: 'Join the Discord' },
+    { text: 'Subscribe to the Newsletter' },
+    { text: 'GREENS SCREENS ENT', accent: true },
+    { text: 'Technology · Gaming · Entertainment' },
+    { text: 'greensscreensent.com', accent: true },
+    { text: 'Signal Always Green' },
+    { text: '@greens.screens · Instagram', accent: true },
+    { text: 'Join the Discord' },
+    { text: 'Subscribe to the Newsletter' },
+  ];
+
+  const container = document.getElementById('ticker-inner');
+  const html = tickerItems.map(item =>
+    `<span class="ticker-item">
+      <span class="ticker-sep">◆</span>
+      <span class="${item.accent ? 'ti-accent' : ''}">${item.text}</span>
+    </span>`
+  ).join('');
+  container.innerHTML = html + html;
+
+  function toggleLayer(id, btnId) {
+    const el = document.getElementById(id);
+    const btn = document.getElementById(btnId);
+    const hidden = el.style.display === 'none';
+    el.style.display = hidden ? '' : 'none';
+    btn.classList.toggle('active', hidden);
+  }
+
+  function triggerAlert() {
+    const alert = document.getElementById('logo-alert');
+    alert.classList.remove('fire');
+    void alert.offsetWidth;
+    alert.classList.add('fire');
+    const btn = document.getElementById('btn-alert');
+    btn.classList.add('active');
+    setTimeout(() => { alert.classList.remove('fire'); btn.classList.remove('active'); }, 3600);
+  }
+
+  // Hide controls panel when ?obs=1
+  if (new URLSearchParams(location.search).get('obs') === '1') {
+    document.getElementById('ctrl-tab').style.display = 'none';
+  }
+
+  /*
+    OBS SETUP FOR MOBILE/VERTICAL:
+    - Add Browser Source
+    - Width: 1080, Height: 1920
+    - Local file: gse-overlay-mobile.html
+    - In your vertical scene, this sits on top of your game/camera capture
+    - For TikTok/Reels export: set OBS canvas to 1080x1920
+  */
+</script>
+</body>
+</html>

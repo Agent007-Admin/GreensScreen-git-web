@@ -9,15 +9,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:#050a0d; font-family:'Rajdhani',sans-serif; padding:32px 20px; color: #ddeef8; }
+  body { background:#050a07; font-family:'Rajdhani',sans-serif; padding:32px 20px; color: {{TEXT_COLOR}}; }
 
   .client-bar {
     max-width:660px; margin:0 auto;
-    background:#1a1a1a; border:1px solid #2a2a2a; border-bottom:none;
+    background:#0a1410; border:1px solid rgba(0,255,136,0.1); border-bottom:none;
     border-radius:8px 8px 0 0; padding:12px 16px;
     display:flex; align-items:center; gap:10px;
   }
-  .dot { width:10px; height:10px; border-radius:50%; background:#3a3a3a; }
+  .dot { width:10px; height:10px; border-radius:50%; background:rgba(0,255,136,0.15); }
   .sub-line { font-family:'Share Tech Mono',monospace; font-size:11px; color:#555; letter-spacing:1px; margin-left:4px; }
 
   .wrap {
@@ -37,7 +37,7 @@
   }
   .hdr-top { display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; }
   .logo { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:3px; color:#00ff88; }
-  .logo span { color:{{TEXT_COLOR}}; } .logo .acc { color:#aaff44; }
+  .logo span { color:{{TEXT_COLOR}}; } .logo .acc { color:{{ACCENT_LIME}}; }
   .edition-badge {
     font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:2px;
     color:{{ACCENT_COLOR}}; background:{{ACCENT_COLOR_DIM}}; border:1px solid {{ACCENT_COLOR_BORDER}}; padding:4px 12px;
@@ -78,10 +78,10 @@
   .sec-releases .story-link { color:{{ACCENT_COLOR}}; }
 
   .sec-indie .sec-header { border-color:rgba(170,255,68,0.2); }
-  .sec-indie .sec-icon { color:#aaff44; border-color:rgba(170,255,68,0.2); background:rgba(170,255,68,0.08); }
-  .sec-indie .sec-name { color:#aaff44; }
-  .sec-indie .sec-desc { color:#aaff44; }
-  .sec-indie .story-link { color:#aaff44; }
+  .sec-indie .sec-icon { color:{{ACCENT_LIME}}; border-color:rgba(170,255,68,0.2); background:rgba(170,255,68,0.08); }
+  .sec-indie .sec-name { color:{{ACCENT_LIME}}; }
+  .sec-indie .sec-desc { color:{{ACCENT_LIME}}; }
+  .sec-indie .story-link { color:{{ACCENT_LIME}}; }
 
   .sec-screen .sec-header { border-color:rgba(255,153,68,0.2); }
   .sec-screen .sec-icon { color:#ff9944; border-color:rgba(255,153,68,0.2); background:rgba(255,153,68,0.08); }

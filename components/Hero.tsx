@@ -8,7 +8,7 @@ export const Hero: React.FC = () => {
   };
 
   return (
-    <section className="relative min-h-[80vh] flex items-center justify-center text-center px-6 py-[60px] overflow-hidden z-10">
+    <section id="hero" className="relative min-h-[80vh] flex items-center justify-center text-center px-6 py-[60px] overflow-hidden z-10">
       <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-[radial-gradient(ellipse,rgba(0,255,136,0.08)_0%,transparent_70%)] pointer-events-none" />
       
       <div className="relative z-10">

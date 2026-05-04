@@ -64,6 +64,7 @@ export const SocialGrid: React.FC = () => {
             transition={{ duration: 0.5, delay: index * 0.1 }}
             className="bg-gs-card border border-gs-border p-6 flex items-center gap-4 no-underline transition-all hover:border-gs-green/40 hover:-translate-y-[3px] group relative overflow-hidden"
           >
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gs-green scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100" />
             <div className="absolute inset-0 bg-gs-green/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
             <div className="w-[42px] h-[42px] flex-shrink-0 bg-gs-green/10 border border-gs-border flex items-center justify-center text-xl relative z-10">
               {social.icon}

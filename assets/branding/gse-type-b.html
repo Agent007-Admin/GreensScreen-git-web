@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GSE Type B — Game Review</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --g: #00ff88; --a: #aaff44; --dk: #050a07; --tx: #e8f5ee; --mu: #6b9a7a;
+    --fd: 'Bebas Neue', sans-serif; --fm: 'Share Tech Mono', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0f0b; display: flex; flex-direction: column; align-items: center; gap: 32px; padding: 40px 24px; font-family: var(--fm); }
+
+  .label { color: var(--mu); font-size: 9px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; }
+
+  .canvas { position: relative; overflow: hidden; }
+  .c169 { width: 640px; height: 360px; background: #060e08; }
+  .c916 { width: 202px; height: 360px; background: #060e08; }
+
+  /* ── HORIZONTAL SCAN LINES that slowly drift ── */
+  .h-scan-drift {
+    position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    background-image: linear-gradient(rgba(0,255,136,0.055) 1px, transparent 1px);
+    background-size: 100% 36px;
+    animation: scanDrift 12s linear infinite;
+  }
+  @keyframes scanDrift {
+    0%   { background-position: 0 0; }
+    100% { background-position: 0 36px; }
+  }
+
+  /* ── GRID ── */
+  .grid { position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background-image: linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* ── LEFT ACCENT BAR ── */
+  .side-bar {
+    position: absolute; left: 0; top: 0; bottom: 0; z-index: 10; width: 5px;
+    background: linear-gradient(to bottom, var(--g), var(--a));
+    animation: barBreath 3s ease-in-out infinite;
+  }
+  @keyframes barBreath {
+    0%, 100% { opacity: 0.8; }
+    50%       { opacity: 1; box-shadow: 2px 0 16px rgba(0,255,136,0.4); }
+  }
+
+  /* ── VERDICT WATERMARK ── */
+  .verdict-wm {
+    position: absolute; z-index: 3; pointer-events: none;
+    font-family: var(--fd); color: var(--a); opacity: 0;
+    transform: rotate(-8deg); white-space: nowrap; letter-spacing: 4px;
+    animation: verdictFade 4s ease-in-out infinite;
+  }
+  @keyframes verdictFade {
+    0%   { opacity: 0; }
+    20%  { opacity: 0.14; }
+    50%  { opacity: 0.18; }
+    70%  { opacity: 0.12; }
+    100% { opacity: 0; }
+  }
+
+  /* ── SCORE BLOCK ── */
+  .score-block {
+    position: absolute; z-index: 20;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(0,255,136,0.07);
+    border: 1px solid rgba(0,255,136,0.35);
+    clip-path: polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);
+    animation: scorePulse 3s ease-in-out infinite;
+  }
+  @keyframes scorePulse {
+    0%, 100% { box-shadow: inset 0 0 20px rgba(0,255,136,0.04); border-color: rgba(0,255,136,0.3); }
+    50%       { box-shadow: inset 0 0 30px rgba(0,255,136,0.1); border-color: rgba(0,255,136,0.55); }
+  }
+  .score-num {
+    font-family: var(--fd); color: var(--g);
+    text-shadow: 0 0 20px rgba(0,255,136,0.5); line-height: 1;
+    animation: scoreGlow 3s ease-in-out infinite;
+  }
+  @keyframes scoreGlow {
+    0%, 100% { text-shadow: 0 0 16px rgba(0,255,136,0.4); }
+    50%       { text-shadow: 0 0 36px rgba(0,255,136,0.8); }
+  }
+  .score-label { font-family: var(--fm); color: var(--mu); text-transform: uppercase; letter-spacing: 1.5px; }
+
+  /* ── CATEGORY PILL ── */
+  .cat-pill {
+    position: absolute; z-index: 20;
+    font-family: var(--fm); letter-spacing: 2px; text-transform: uppercase;
+    background: rgba(170,255,68,0.12); color: var(--a);
+    border: 1px solid rgba(170,255,68,0.3);
+    clip-path: polygon(5px 0%,100% 0%,calc(100% - 5px) 100%,0% 100%);
+    animation: fadeIn 0.8s ease forwards;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* ── GAME TITLE ── */
+  .game-title {
+    position: absolute; z-index: 15;
+    font-family: var(--fd); color: var(--tx); letter-spacing: 3px; line-height: 0.9;
+    animation: titleSlide 0.8s cubic-bezier(0.22,1,0.36,1) forwards 0.4s;
+    opacity: 0;
+  }
+  @keyframes titleSlide {
+    from { opacity: 0; transform: translateX(-16px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .game-title .g { color: var(--g); }
+
+  /* ── META LINE ── */
+  .meta-line {
+    position: absolute; z-index: 15;
+    font-family: var(--fm); color: var(--mu); text-transform: uppercase; letter-spacing: 2px;
+    display: flex; align-items: center; gap: 8px;
+    animation: fadeIn 1s ease forwards 0.9s; opacity: 0;
+  }
+  .meta-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--g); opacity: 0.7; }
+
+  /* ── LOGO BUG ── */
+  .logo-bug {
+    position: absolute; z-index: 20;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+    animation: fadeIn 1s ease forwards 0.7s; opacity: 0;
+  }
+  .lb-text { font-family: var(--fd); font-size: 14px; letter-spacing: 2px; color: var(--g); text-shadow: 0 0 12px rgba(0,255,136,0.5); line-height: 1; }
+  .lb-text em { font-style: normal; color: var(--a); }
+  .lb-line { width: 100%; height: 1px; background: linear-gradient(to left, var(--g), transparent); }
+  .lb-sub  { font-family: var(--fm); font-size: 6px; letter-spacing: 1.5px; color: rgba(107,154,122,0.8); }
+
+  /* ── SCANLINES ── */
+  .scanlines { position: absolute; inset: 0; z-index: 40; pointer-events: none;
+    background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 3px);
+  }
+  .tbar { position: absolute; top:0;left:0;right:0;height:1px;z-index:20;background:linear-gradient(to right,rgba(0,255,136,0.5),transparent); }
+  .bbar { position: absolute; bottom:0;left:0;right:0;height:3px;z-index:20;background:linear-gradient(to right,var(--g),var(--a),transparent); }
+
+  .replay-btn {
+    font-family: var(--fm); font-size: 9px; letter-spacing: 2px; color: var(--g);
+    background: transparent; border: 1px solid rgba(0,255,136,0.3); padding: 6px 18px;
+    cursor: pointer; text-transform: uppercase;
+    clip-path: polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);
+    transition: all 0.15s; margin-top: 6px;
+  }
+  .replay-btn:hover { background: rgba(0,255,136,0.1); border-color: var(--g); }
+</style>
+</head>
+<body>
+
+<!-- 16:9 -->
+<div>
+  <div class="label">Type B · Game Review · 16:9 Desktop</div>
+  <div class="canvas c169" id="canvas-b169">
+    <div class="grid"></div>
+    <div class="h-scan-drift"></div>
+    <div class="side-bar"></div>
+    <!-- verdict watermark -->
+    <div class="verdict-wm" style="font-size:110px;left:-8px;top:50px;">REVIEWED</div>
+    <!-- score block -->
+    <div class="score-block" style="top:24px;right:24px;width:100px;height:90px;">
+      <div class="score-num" style="font-size:48px;">9.1</div>
+      <div class="score-label" style="font-size:8px;">/ 10 · SIGNAL</div>
+    </div>
+    <!-- category pill -->
+    <div class="cat-pill" style="top:14px;left:12px;font-size:9px;padding:5px 16px;">REVIEW</div>
+    <!-- game title -->
+    <div class="game-title" style="bottom:60px;left:18px;font-size:56px;">
+      <div class="g">GAME</div>
+      <div>TITLE HERE</div>
+    </div>
+    <!-- meta -->
+    <div class="meta-line" style="bottom:22px;left:20px;font-size:9px;">
+      <div class="meta-dot"></div>
+      GREENS.SCREENS REVIEW
+      <div class="meta-dot"></div>
+      2026
+    </div>
+    <!-- logo bug -->
+    <div class="logo-bug" style="bottom:44px;right:24px;">
+      <div class="lb-text"><span style="color:var(--g)">GREENS</span> <span style="color:rgba(232,245,238,0.75)">SCREENS</span><em> ENT</em></div>
+      <div class="lb-line"></div>
+      <div class="lb-sub">greensscreensent.com</div>
+    </div>
+    <div class="tbar"></div><div class="bbar"></div><div class="scanlines"></div>
+  </div>
+  <button class="replay-btn" onclick="replayB('canvas-b169')">↺ Replay</button>
+</div>
+
+<!-- 9:16 -->
+<div>
+  <div class="label">Type B · Game Review · 9:16 Shorts / Reels</div>
+  <div class="canvas c916" id="canvas-b916">
+    <div class="grid"></div>
+    <div class="h-scan-drift" style="background-size:100% 28px;animation:scanDrift 10s linear infinite;"></div>
+    <div class="side-bar" style="width:3px;"></div>
+    <div class="verdict-wm" style="font-size:64px;left:-4px;top:80px;letter-spacing:2px;">REVIEWED</div>
+    <div class="score-block" style="top:16px;right:10px;width:66px;height:60px;">
+      <div class="score-num" style="font-size:32px;">9.1</div>
+      <div class="score-label" style="font-size:6.5px;">/ 10</div>
+    </div>
+    <div class="cat-pill" style="top:12px;left:8px;font-size:7px;padding:3px 11px;">REVIEW</div>
+    <div class="game-title" style="bottom:56px;left:12px;font-size:36px;letter-spacing:2px;">
+      <div class="g">GAME</div>
+      <div>TITLE</div>
+    </div>
+    <div class="meta-line" style="bottom:24px;left:14px;font-size:7px;letter-spacing:1.5px;">
+      <div class="meta-dot"></div>
+      GSE REVIEW
+    </div>
+    <div class="tbar"></div><div class="bbar"></div><div class="scanlines"></div>
+  </div>
+  <button class="replay-btn" onclick="replayB('canvas-b916')">↺ Replay</button>
+</div>
+
+<script>
+function replayB(id) {
+  const canvas = document.getElementById(id);
+  const animated = canvas.querySelectorAll('.game-title, .meta-line, .logo-bug, .cat-pill');
+  animated.forEach(el => {
+    const anim = el.style.animation || window.getComputedStyle(el).animation;
+    el.style.animation = 'none';
+    el.offsetHeight;
+    el.style.animation = anim || '';
+  });
+}
+</script>
+</body>
+</html>

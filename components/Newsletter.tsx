@@ -40,6 +40,42 @@ export const Newsletter: React.FC = () => {
     }
   };
 
+  const handlePreviewNewsletter = async (forceRefresh: boolean = false) => {
+    if (!adminSecret) {
+      alert('ADMIN SECRET REQUIRED');
+      return;
+    }
+    
+    setTestStatus('loading');
+    try {
+      const response = await fetch('/api/newsletter/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          secret: adminSecret,
+          month: testMonth,
+          year: testYear,
+          forceRefresh
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Preview failed');
+      
+      const html = await response.text();
+      const previewWindow = window.open('', '_blank');
+      if (previewWindow) {
+        previewWindow.document.write(html);
+        previewWindow.document.close();
+      } else {
+        alert('POPUP BLOCKED. PLEASE ALLOW POPUPS TO SEE PREVIEW.');
+      }
+      setTestStatus('idle');
+    } catch (e) {
+      setTestStatus('error');
+      setTimeout(() => setTestStatus('idle'), 3000);
+    }
+  };
+
   const handleMarkTest = async () => {
     if (!adminSecret) {
       alert('ADMIN SECRET REQUIRED');
@@ -179,34 +215,41 @@ export const Newsletter: React.FC = () => {
               </div>
               <div className="flex gap-2">
                 <button 
+                  onClick={() => handlePreviewNewsletter(false)}
+                  disabled={testStatus === 'loading'}
+                  className="flex-1 font-mono text-[10px] bg-gs-green text-gs-dark py-2 font-bold uppercase tracking-[1px] nav-btn-clip transition-all hover:bg-gs-accent"
+                >
+                  {testStatus === 'loading' ? 'LOADING...' : 'PREVIEW NEWSLETTER'}
+                </button>
+                <button 
                   onClick={() => handleTestNewsletter(false)}
                   disabled={testStatus === 'loading'}
-                  className="flex-1 font-mono text-[10px] bg-gs-green text-gs-dark py-2 font-bold uppercase tracking-[1px]"
+                  className="flex-1 font-mono text-[10px] border border-gs-green text-gs-green py-2 font-bold uppercase tracking-[1px] nav-btn-clip transition-all hover:bg-gs-green/10"
                 >
-                  {testStatus === 'loading' ? 'SENDING...' : 'SEND TEST NEWSLETTER'}
+                  {testStatus === 'loading' ? 'SENDING...' : 'SEND TEST'}
                 </button>
                 <button 
                   onClick={() => handleTestNewsletter(true)}
                   disabled={testStatus === 'loading'}
                   title="Regenerate content from scratch"
-                  className="font-mono text-[10px] border border-gs-green/50 text-gs-green/50 px-3 py-2 font-bold uppercase tracking-[1px] hover:text-gs-green hover:border-gs-green"
+                  className="font-mono text-[10px] border border-gs-green/50 text-gs-green/50 px-3 py-2 font-bold uppercase tracking-[1px] hover:text-gs-green hover:border-gs-green transition-all nav-btn-clip"
                 >
                   REFRESH
                 </button>
                 <button 
                   onClick={handleMarkTest}
-                  className="font-mono text-[10px] border border-gs-green text-gs-green px-4 py-2 font-bold uppercase tracking-[1px]"
+                  className="font-mono text-[10px] border border-gs-green/20 text-gs-green/20 px-4 py-2 font-bold uppercase tracking-[1px] nav-btn-clip transition-all hover:border-gs-green/50"
                 >
-                  MARK AS TEST
+                  MARK
                 </button>
               </div>
-              <button 
-                onClick={handleReleaseNewsletter}
-                disabled={testStatus === 'loading'}
-                className="w-full font-mono text-[10px] border border-[#ff6b6b] text-[#ff6b6b] py-2 font-bold uppercase tracking-[1px] hover:bg-[#ff6b6b]/10"
-              >
-                {testStatus === 'loading' ? 'RELEASING...' : `🚀 RELEASE ${testMonth.toUpperCase()} NEWSLETTER TO ALL`}
-              </button>
+            <button 
+              onClick={handleReleaseNewsletter}
+              disabled={testStatus === 'loading'}
+              className="w-full font-mono text-[10px] border border-[#ff4455] text-[#ff4455] py-2 font-bold uppercase tracking-[1px] hover:bg-[#ff4455]/10 nav-btn-clip transition-all"
+            >
+              {testStatus === 'loading' ? 'RELEASING...' : `🚀 RELEASE ${testMonth.toUpperCase()} NEWSLETTER TO ALL`}
+            </button>
               {testStatus === 'success' && <div className="text-[10px] text-gs-green font-mono">✓ ACTION COMPLETED</div>}
               {testStatus === 'error' && <div className="text-[10px] text-[#ff6b6b] font-mono">✗ FAILED TO SEND TEST</div>}
             </motion.div>
@@ -242,7 +285,7 @@ export const Newsletter: React.FC = () => {
               <button 
                 type="submit"
                 disabled={status === 'loading'}
-                className="font-mono text-[12px] tracking-[1px] text-gs-dark bg-gs-green border border-gs-green px-6 py-3 cursor-pointer font-bold transition-all hover:bg-gs-accent hover:border-gs-accent disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+                className="font-mono text-[12px] tracking-[2px] text-gs-dark bg-gs-green border border-gs-green px-7 py-3 cursor-pointer font-bold transition-all hover:bg-gs-accent hover:border-gs-accent disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap btn-clip"
               >
                 {status === 'loading' ? 'SENDING...' : 'SUBSCRIBE'}
               </button>

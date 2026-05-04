@@ -8,8 +8,20 @@ export const Navbar: React.FC = () => {
 
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-9 h-14 bg-gs-dark/90 backdrop-blur-xl border-b border-gs-border">
-      <div className="font-display text-xl tracking-[2px] text-gs-green neon-text">
-        GREENS<span className="text-gs-text"> SCREENS</span><span className="text-gs-accent"> ENT</span>
+      <div 
+        className="flex items-center gap-3 cursor-pointer group"
+        onClick={() => scrollTo('hero')}
+      >
+        <div className="relative flex items-center justify-center">
+          <div className="w-2.5 h-2.5 rounded-full bg-gs-green pulse shadow-[0_0_10px_rgba(0,255,136,0.5)]" />
+        </div>
+        <div className="font-display text-[22px] tracking-[2px] leading-none mt-0.5">
+          <span className="text-gs-green neon-text">GREENS</span>
+          <span className="text-gs-text"> SCREENS</span>
+          <span className="mx-2 w-[1px] h-5 bg-gs-green/20 inline-block align-middle" />
+          <span className="text-gs-accent">ENT</span>
+          <span className="hidden lg:inline-block font-mono text-[9px] text-gs-muted tracking-[1px] ml-2 opacity-50">SIGNAL_GREEN</span>
+        </div>
       </div>
       
       <ul className="hidden md:flex gap-7 list-none">

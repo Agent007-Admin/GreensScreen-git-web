@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GSE Brand & Style Guide 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --gs-green:   #00ff88;
+    --gs-accent:  #aaff44;
+    --gs-dim:     #00cc6a;
+    --gs-dark:    #050a07;
+    --gs-surface: #0a1410;
+    --gs-card:    #0f1e16;
+    --gs-text:    #e8f5ee;
+    --gs-muted:   #6b9a7a;
+    --gs-border:  rgba(0,255,136,0.15);
+    --gs-border-bright: rgba(0,255,136,0.4);
+    --fd: 'Bebas Neue', sans-serif;
+    --fb: 'Rajdhani', sans-serif;
+    --fm: 'Share Tech Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--gs-dark);
+    color: var(--gs-text);
+    font-family: var(--fb);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* ─── SCANLINES ─── */
+  .scanlines {
+    position: fixed; inset: 0; pointer-events: none; z-index: 100;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px);
+  }
+  .grid-bg {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: linear-gradient(rgba(0,255,136,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,136,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  /* ─── PAGE WRAPPER ─── */
+  .page { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 0 40px 80px; }
+
+  /* ─── COVER ─── */
+  .cover {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 0 60px;
+    border-bottom: 1px solid var(--gs-border);
+    position: relative;
+  }
+  .cover-eyebrow {
+    font-family: var(--fm);
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--gs-green);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .cover-eyebrow::before, .cover-eyebrow::after {
+    content: '';
+    height: 1px;
+    width: 40px;
+    background: rgba(0,255,136,0.4);
+  }
+  .cover-title {
+    font-family: var(--fd);
+    font-size: clamp(64px, 10vw, 112px);
+    letter-spacing: 6px;
+    line-height: 0.88;
+    margin-bottom: 8px;
+  }
+  .cover-title .line-green {
+    color: var(--gs-green);
+    text-shadow: 0 0 40px rgba(0,255,136,0.4);
+    display: block;
+  }
+  .cover-title .line-white { color: var(--gs-text); display: block; }
+  .cover-title .line-accent {
+    color: var(--gs-accent);
+    display: block;
+    font-size: 0.45em;
+    letter-spacing: 12px;
+    margin-top: 12px;
+  }
+  .cover-tagline {
+    font-family: var(--fm);
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--gs-muted);
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .cover-tagline .signal { color: var(--gs-green); }
+  .cover-meta {
+    position: absolute;
+    bottom: 40px;
+    right: 0;
+    font-family: var(--fm);
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    color: var(--gs-muted);
+    text-align: right;
+    line-height: 2;
+  }
+  .signal-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gs-green);
+    box-shadow: 0 0 10px rgba(0,255,136,0.9);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(0,255,136,0.9); transform: scale(1); }
+    50% { box-shadow: 0 0 20px rgba(0,255,136,1); transform: scale(1.2); }
+  }
+
+  /* ─── CHAPTER DIVIDER ─── */
+  .chapter {
+    padding: 72px 0 0;
+  }
+  .chapter-num {
+    font-family: var(--fm);
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--gs-green);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .chapter-num::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--gs-border), transparent);
+  }
+  .chapter-title {
+    font-family: var(--fd);
+    font-size: clamp(36px, 5vw, 56px);
+    letter-spacing: 4px;
+    color: var(--gs-text);
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+  .chapter-title .accent { color: var(--gs-green); }
+  .chapter-intro {
+    font-size: 15px;
+    color: var(--gs-muted);
+    max-width: 580px;
+    line-height: 1.8;
+    margin-bottom: 40px;
+    font-weight: 500;
+  }
+
+  /* ─── CARDS / TILES ─── */
+  .tile-grid {
+    display: grid;
+    gap: 1px;
+    background: var(--gs-border);
+    border: 1px solid var(--gs-border);
+    margin-bottom: 48px;
+  }
+  .tile-grid-2 { grid-template-columns: 1fr 1fr; }
+  .tile-grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .tile-grid-3 { grid-template-columns: repeat(3, 1fr); }
+
+  .tile {
+    background: var(--gs-card);
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.2s;
+  }
+  .tile:hover { background: #111f18; }
+  .tile::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--gs-green);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s;
+  }
+  .tile:hover::before { transform: scaleX(1); }
+  .tile-num {
+    font-family: var(--fm);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--gs-green);
+    opacity: 0.5;
+    margin-bottom: 10px;
+  }
+  .tile-title {
+    font-family: var(--fd);
+    font-size: 24px;
+    letter-spacing: 2px;
+    color: var(--gs-text);
+    margin-bottom: 10px;
+  }
+  .tile-title .g { color: var(--gs-green); }
+  .tile-body {
+    font-size: 13px;
+    color: var(--gs-muted);
+    line-height: 1.7;
+    font-weight: 500;
+  }
+  .tile-full { grid-column: 1 / -1; }
+
+  /* ─── LOGO SHOWCASE ─── */
+  .logo-showcase {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--gs-border);
+    border: 1px solid var(--gs-border);
+    margin-bottom: 48px;
+  }
+  .logo-box {
+    background: var(--gs-dark);
+    padding: 40px 28px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+  }
+  .logo-box-label {
+    font-family: var(--fm);
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--gs-muted);
+    text-transform: uppercase;
+    margin-top: 18px;
+    align-self: flex-start;
+  }
+
+  /* ─── COLOR PALETTE ─── */
+  .palette {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: var(--gs-border);
+    border: 1px solid var(--gs-border);
+    margin-bottom: 48px;
+  }
+  .swatch {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .swatch-block {
+    height: 80px;
+    width: 100%;
+    position: relative;
+  }
+  .swatch-block .swatch-label {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 5px 8px;
+    font-family: var(--fm);
+    font-size: 7.5px;
+    letter-spacing: 1px;
+    background: rgba(0,0,0,0.4);
+  }
+  .swatch-info { padding: 10px 10px 14px; background: var(--gs-card); }
+  .swatch-name { font-family: var(--fm); font-size: 8px; letter-spacing: 1.5px; color: var(--gs-muted); text-transform: uppercase; margin-bottom: 4px; line-height: 1.5; }
+  .swatch-hex  { font-family: var(--fm); font-size: 10px; letter-spacing: 1px; color: var(--gs-text); }
+  .swatch-use  { font-size: 10px; color: var(--gs-muted); margin-top: 5px; line-height: 1.5; font-weight: 500; }
+
+  /* ─── TYPOGRAPHY SPECIMENS ─── */
+  .type-specimen {
+    border: 1px solid var(--gs-border);
+    margin-bottom: 2px;
+    display: grid;
+    grid-template-columns: 200px 1fr;
+  }
+  .type-meta {
+    background: var(--gs-card);
+    padding: 20px;
+    border-right: 1px solid var(--gs-border);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .type-meta-name { font-family: var(--fm); font-size: 9px; letter-spacing: 2px; color: var(--gs-green); text-transform: uppercase; }
+  .type-meta-detail { font-family: var(--fm); font-size: 8px; letter-spacing: 1px; color: var(--gs-muted); line-height: 1.8; }
+  .type-display {
+    background: var(--gs-dark);
+    padding: 28px 32px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  /* ─── VOICE TABLE ─── */
+  .voice-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--gs-border);
+    border: 1px solid var(--gs-border);
+    margin-bottom: 48px;
+  }
+  .voice-col { background: var(--gs-card); padding: 28px; }
+  .voice-col-head {
+    font-family: var(--fd);
+    font-size: 18px;
+    letter-spacing: 3px;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--gs-border);
+  }
+  .voice-item {
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: var(--gs-muted);
+    line-height: 2.5;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-weight: 500;
+  }
+  .vi-dot { flex-shrink: 0; margin-top: 8px; font-size: 7px; }
+  .vi-green  { color: var(--gs-green); }
+  .vi-red    { color: #ff4455; }
+  .vi-accent { color: var(--gs-accent); }
+
+  /* ─── PILLARS ─── */
+  .pillar-grid {
+    display: grid;
+    gap: 1px;
+    background: var(--gs-border);
+    border: 1px solid var(--gs-border);
+    margin-bottom: 48px;
+  }
+  .pillar { background: var(--gs-card); padding: 28px 32px; position: relative; overflow: hidden; }
+  .pillar::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--gs-green);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s;
+  }
+  .pillar:hover::before { transform: scaleX(1); }
+  .pillar-top { grid-column: 1 / -1; }
+  .pillar-num { font-family: var(--fm); font-size: 9px; letter-spacing: 2px; color: var(--gs-green); opacity: 0.5; margin-bottom: 8px; }
+  .pillar-name { font-family: var(--fd); font-size: 32px; letter-spacing: 3px; color: var(--gs-text); margin-bottom: 10px; }
+  .pillar-name .g { color: var(--gs-green); }
+  .pillar-body { font-size: 13px; color: var(--gs-muted); line-height: 1.75; max-width: 580px; font-weight: 500; }
+  .pillar-tag {
+    display: inline-block;
+    font-family: var(--fm);
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--gs-green);
+    border: 1px solid rgba(0,255,136,0.25);
+    padding: 3px 10px;
+    margin-top: 14px;
+    clip-path: polygon(5px 0%, 100% 0%, calc(100% - 5px) 100%, 0% 100%);
+  }
+
+  /* ─── USAGE DO/DON'T ─── */
+  .rule-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--gs-border);
+    border: 1px solid var(--gs-border);
+    margin-bottom: 48px;
+  }
+  .rule-card { background: var(--gs-card); padding: 28px; }
+  .rule-title { font-family: var(--fd); font-size: 20px; letter-spacing: 3px; margin-bottom: 16px; }
+  .rule-title.do { color: var(--gs-green); }
+  .rule-title.dont { color: #ff4455; }
+  .rule-title.when { color: var(--gs-accent); }
+  .rule-item { font-size: 11px; letter-spacing: 1px; color: var(--gs-muted); line-height: 2.4; display: flex; gap: 10px; font-weight: 500; }
+  .rule-item .rb { font-size: 7px; margin-top: 5px; flex-shrink: 0; }
+  .rb-do   { color: var(--gs-green); }
+  .rb-dont { color: #ff4455; }
+  .rb-when { color: var(--gs-accent); }
+
+  /* ─── COMMUNITY BLOCK ─── */
+  .community-block {
+    background: var(--gs-card);
+    border: 1px solid var(--gs-border);
+    padding: 40px;
+    margin-bottom: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .community-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 4px;
+    background: linear-gradient(to bottom, var(--gs-green), var(--gs-accent));
+  }
+  .community-title {
+    font-family: var(--fd);
+    font-size: 36px;
+    letter-spacing: 4px;
+    color: var(--gs-text);
+    margin-bottom: 16px;
+  }
+  .community-title .g { color: var(--gs-green); }
+  .community-body {
+    font-size: 14px;
+    color: var(--gs-muted);
+    max-width: 640px;
+    line-height: 1.85;
+    font-weight: 500;
+  }
+  .community-stats {
+    display: flex;
+    gap: 48px;
+    margin-top: 32px;
+    flex-wrap: wrap;
+  }
+  .stat-block { display: flex; flex-direction: column; gap: 4px; }
+  .stat-num {
+    font-family: var(--fd);
+    font-size: 42px;
+    letter-spacing: 3px;
+    color: var(--gs-green);
+    line-height: 1;
+  }
+  .stat-label {
+    font-family: var(--fm);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--gs-muted);
+    text-transform: uppercase;
+  }
+
+  /* ─── SIGNAL STATEMENT ─── */
+  .signal-statement {
+    border-top: 1px solid var(--gs-border);
+    border-bottom: 1px solid var(--gs-border);
+    padding: 48px 0;
+    margin: 48px 0;
+    text-align: center;
+  }
+  .signal-word {
+    font-family: var(--fd);
+    font-size: clamp(32px, 5vw, 60px);
+    letter-spacing: 6px;
+    color: var(--gs-green);
+    text-shadow: 0 0 30px rgba(0,255,136,0.3);
+    display: block;
+  }
+  .signal-sub {
+    font-family: var(--fm);
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--gs-muted);
+    margin-top: 12px;
+    text-transform: uppercase;
+  }
+
+  /* ─── FOOTER ─── */
+  .guide-footer {
+    border-top: 1px solid var(--gs-border);
+    padding-top: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 48px;
+  }
+  .guide-footer-logo { font-family: var(--fd); font-size: 18px; letter-spacing: 3px; color: var(--gs-green); }
+  .guide-footer-logo span { color: var(--gs-text); }
+  .guide-footer-logo em { font-style: normal; color: var(--gs-accent); }
+  .guide-footer-note { font-family: var(--fm); font-size: 9px; letter-spacing: 2px; color: var(--gs-muted); }
+
+  /* ─── PRINT BUTTON ─── */
+  .print-btn {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    z-index: 200;
+    font-family: var(--fm);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--gs-dark);
+    background: var(--gs-green);
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    text-transform: uppercase;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    transition: background 0.15s;
+  }
+  .print-btn:hover { background: var(--gs-accent); }
+
+  @media print {
+    .scanlines, .grid-bg, .print-btn { display: none !important; }
+    body { background: #050a07; }
+    .page { padding: 0 20px; }
+    .cover { min-height: auto; padding: 40px 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scanlines"></div>
+<div class="grid-bg"></div>
+<button class="print-btn" onclick="window.print()">↓ Print / Save PDF</button>
+
+<div class="page">
+
+  <!-- ══════════════════════
+       COVER
+  ══════════════════════ -->
+  <div class="cover">
+    <div class="cover-eyebrow">
+      <span class="signal-dot"></span>
+      Greens Screens Entertainment · Official Document
+    </div>
+    <div class="cover-title">
+      <span class="line-green">BRAND</span>
+      <span class="line-white">& STYLE</span>
+      <span class="line-white">GUIDE</span>
+      <span class="line-accent">SIGNAL_ALWAYS_GREEN</span>
+    </div>
+    <div class="cover-tagline">
+      <span class="signal">TECHNOLOGY</span> ◆
+      <span>GAMING</span> ◆
+      <span>ENTERTAINMENT</span> ◆
+      <span>COMMUNITY</span>
+    </div>
+    <div class="cover-meta">
+      GREENS SCREENS ENT<br>
+      VERSION 1.0 · 2026<br>
+      greensscreensent.com
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════
+       01 · WHO WE ARE
+  ══════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-num">01 · Identity</div>
+    <div class="chapter-title">WHO WE <span class="accent">ARE</span></div>
+    <div class="chapter-intro">
+      Greens Screens Entertainment is a technology-first collective operating at the intersection of gaming, creative media, and digital culture. We are not a service. We are not a product. We are a signal — and the signal is always green.
+    </div>
+
+    <div class="tile-grid tile-grid-2">
+      <div class="tile">
+        <div class="tile-num">MISSION</div>
+        <div class="tile-title">THE <span class="g">UMBRELLA_</span></div>
+        <div class="tile-body">We exist to build a technology-powered collective — a shared space where gaming culture, original entertainment, and community ambition converge. Every tool we build, every piece of content we create, and every community we cultivate lives under one roof. One signal. One frequency. One brand.</div>
+      </div>
+      <div class="tile">
+        <div class="tile-num">VISION</div>
+        <div class="tile-title">WHERE THE SIGNAL <span class="g">LEADS</span></div>
+        <div class="tile-body">The digital age didn't slow down — it accelerated. Gaming evolved from a pastime into a culture, a language, and an economy. GSE is built to grow with it. Our vision is a flagship presence — physical and digital — that becomes the go-to hub for creators, players, and communities looking to plug into something larger than themselves.</div>
+      </div>
+      <div class="tile tile-full">
+        <div class="tile-num">POSITIONING STATEMENT</div>
+        <div class="tile-title">BUILT <span class="g">DIFFERENT</span></div>
+        <div class="tile-body" style="max-width:680px;font-size:14px;line-height:1.85;">
+          Greens Screens Entertainment is a technology-first collective building at the intersection of gaming, creative media, and digital entertainment. We are a sanctuary for community and growth — rigorous in our craft, relentless in our output, and unwavering in our commitment to the people who show up. Four pillars. One signal.
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════
+       02 · THE FOUR PILLARS
+  ══════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-num">02 · Foundation</div>
+    <div class="chapter-title">THE FOUR <span class="accent">PILLARS</span></div>
+    <div class="chapter-intro">
+      Everything GSE does lives inside one of four pillars. They are not departments. They are frequencies. Together they form the full signal.
+    </div>
+
+    <div class="pillar-grid" style="grid-template-columns:1fr;">
+      <div class="pillar pillar-top">
+        <div class="pillar-num">01 / FOUNDATION</div>
+        <div class="pillar-name"><span class="g">💻</span> TECHNOLOGY</div>
+        <div class="pillar-body">The foundation of everything we build. Tools, platforms, and experiments at the cutting edge of what's possible in digital spaces — powering every pillar beneath it. Without technology, there is no signal. This pillar is never silent.</div>
+        <div class="pillar-tag">Tools · Platforms · Digital Infrastructure · Innovation</div>
+      </div>
+    </div>
+    <div class="pillar-grid" style="grid-template-columns:1fr 1fr;">
+      <div class="pillar">
+        <div class="pillar-num">02 / CULTURE</div>
+        <div class="pillar-name"><span class="g">🎮</span> GAMING</div>
+        <div class="pillar-body">From competitive titles to indie exploration — we play, review, and build culture around games that matter. Gaming is not entertainment. Gaming is the language of a generation. We speak it fluently.</div>
+        <div class="pillar-tag">Competitive · Reviews · Culture · Community Play</div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-num">03 / CRAFT</div>
+        <div class="pillar-name"><span class="g">🎬</span> ENTERTAINMENT</div>
+        <div class="pillar-body">Original content, commentary, and creative productions pushing the boundaries of digital media. This is where craft meets signal — where we tell stories that only this collective can tell.</div>
+        <div class="pillar-tag">Original Content · Streams · Commentary · Production</div>
+      </div>
+    </div>
+    <div class="pillar-grid" style="grid-template-columns:1fr;">
+      <div class="pillar pillar-top">
+        <div class="pillar-num">04 / COLLECTIVE</div>
+        <div class="pillar-name"><span class="g">🌐</span> COMMUNITY</div>
+        <div class="pillar-body">Where it all comes together. A growing network of creators, players, viewers, and enthusiasts connected by shared passion — and a shared signal. The community is not the audience. The community IS the brand. Every viewer, every Discord member, every newsletter subscriber is a partner in what GSE is building.</div>
+        <div class="pillar-tag">Discord · Newsletter · Viewers · Creators · Partners</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════
+       03 · LOGO SYSTEM
+  ══════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-num">03 · Identity System</div>
+    <div class="chapter-title">THE <span class="accent">LOGO</span></div>
+    <div class="chapter-intro">
+      Three approved logo configurations. Each serves a specific context. Never mix elements between configurations. Always use the provided SVG files — never reconstruct the logo by hand.
+    </div>
+
+    <div class="logo-showcase">
+      <!-- Primary Stacked -->
+      <div class="logo-box">
+        <svg width="160" height="100" viewBox="0 0 280 172" xmlns="http://www.w3.org/2000/svg">
+          <line x1="36" y1="100" x2="244" y2="100" stroke="rgba(0,255,136,0.14)" stroke-width="0.5"/>
+          <text font-family="'Share Tech Mono',monospace" font-size="11" letter-spacing="3" fill="#aaff44" x="263" y="24" text-anchor="end">ENT</text>
+          <circle cx="272" cy="20" r="4" fill="#00ff88" style="filter:drop-shadow(0 0 6px #00ff88)"/>
+          <text font-family="'Bebas Neue',sans-serif" font-size="84" letter-spacing="6" fill="#00ff88" x="150" y="96" text-anchor="middle" style="filter:drop-shadow(0 0 22px rgba(0,255,136,0.5))">GREENS</text>
+          <text font-family="'Bebas Neue',sans-serif" font-size="84" letter-spacing="6" fill="#e8f5ee" x="150" y="172" text-anchor="middle">SCREENS</text>
+        </svg>
+        <div class="logo-box-label">01 · Primary stacked</div>
+      </div>
+      <!-- Horizontal -->
+      <div class="logo-box" style="grid-column:span 2;">
+        <svg width="100%" viewBox="0 0 640 80" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="14" cy="40" r="5" fill="#00ff88" style="filter:drop-shadow(0 0 8px #00ff88)"/>
+          <line x1="26" y1="40" x2="38" y2="40" stroke="#00ff88" stroke-width="1.2" opacity="0.5"/>
+          <text font-family="'Bebas Neue',sans-serif" font-size="58" letter-spacing="5" fill="#00ff88" x="46" y="62" style="filter:drop-shadow(0 0 16px rgba(0,255,136,0.5))">GREENS</text>
+          <text font-family="'Bebas Neue',sans-serif" font-size="58" letter-spacing="5" fill="#e8f5ee" x="220" y="62">SCREENS</text>
+          <line x1="420" y1="12" x2="420" y2="68" stroke="rgba(0,255,136,0.2)" stroke-width="0.5"/>
+          <text font-family="'Bebas Neue',sans-serif" font-size="26" letter-spacing="4" fill="#aaff44" x="436" y="40">ENT</text>
+          <text font-family="'Share Tech Mono',monospace" font-size="8.5" letter-spacing="1.8" fill="#6b9a7a" x="436" y="58">SIGNAL_GREEN</text>
+        </svg>
+        <div class="logo-box-label">02 · Horizontal lockup</div>
+      </div>
+      <!-- Icon -->
+      <div class="logo-box">
+        <svg width="80" height="80" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="4" width="92" height="92" rx="8" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.3"/>
+          <polygon points="18,82 18,28 38,18 62,18 82,28 82,72 62,82" fill="none" stroke="#00ff88" stroke-width="1.2" opacity="0.45"/>
+          <text font-family="'Bebas Neue',sans-serif" font-size="38" letter-spacing="1" fill="#00ff88" x="50" y="62" text-anchor="middle" style="filter:drop-shadow(0 0 14px rgba(0,255,136,0.75))">GSE</text>
+          <circle cx="38" cy="88" r="2.2" fill="#00ff88" opacity="0.8"/>
+          <circle cx="50" cy="88" r="2.2" fill="#aaff44" opacity="0.6"/>
+          <circle cx="62" cy="88" r="2.2" fill="#00ff88" opacity="0.35"/>
+        </svg>
+        <div class="logo-box-label">03 · Square icon / favicon</div>
+      </div>
+      <!-- Icon Circle Note -->
+      <div class="logo-box" style="grid-column:span 2;">
+        <div style="display:flex;gap:32px;align-items:flex-start;width:100%;padding:0 8px;">
+          <div>
+            <div style="font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--gs-green);text-transform:uppercase;margin-bottom:10px;">LOGO CLEAR SPACE RULE</div>
+            <div style="font-size:12px;color:var(--gs-muted);line-height:1.8;max-width:360px;font-weight:500;">Always maintain a minimum clear space around the logo equal to the height of the letter "G" in the wordmark. Nothing — text, imagery, or other graphic elements — should enter this protected zone.</div>
+          </div>
+          <div>
+            <div style="font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--gs-green);text-transform:uppercase;margin-bottom:10px;">MINIMUM SIZE</div>
+            <div style="font-size:12px;color:var(--gs-muted);line-height:1.8;font-weight:500;">
+              Primary stacked: 120px wide minimum<br>
+              Horizontal: 200px wide minimum<br>
+              Square icon: 32px minimum (24px favicon)
+            </div>
+          </div>
+        </div>
+        <div class="logo-box-label" style="padding-top:16px;">Logo usage rules</div>
+      </div>
+    </div>
+
+    <!-- Logo Do/Don't -->
+    <div class="rule-grid">
+      <div class="rule-card">
+        <div class="rule-title do">DO</div>
+        <div class="rule-item"><span class="rb rb-do">◆</span>Use on dark (#050A07) or black backgrounds</div>
+        <div class="rule-item"><span class="rb rb-do">◆</span>Maintain the clear space rule at all times</div>
+        <div class="rule-item"><span class="rb rb-do">◆</span>Use the provided SVG files exclusively</div>
+        <div class="rule-item"><span class="rb rb-do">◆</span>Keep ENT tag and signal dot together</div>
+        <div class="rule-item"><span class="rb rb-do">◆</span>Use square icon for Discord, favicons, app icons</div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-title dont">DON'T</div>
+        <div class="rule-item"><span class="rb rb-dont">✕</span>Stretch, skew, or alter proportions</div>
+        <div class="rule-item"><span class="rb rb-dont">✕</span>Place on busy or uncontrolled backgrounds</div>
+        <div class="rule-item"><span class="rb rb-dont">✕</span>Swap Bebas Neue for any other typeface</div>
+        <div class="rule-item"><span class="rb rb-dont">✕</span>Use off-brand colors on the wordmark</div>
+        <div class="rule-item"><span class="rb rb-dont">✕</span>Remove the ENT designation or signal dot</div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-title when">USE WHEN</div>
+        <div class="rule-item"><span class="rb rb-when">→</span>Primary stacked → merch, thumbnails, posters, alerts</div>
+        <div class="rule-item"><span class="rb rb-when">→</span>Horizontal → banners, headers, overlays, email</div>
+        <div class="rule-item"><span class="rb rb-when">→</span>Square icon → avatars, Discord, GitHub, favicon</div>
+        <div class="rule-item"><span class="rb rb-when">→</span>Monochrome → print, embroidery, merch tags</div>
+        <div class="rule-item"><span class="rb rb-when">→</span>Accent lime → secondary callouts and CTAs only</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════
+       04 · COLOR PALETTE
+  ══════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-num">04 · Color</div>
+    <div class="chapter-title">THE <span class="accent">PALETTE</span></div>
+    <div class="chapter-intro">
+      Every color in the GSE palette exists for a reason. The system is built for dark environments — screens, streams, digital media. Color communicates signal strength: bright green is active, muted green is present, dark is the ground everything lives on.
+    </div>
+
+    <div class="palette">
+      <div class="swatch">
+        <div class="swatch-block" style="background:#00ff88;box-shadow:0 0 20px rgba(0,255,136,0.25)">
+          <div class="swatch-label" style="color:#050a07">PRIMARY</div>
+        </div>
+        <div class="swatch-info">
+          <div class="swatch-name">Primary Green</div>
+          <div class="swatch-hex">#00FF88</div>
+          <div class="swatch-use">Logo, headlines, CTAs, active states, neon glow</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#aaff44">
+          <div class="swatch-label" style="color:#050a07">ACCENT</div>
+        </div>
+        <div class="swatch-info">
+          <div class="swatch-name">Accent Lime</div>
+          <div class="swatch-hex">#AAFF44</div>
+          <div class="swatch-use">ENT tag, secondary highlights, hover accents</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#00cc6a">
+          <div class="swatch-label" style="color:#050a07">DIM</div>
+        </div>
+        <div class="swatch-info">
+          <div class="swatch-name">Green Dim</div>
+          <div class="swatch-hex">#00CC6A</div>
+          <div class="swatch-use">Monochrome alt, dimmed states, watermarks</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#050a07;border:1px solid rgba(0,255,136,0.12)">
+          <div class="swatch-label">BG</div>
+        </div>
+        <div class="swatch-info">
+          <div class="swatch-name">Background</div>
+          <div class="swatch-hex">#050A07</div>
+          <div class="swatch-use">Page background, primary dark surface</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#0f1e16;border:1px solid rgba(0,255,136,0.08)">
+          <div class="swatch-label">CARD</div>
+        </div>
+        <div class="swatch-info">
+          <div class="swatch-name">Card Surface</div>
+          <div class="swatch-hex">#0F1E16</div>
+          <div class="swatch-use">Cards, panels, overlay backgrounds</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#e8f5ee">
+          <div class="swatch-label" style="color:#050a07">TEXT</div>
+        </div>
+        <div class="swatch-info">
+          <div class="swatch-name">Off-White</div>
+          <div class="swatch-hex">#E8F5EE</div>
+          <div class="swatch-use">Body text, wordmark secondary, off-white elements</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#6b9a7a">
+          <div class="swatch-label">MUTED</div>
+        </div>
+        <div class="swatch-info">
+          <div class="swatch-name">Muted Green</div>
+          <div class="swatch-hex">#6B9A7A</div>
+          <div class="swatch-use">Subtext, labels, secondary info, metadata</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Color rules -->
+    <div class="tile-grid tile-grid-2" style="margin-top:0;">
+      <div class="tile">
+        <div class="tile-num">COLOR HIERARCHY</div>
+        <div class="tile-title">SIGNAL <span class="g">STRENGTH</span></div>
+        <div class="tile-body">
+          Think of the palette as signal strength. #00FF88 is full broadcast — use it for things that demand attention. #AAFF44 is the secondary channel — accents and CTAs. #6B9A7A is ambient — supporting info that doesn't compete. Background colors are the silence the signal speaks into.
+        </div>
+      </div>
+      <div class="tile">
+        <div class="tile-num">ACCESSIBILITY NOTE</div>
+        <div class="tile-title">DARK <span class="g">FIRST</span></div>
+        <div class="tile-body">
+          The GSE palette is designed for dark environments. All primary content should live on #050A07 or #0F1E16. Never place primary green on a white background without using the approved monochrome variant. The brand is a screen brand — design for the screen first, print second.
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════
+       05 · TYPOGRAPHY
+  ══════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-num">05 · Typography</div>
+    <div class="chapter-title">THE <span class="accent">TYPE</span> SYSTEM</div>
+    <div class="chapter-intro">
+      Three typefaces. Each serves a distinct role. They are never interchangeable. Together they create the three-layer voice of GSE: command, clarity, and code.
+    </div>
+
+    <!-- Bebas Neue -->
+    <div class="type-specimen">
+      <div class="type-meta">
+        <div class="type-meta-name">Display / Bebas Neue</div>
+        <div class="type-meta-detail">
+          Role: Headlines, logo, display<br>
+          Weight: Regular (400)<br>
+          Tracking: 3–8px<br>
+          Case: ALL CAPS always<br>
+          Sizes: 20px → 120px+
+        </div>
+      </div>
+      <div class="type-display">
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:5px;color:#00ff88;text-shadow:0 0 20px rgba(0,255,136,0.4);line-height:1;">GREENS SCREENS ENT</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:#e8f5ee;line-height:1;margin-top:6px;">BUILT DIFFERENT · THE UMBRELLA_</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:#6b9a7a;margin-top:6px;">SIGNAL · TECHNOLOGY · GAMING · COMMUNITY</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rajdhani -->
+    <div class="type-specimen" style="margin-top:1px;">
+      <div class="type-meta">
+        <div class="type-meta-name">Body / Rajdhani</div>
+        <div class="type-meta-detail">
+          Role: Body, nav, UI<br>
+          Weights: 400, 500, 600, 700<br>
+          Tracking: 0–2px<br>
+          Case: Sentence or upper<br>
+          Sizes: 12px → 20px
+        </div>
+      </div>
+      <div class="type-display" style="flex-direction:column;gap:8px;align-items:flex-start;">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:#e8f5ee;letter-spacing:1px;">A technology-first collective building at the intersection</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:500;color:#6b9a7a;letter-spacing:0.5px;">of gaming, creative media, and digital entertainment. Where the signal is always green.</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:400;color:#6b9a7a;letter-spacing:1px;text-transform:uppercase;">Navigation · Labels · Subheadings · UI Copy</div>
+      </div>
+    </div>
+
+    <!-- Share Tech Mono -->
+    <div class="type-specimen" style="margin-top:1px;margin-bottom:48px;">
+      <div class="type-meta">
+        <div class="type-meta-name">Mono / Share Tech Mono</div>
+        <div class="type-meta-detail">
+          Role: Code, labels, data<br>
+          Weight: Regular (400)<br>
+          Tracking: 2–4px<br>
+          Case: ALL CAPS preferred<br>
+          Sizes: 8px → 14px
+        </div>
+      </div>
+      <div class="type-display" style="flex-direction:column;gap:8px;align-items:flex-start;">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:14px;letter-spacing:3px;color:#00ff88;">SIGNAL_ALWAYS_GREEN · THE UMBRELLA_</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;color:#6b9a7a;">TECHNOLOGY · GAMING · ENTERTAINMENT · COMMUNITY</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:#6b9a7a;opacity:0.6;">greensscreensent.com · @greens.screens · © 2026</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════
+       06 · VOICE & TONE
+  ══════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-num">06 · Voice</div>
+    <div class="chapter-title">VOICE & <span class="accent">TONE</span></div>
+    <div class="chapter-intro">
+      How GSE speaks is as important as what it looks like. The brand voice is direct, sharp, and community-first. It doesn't over-explain. It doesn't undersell. It speaks like someone who knows exactly what they're building — and who they're building it for.
+    </div>
+
+    <div class="voice-grid">
+      <div class="voice-col">
+        <div class="voice-col-head" style="color:var(--gs-green)">WE ARE</div>
+        <div class="voice-item"><span class="vi-dot vi-green">◆</span><div><strong style="color:var(--gs-text);">Direct.</strong> We say what we mean. No fluff, no filler. Clear signal, clean transmission.</div></div>
+        <div class="voice-item"><span class="vi-dot vi-green">◆</span><div><strong style="color:var(--gs-text);">Community-first.</strong> The audience isn't a number. They're partners in the signal. We speak with them, not at them.</div></div>
+        <div class="voice-item"><span class="vi-dot vi-green">◆</span><div><strong style="color:var(--gs-text);">Tech-fluent.</strong> We know the tools. We reference the culture. We don't explain what a Discord server is — we build one worth joining.</div></div>
+        <div class="voice-item"><span class="vi-dot vi-green">◆</span><div><strong style="color:var(--gs-text);">Ambitious.</strong> We talk about what we're building as if it's already real — because it is, in progress. Future-facing, not vague.</div></div>
+        <div class="voice-item"><span class="vi-dot vi-green">◆</span><div><strong style="color:var(--gs-text);">Human.</strong> Behind the tech and the design is real personality. We're gamers. We're creators. We're builders. That shows up in the words.</div></div>
+      </div>
+      <div class="voice-col">
+        <div class="voice-col-head" style="color:#ff4455">WE ARE NOT</div>
+        <div class="voice-item"><span class="vi-dot vi-red">✕</span><div><strong style="color:var(--gs-text);">Corporate.</strong> No brand speak. No "synergy." No "leveraging our ecosystem." Plain language, always.</div></div>
+        <div class="voice-item"><span class="vi-dot vi-red">✕</span><div><strong style="color:var(--gs-text);">Arrogant.</strong> Confidence without community is just noise. We don't talk down. We invite in.</div></div>
+        <div class="voice-item"><span class="vi-dot vi-red">✕</span><div><strong style="color:var(--gs-text);">Vague.</strong> "Coming soon" without context. "Big things ahead" without substance. If we speak, we say something real.</div></div>
+        <div class="voice-item"><span class="vi-dot vi-red">✕</span><div><strong style="color:var(--gs-text);">Performative.</strong> We don't chase trends for attention. We create what's authentic to this brand and this community.</div></div>
+        <div class="voice-item"><span class="vi-dot vi-red">✕</span><div><strong style="color:var(--gs-text);">Passive.</strong> Every sentence should feel like it has intent behind it. We don't post — we transmit.</div></div>
+      </div>
+    </div>
+
+    <!-- Voice Examples -->
+    <div class="tile-grid tile-grid-2">
+      <div class="tile">
+        <div class="tile-num">WRITE LIKE THIS</div>
+        <div class="tile-body" style="font-size:13px;line-height:2;">
+          <div style="color:var(--gs-green);margin-bottom:8px;">✓ "Four pillars. One signal."</div>
+          <div style="color:var(--gs-green);margin-bottom:8px;">✓ "Where the signal is always green."</div>
+          <div style="color:var(--gs-green);margin-bottom:8px;">✓ "Gaming evolved into a language. We speak it fluently."</div>
+          <div style="color:var(--gs-green);margin-bottom:8px;">✓ "The community isn't the audience — the community IS the brand."</div>
+          <div style="color:var(--gs-green);">✓ "Built different. Powered by the collective."</div>
+        </div>
+      </div>
+      <div class="tile">
+        <div class="tile-num">NOT LIKE THIS</div>
+        <div class="tile-body" style="font-size:13px;line-height:2;">
+          <div style="color:#ff4455;margin-bottom:8px;">✕ "We are a full-service entertainment solution."</div>
+          <div style="color:#ff4455;margin-bottom:8px;">✕ "Stay tuned for exciting upcoming content!"</div>
+          <div style="color:#ff4455;margin-bottom:8px;">✕ "We leverage cutting-edge digital platforms to engage users."</div>
+          <div style="color:#ff4455;margin-bottom:8px;">✕ "Like, comment, and subscribe for more!"</div>
+          <div style="color:#ff4455;">✕ "We are passionate about gaming and entertainment."</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════
+       07 · COMMUNITY
+  ══════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-num">07 · Community</div>
+    <div class="chapter-title">THE <span class="accent">COLLECTIVE</span></div>
+    <div class="chapter-intro">
+      The community is not a metric. It is the reason the signal exists. Every design decision, every piece of content, and every platform we occupy is built with the community in mind — viewers, Discord members, newsletter subscribers, and partners alike.
+    </div>
+
+    <div class="community-block">
+      <div class="community-title">THE <span class="g">PEOPLE</span> BEHIND THE SIGNAL</div>
+      <div class="community-body">
+        Gaming is a collective effort — always has been. From the earliest LAN parties to modern streaming communities, games are better when played with others, and content is more powerful when it resonates with a real audience. GSE exists at that intersection. We don't build for the algorithm. We build for the people who show up — consistently, passionately, and with a shared signal.
+        <br><br>
+        Our community lives across three platforms: Instagram, YouTube, and Discord. Each serves a distinct purpose. Instagram is the visual record. YouTube is the proof of work. Discord is the living room — where the real conversations happen, where members become partners, and where the signal is loudest.
+      </div>
+      <div class="community-stats">
+        <div class="stat-block">
+          <div class="stat-num" style="font-size:28px;color:var(--gs-text);">Instagram</div>
+          <div class="stat-label">@greens.screens · Visual record</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-num" style="font-size:28px;color:var(--gs-text);">YouTube</div>
+          <div class="stat-label">@Greens.screens · Proof of work</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-num" style="font-size:28px;color:var(--gs-text);">Discord</div>
+          <div class="stat-label">discord.gg/rBdb9bsNaS · The living room</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile-grid tile-grid-2">
+      <div class="tile">
+        <div class="tile-num">PARTNERS & COLLABORATORS</div>
+        <div class="tile-title">THE <span class="g">NETWORK</span></div>
+        <div class="tile-body">Partners and collaborators are treated as extensions of the GSE signal. Any collab, sponsorship, or co-creation should align with the brand's four pillars. We don't partner for exposure alone — we partner for shared values. Technology, gaming, entertainment, community. If a partner doesn't speak at least one of those languages, the signal doesn't connect.</div>
+      </div>
+      <div class="tile">
+        <div class="tile-num">NEWSLETTER COMMUNITY</div>
+        <div class="tile-title">DIRECT <span class="g">LINE</span></div>
+        <div class="tile-body">The newsletter is the most direct channel in the GSE ecosystem. It bypasses algorithms and social media noise to land directly in the inbox of our most committed community members. It is not a marketing blast — it is a transmission. AI-generated and human-curated, it goes out monthly with signal on what GSE is building, playing, and broadcasting.</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════
+       08 · VISUAL LANGUAGE
+  ══════════════════════ -->
+  <div class="chapter">
+    <div class="chapter-num">08 · Visual Language</div>
+    <div class="chapter-title">THE <span class="accent">AESTHETIC</span></div>
+    <div class="chapter-intro">
+      The GSE visual language is retro-futurist tech — the feeling of a terminal that hasn't gone dark, a signal that never drops, a screen that's always on. Dark, electric, precise.
+    </div>
+
+    <div class="tile-grid" style="grid-template-columns:1fr 1fr 1fr;">
+      <div class="tile">
+        <div class="tile-num">TEXTURE</div>
+        <div class="tile-title"><span class="g">SCAN</span>LINES</div>
+        <div class="tile-body">Subtle horizontal scanlines overlay all primary surfaces. This is not decoration — it is atmosphere. It references the CRT screen, the broadcast monitor, the signal in transmission. Keep it subtle: 2–4px repeating at 3–4% opacity.</div>
+      </div>
+      <div class="tile">
+        <div class="tile-num">STRUCTURE</div>
+        <div class="tile-title"><span class="g">GRID</span> BG</div>
+        <div class="tile-body">A fine green-tinted grid lives behind all page content. 48×48px cells at 3% opacity on the primary green. This references the coordinate system, the map grid, the digital terrain. It is always present, always subtle.</div>
+      </div>
+      <div class="tile">
+        <div class="tile-num">SHAPE LANGUAGE</div>
+        <div class="tile-title"><span class="g">CLIP</span> PATH</div>
+        <div class="tile-body">Buttons and interactive elements use the GSE clip-path: a parallelogram with angled left and right edges. This creates a sense of forward motion and precision. All CTAs, badges, and active UI elements use this shape.</div>
+      </div>
+      <div class="tile">
+        <div class="tile-num">MOTION</div>
+        <div class="tile-title"><span class="g">SIGNAL</span> DOT</div>
+        <div class="tile-body">The pulsing signal dot is the brand's heartbeat. It appears in the logo, on live indicators, and on active states. A 2-second ease-in-out pulse between 100% and 120% scale with a glow. It signals presence, activity, and broadcast.</div>
+      </div>
+      <div class="tile">
+        <div class="tile-num">BORDER</div>
+        <div class="tile-title"><span class="g">GREEN</span> LINE</div>
+        <div class="tile-body">Active cards reveal a 2px green line at the top that scales from 0 to 100% on hover. This is the signature interaction. It appears on pillar cards, social cards, portfolio items. It means: this element is live. This element has signal.</div>
+      </div>
+      <div class="tile">
+        <div class="tile-num">CURSOR</div>
+        <div class="tile-title">THE <span class="g">BLINK_</span></div>
+        <div class="tile-body">The blinking cursor (a square block, not a line) appears after key brand phrases: "THE UMBRELLA_", "SIGNAL_ALWAYS_GREEN", "GREENS.SCREENS_". It implies the brand is live, typing, in progress. It is never decorative — always intentional.</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════
+       SIGNAL STATEMENT
+  ══════════════════════ -->
+  <div class="signal-statement">
+    <span class="signal-word">SIGNAL_ALWAYS_GREEN</span>
+    <div class="signal-sub">
+      Technology · Gaming · Entertainment · Community<br>
+      greensscreensent.com · @greens.screens
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════
+       FOOTER
+  ══════════════════════ -->
+  <div class="guide-footer">
+    <div class="guide-footer-logo"><span>GREENS </span>SCREENS<em> ENT</em></div>
+    <div class="guide-footer-note">Brand &amp; Style Guide · Version 1.0 · 2026</div>
+    <div class="guide-footer-note">greensscreensent.com</div>
+  </div>
+
+</div><!-- /page -->
+</body>
+</html>

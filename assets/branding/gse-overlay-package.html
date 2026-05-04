@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GSE Stream Overlay Package</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+  /* =============================================
+     GSE STREAM OVERLAY PACKAGE — 16:9
+     1920 × 1080 Full HD
+     OBS Browser Source Dimensions: 1920 x 1080
+  ============================================= */
+
+  :root {
+    --gs-green:   #00ff88;
+    --gs-accent:  #aaff44;
+    --gs-dark:    #050a07;
+    --gs-text:    #e8f5ee;
+    --gs-muted:   #6b9a7a;
+    --gs-border:  rgba(0,255,136,0.25);
+    --fd: 'Bebas Neue', sans-serif;
+    --fb: 'Rajdhani', sans-serif;
+    --fm: 'Share Tech Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1920px;
+    height: 1080px;
+    background: transparent;
+    overflow: hidden;
+    position: relative;
+    /* transition: all 1s; if you want fade in/out for whole package */
+  }
+
+  /* =============================================
+     CORNER WATERMARK (Top Right)
+  ============================================= */
+  .corner-watermark {
+    position: absolute;
+    top: 40px;
+    right: 40px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    opacity: 0;
+    animation: appear 1s ease forwards 0.5s;
+  }
+
+  @keyframes appear {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .cw-logo {
+    font-family: var(--fd);
+    font-size: 24px;
+    letter-spacing: 3px;
+    line-height: 1;
+    color: var(--gs-green);
+    text-shadow: 0 0 20px rgba(0,255,136,0.6);
+  }
+  .cw-logo span { color: var(--gs-text); }
+  .cw-logo em   { font-style: normal; color: var(--gs-accent); }
+
+  .cw-line {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to left, var(--gs-green), transparent);
+  }
+
+  .cw-sub {
+    font-family: var(--fm);
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    color: var(--gs-muted);
+  }
+
+  /* =============================================
+     LOWER THIRD (Left Side)
+     Auto-enters at 1.5s
+  ============================================= */
+  .lower-third {
+    position: absolute;
+    bottom: 80px;
+    left: 0;
+    z-index: 20;
+    transform: translateX(-100%);
+    opacity: 0;
+    animation: lt-enter 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards 1.5s;
+  }
+
+  @keyframes lt-enter {
+    from { transform: translateX(-100%); opacity: 0; }
+    to   { transform: translateX(0);     opacity: 1; }
+  }
+
+  .lt-inner {
+    display: flex;
+    align-items: stretch;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 24px) 100%, 0 100%);
+  }
+
+  .lt-bar {
+    width: 8px;
+    background: var(--gs-green);
+    box-shadow: 0 0 20px rgba(0,255,136,0.9);
+    flex-shrink: 0;
+  }
+
+  .lt-body {
+    background: rgba(5,10,7,0.94);
+    border-top: 1px solid var(--gs-border);
+    border-bottom: 1px solid var(--gs-border);
+    padding: 16px 52px 16px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .lt-body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(0,255,136,0.1) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .lt-name {
+    font-family: var(--fd);
+    font-size: 48px;
+    letter-spacing: 5px;
+    line-height: 1;
+    color: var(--gs-text);
+    white-space: nowrap;
+  }
+  .lt-name .h {
+    color: var(--gs-green);
+    text-shadow: 0 0 24px rgba(0,255,136,0.5);
+  }
+
+  .lt-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .lt-url {
+    font-family: var(--fm);
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--gs-muted);
+  }
+  .lt-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--gs-muted);
+    opacity: 0.6;
+  }
+  .lt-tag {
+    font-family: var(--fm);
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    color: var(--gs-green);
+    text-shadow: 0 0 12px rgba(0,255,136,0.3);
+    text-transform: uppercase;
+  }
+
+  /* Blinking cursor at end of name */
+  .cursor {
+    display: inline-block;
+    width: 10px;
+    height: 18px;
+    background: var(--gs-green);
+    margin-left: 5px;
+    vertical-align: middle;
+    animation: blink 1.2s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* =============================================
+     SIGNAL SCANLINE OVERLAY
+     Subtle atmospheric effect
+  ============================================= */
+  .scanlines {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.035) 2px,
+      rgba(0,0,0,0.035) 4px
+    );
+  }
+
+  /* =============================================
+     LOGO ALERT / POPUP
+     Large center brand flash for alerts/scenes
+  ============================================= */
+  .logo-alert {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+  }
+
+  /* Triggered by adding .fire class via JS */
+  .logo-alert.fire {
+    animation: alert-pop 3.5s ease forwards;
+  }
+
+  @keyframes alert-pop {
+    0%   { transform: translate(-50%,-50%) scale(0.8); opacity:0; }
+    15%  { transform: translate(-50%,-50%) scale(1.08); opacity:1; }
+    25%  { transform: translate(-50%,-50%) scale(0.98); opacity:1; }
+    60%  { transform: translate(-50%,-50%) scale(1); opacity:1; }
+    85%  { transform: translate(-50%,-50%) scale(1); opacity:1; }
+    100% { transform: translate(-50%,-50%) scale(1.1); opacity:0; }
+  }
+
+  .alert-backdrop {
+    position: absolute;
+    inset: -140px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,255,136,0.15) 0%, transparent 70%);
+    animation: alert-glow 3s ease-in-out infinite;
+  }
+
+  .alert-box {
+    position: relative;
+    z-index: 2;
+    background: rgba(5,10,7,0.96);
+    border: 1px solid var(--gs-border);
+    padding: 44px 84px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    clip-path: polygon(24px 0%, 100% 0%, calc(100% - 24px) 100%, 0% 100%);
+    box-shadow: 0 0 60px rgba(0,255,136,0.12);
+  }
+  .alert-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left:0; right:0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gs-green), var(--gs-accent), var(--gs-green), transparent);
+  }
+
+  .ab-eye {
+    font-family: var(--fm);
+    font-size: 14px;
+    letter-spacing: 5px;
+    color: var(--gs-green);
+    opacity: 0.7;
+    text-transform: uppercase;
+  }
+  .ab-logo {
+    font-family: var(--fd);
+    font-size: 88px;
+    letter-spacing: 8px;
+    line-height: 0.88;
+    text-align: center;
+    color: var(--gs-text);
+  }
+  .ab-logo .g { color: var(--gs-green); text-shadow: 0 0 40px rgba(0,255,136,0.5); }
+  .ab-logo .e { color: var(--gs-accent); }
+  .ab-tag {
+    font-family: var(--fm);
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--gs-muted);
+    margin-top: 6px;
+  }
+
+  /* =============================================
+     TICKER STRIP
+     Horizontal scrolling info bar
+  ============================================= */
+  .ticker-strip {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 48px;
+    background: rgba(5,10,7,0.9);
+    border-top: 1px solid var(--gs-border);
+    overflow: hidden;
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    animation: ticker-in 1s ease forwards 2.5s;
+  }
+
+  @keyframes ticker-in { from { opacity: 0; } to { opacity: 1; } }
+
+  .ticker-inner {
+    display: flex;
+    white-space: nowrap;
+    animation: ticker 30s linear infinite;
+  }
+
+  @keyframes ticker {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .ticker-item {
+    font-family: var(--fm);
+    font-size: 14px;
+    letter-spacing: 3px;
+    color: var(--gs-muted);
+    padding: 0 40px;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .ticker-item span { color: var(--gs-green); }
+  .ticker-sep { color: rgba(0,255,136,0.3); font-size: 12px; }
+
+  /* =============================================
+     CONTROL PANEL (Hidden in OBS)
+     Adds toggle buttons for previewing
+  ============================================= */
+  .ctrl-panel {
+    position: fixed;
+    top: 40px;
+    left: 40px;
+    z-index: 1000;
+    background: rgba(5,10,7,0.96);
+    border: 1px solid var(--gs-border);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 240px;
+    box-shadow: 0 0 30px rgba(0,255,136,0.08);
+  }
+  .ctrl-title {
+    font-family: var(--fm);
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--gs-muted);
+    text-transform: uppercase;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--gs-border);
+  }
+  .demo-btn {
+    background: transparent;
+    border: 1px solid var(--gs-border);
+    color: var(--gs-green);
+    font-family: var(--fm);
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 10px 18px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    width: 100%;
+    text-align: left;
+  }
+  .demo-btn:hover { background: rgba(0,255,136,0.1); border-color: var(--gs-green); }
+  .demo-btn.active { background: var(--gs-green); color: var(--gs-dark); border-color: var(--gs-green); }
+  .demo-btn.alert-btn { border-color: var(--gs-accent); color: var(--gs-accent); margin-top: 6px; }
+  .demo-btn.alert-btn:hover { background: rgba(170,255,68,0.1); }
+</style>
+</head>
+<body>
+
+<div class="scanlines"></div>
+
+<!-- CORNER WATERMARK -->
+<div class="corner-watermark" id="watermark">
+  <div class="cw-logo"><span style="color:var(--gs-green)">GREENS</span><span> SCREENS</span><em> ENT</em></div>
+  <div class="cw-line"></div>
+  <div class="cw-sub">greensscreensent.com</div>
+</div>
+
+<!-- LOWER THIRD -->
+<div class="lower-third" id="lower-third">
+  <div class="lt-inner">
+    <div class="lt-bar"></div>
+    <div class="lt-body">
+      <div class="lt-name"><span class="h">GREENS</span>.SCREENS<span class="cursor"></span></div>
+      <div class="lt-meta">
+        <span class="lt-url">greensscreensent.com</span>
+        <span class="lt-dot"></span>
+        <span class="lt-tag">Technology</span>
+        <span class="lt-dot"></span>
+        <span class="lt-tag">Gaming</span>
+        <span class="lt-dot"></span>
+        <span class="lt-tag">Entertainment</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGO ALERT -->
+<div class="logo-alert" id="logo-alert">
+  <div class="alert-backdrop"></div>
+  <div class="alert-box">
+    <div class="ab-eye">// signal incoming</div>
+    <div class="ab-logo">
+      <span class="g">GREENS</span><br>
+      SCREENS<br>
+      <span class="e">ENT</span>
+    </div>
+    <div class="ab-tag">SIGNAL_ALWAYS_GREEN</div>
+  </div>
+</div>
+
+<!-- TICKER STRIP -->
+<div class="ticker-strip" id="ticker">
+  <div class="ticker-inner" id="ticker-inner">
+    <!-- JavasScript will populate this -->
+  </div>
+</div>
+
+<!-- INTERACTIVE CONTROLS (Hide in OBS with Custom CSS or ?obs=1) -->
+<div class="ctrl-panel" id="ctrl-panel">
+  <div class="ctrl-title">GSE Overlay Controls</div>
+  <button class="demo-btn active" id="btn-lt" onclick="toggleLayer('lower-third', 'btn-lt')">Toggle Lower Third</button>
+  <button class="demo-btn active" id="btn-wm" onclick="toggleLayer('watermark', 'btn-wm')">Toggle Watermark</button>
+  <button class="demo-btn active" id="btn-tk" onclick="toggleLayer('ticker', 'btn-tk')">Toggle Ticker</button>
+  <button class="demo-btn alert-btn" id="btn-alert" onclick="fireAlert()">⚡ Fire System Alert</button>
+  <button class="demo-btn" style="margin-top:12px;opacity:0.6;font-size:8px;border-color:transparent;" onclick="location.reload()">↺ Reset Layers</button>
+</div>
+
+<script>
+  // Ticker content
+  const tickerData = [
+    "GREENS SCREENS ENTERTAINMENT",
+    "SIGNAL ALWAYS GREEN",
+    "JOIN THE DISCORD: discord.gg/rBdb9bsNaS",
+    "FOLLOW ON INSTAGRAM: @greens.screens",
+    "SUBSCRIBE TO THE NEWSLETTER",
+    "TECHNOLOGY · GAMING · ENTERTAINMENT · COMMUNITY",
+    "GREENS SCREENS ENTERTAINMENT",
+    "SIGNAL ALWAYS GREEN",
+    "JOIN THE DISCORD: discord.gg/rBdb9bsNaS",
+    "FOLLOW ON INSTAGRAM: @greens.screens",
+    "SUBSCRIBE TO THE NEWSLETTER",
+    "TECHNOLOGY · GAMING · ENTERTAINMENT · COMMUNITY",
+  ];
+
+  const tInner = document.getElementById('ticker-inner');
+  tickerData.forEach(text => {
+    const item = document.createElement('span');
+    item.className = 'ticker-item';
+    item.innerHTML = `<span class="ticker-sep">◆</span> ${text}`;
+    tInner.appendChild(item);
+  });
+  // Duplicate for seamless loop
+  tInner.innerHTML += tInner.innerHTML;
+
+  function toggleLayer(id, btnId) {
+    const el = document.getElementById(id);
+    const btn = document.getElementById(btnId);
+    const isVisible = el.style.display !== 'none';
+    el.style.display = isVisible ? 'none' : 'block';
+    btn.classList.toggle('active', !isVisible);
+  }
+
+  function fireAlert() {
+    const alert = document.getElementById('logo-alert');
+    alert.classList.remove('fire');
+    // Force reflow
+    void alert.offsetWidth;
+    alert.classList.add('fire');
+
+    const btn = document.getElementById('btn-alert');
+    btn.classList.add('active');
+    setTimeout(() => {
+      alert.classList.remove('fire');
+      btn.classList.remove('active');
+    }, 3600);
+  }
+
+  // Parse URL for OBS mode
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('obs') === '1') {
+    document.getElementById('ctrl-panel').style.display = 'none';
+  }
+</script>
+
+</body>
+</html>

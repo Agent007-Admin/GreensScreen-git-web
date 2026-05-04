@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GSE Thumbnail Production Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --g:  #00ff88; --a: #aaff44; --dim: #00cc6a;
+    --dk: #050a07; --sf: #0a1410; --cd: #0f1e16;
+    --tx: #e8f5ee; --mu: #6b9a7a;
+    --bd: rgba(0,255,136,0.15); --bdb: rgba(0,255,136,0.4);
+    --red: #ff4455;
+    --fd: 'Bebas Neue', sans-serif;
+    --fb: 'Rajdhani', sans-serif;
+    --fm: 'Share Tech Mono', monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--dk); color: var(--tx);
+    font-family: var(--fb); font-size: 15px; line-height: 1.7;
+  }
+  .scanlines {
+    position: fixed; inset:0; pointer-events:none; z-index:100;
+    background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);
+  }
+  .grid-bg {
+    position: fixed; inset:0; pointer-events:none; z-index:0;
+    background-image: linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px);
+    background-size: 48px 48px;
+  }
+  .page { position:relative; z-index:1; max-width:960px; margin:0 auto; padding:0 40px 80px; }
+
+  /* ── COVER ── */
+  .cover {
+    padding: 72px 0 56px;
+    border-bottom: 1px solid var(--bd);
+    position: relative;
+  }
+  .cover-eyebrow {
+    font-family: var(--fm); font-size:10px; letter-spacing:4px; color:var(--g);
+    display:flex; align-items:center; gap:14px; margin-bottom:20px;
+  }
+  .cover-eyebrow::before,.cover-eyebrow::after { content:''; height:1px; width:36px; background:rgba(0,255,136,0.4); }
+  .cover-title {
+    font-family: var(--fd); font-size: clamp(52px,8vw,88px);
+    letter-spacing:5px; line-height:0.9;
+  }
+  .cover-title .g { color:var(--g); text-shadow:0 0 30px rgba(0,255,136,0.4); display:block; }
+  .cover-title .w { color:var(--tx); display:block; }
+  .cover-sub {
+    font-family: var(--fm); font-size:11px; letter-spacing:3px; color:var(--mu);
+    margin-top:22px; display:flex; align-items:center; gap:10px;
+  }
+  .sdot {
+    width:7px; height:7px; border-radius:50%; background:var(--g);
+    box-shadow:0 0 10px rgba(0,255,136,0.9);
+    animation: pulse 2s ease-in-out infinite; display:inline-block;
+  }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 8px rgba(0,255,136,0.9);} 50%{box-shadow:0 0 18px rgba(0,255,136,1);transform:scale(1.2);} }
+  .cover-meta {
+    position:absolute; bottom:32px; right:0;
+    font-family:var(--fm); font-size:9px; letter-spacing:2px; color:var(--mu); text-align:right; line-height:2;
+  }
+
+  /* ── CHAPTER ── */
+  .chapter { padding:64px 0 0; }
+  .chapter-num {
+    font-family:var(--fm); font-size:9px; letter-spacing:3px; color:var(--g);
+    text-transform:uppercase; display:flex; align-items:center; gap:12px; margin-bottom:10px;
+  }
+  .chapter-num::after { content:''; flex:1; height:1px; background:linear-gradient(to right,var(--bd),transparent); }
+  .chapter-title { font-family:var(--fd); font-size:clamp(32px,4.5vw,50px); letter-spacing:4px; color:var(--tx); line-height:1; margin-bottom:16px; }
+  .chapter-title .accent { color:var(--g); }
+  .chapter-intro { font-size:14px; color:var(--mu); max-width:580px; line-height:1.8; margin-bottom:36px; font-weight:500; }
+
+  /* ── DECISION TREE ── */
+  .decision-tree {
+    border:1px solid var(--bd); background:var(--cd); padding:36px;
+    margin-bottom:48px; position:relative; overflow:hidden;
+  }
+  .decision-tree::before {
+    content:''; position:absolute; top:0; left:0; bottom:0; width:4px;
+    background:linear-gradient(to bottom, var(--g), var(--a));
+  }
+  .dt-title { font-family:var(--fd); font-size:22px; letter-spacing:3px; color:var(--tx); margin-bottom:24px; }
+  .dt-title .g { color:var(--g); }
+  .dt-row {
+    display:grid; grid-template-columns:1fr 24px 1fr;
+    align-items:center; gap:0; margin-bottom:4px;
+  }
+  .dt-q {
+    font-family:var(--fm); font-size:10px; letter-spacing:2px; color:var(--mu);
+    text-transform:uppercase; background:var(--sf);
+    border:1px solid var(--bd); padding:12px 16px;
+  }
+  .dt-arrow { text-align:center; color:rgba(0,255,136,0.3); font-size:14px; }
+  .dt-a {
+    font-family:var(--fd); font-size:20px; letter-spacing:3px;
+    padding:10px 18px; text-align:center;
+    clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+  }
+  .dt-a.a { background:rgba(0,255,136,0.12); color:var(--g); border:1px solid rgba(0,255,136,0.35); }
+  .dt-a.b { background:rgba(170,255,68,0.1); color:var(--a); border:1px solid rgba(170,255,68,0.3); }
+  .dt-a.c { background:rgba(0,204,106,0.08); color:var(--dim); border:1px solid rgba(0,204,106,0.3); }
+
+  /* ── TYPE CARDS ── */
+  .type-card {
+    border:1px solid var(--bd); margin-bottom:48px; overflow:hidden;
+  }
+  .type-card-header {
+    display:grid; grid-template-columns:auto 1fr auto;
+    align-items:center; gap:20px;
+    background:var(--cd); padding:24px 28px;
+    border-bottom:1px solid var(--bd); position:relative;
+  }
+  .type-card-header::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  }
+  .type-card-header.a::before { background:linear-gradient(to right,var(--g),transparent); }
+  .type-card-header.b::before { background:linear-gradient(to right,var(--a),transparent); }
+  .type-card-header.c::before { background:linear-gradient(to right,var(--dim),transparent); }
+  .type-badge {
+    font-family:var(--fd); font-size:52px; letter-spacing:2px; line-height:1;
+    clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);
+    padding:4px 22px;
+  }
+  .type-badge.a { color:var(--g); background:rgba(0,255,136,0.1); }
+  .type-badge.b { color:var(--a); background:rgba(170,255,68,0.08); }
+  .type-badge.c { color:var(--dim); background:rgba(0,204,106,0.07); }
+  .type-header-info {}
+  .type-name { font-family:var(--fd); font-size:28px; letter-spacing:4px; color:var(--tx); }
+  .type-use { font-family:var(--fm); font-size:9px; letter-spacing:2px; color:var(--mu); margin-top:4px; text-transform:uppercase; }
+  .type-formats {
+    display:flex; flex-direction:column; gap:4px; align-items:flex-end;
+  }
+  .fmt-pill {
+    font-family:var(--fm); font-size:8px; letter-spacing:2px; color:var(--g);
+    border:1px solid rgba(0,255,136,0.25); padding:3px 12px; text-transform:uppercase;
+    clip-path:polygon(4px 0%,100% 0%,calc(100% - 4px) 100%,0% 100%);
+  }
+
+  /* ── CHANGE / LOCK GRID ── */
+  .cl-grid {
+    display:grid; grid-template-columns:1fr 1fr; gap:1px;
+    background:var(--bd);
+  }
+  .cl-col { background:var(--cd); padding:28px; }
+  .cl-head {
+    font-family:var(--fd); font-size:16px; letter-spacing:3px;
+    margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--bd);
+  }
+  .cl-head.change { color:var(--g); }
+  .cl-head.lock   { color:var(--mu); }
+  .cl-item {
+    font-size:12px; letter-spacing:0.5px; color:var(--mu);
+    line-height:2.6; display:flex; gap:10px; align-items:flex-start; font-weight:500;
+  }
+  .ci-dot { flex-shrink:0; margin-top:8px; font-size:7px; }
+  .ci-green { color:var(--g); }
+  .ci-lock  { color:rgba(107,154,122,0.4); }
+  .ci-val {
+    font-family:var(--fm); font-size:9px; letter-spacing:1.5px;
+    color:var(--g); background:rgba(0,255,136,0.08);
+    border:1px solid rgba(0,255,136,0.2); padding:1px 8px; margin-left:4px;
+    display:inline-block; vertical-align:middle;
+    clip-path:polygon(3px 0%,100% 0%,calc(100% - 3px) 100%,0% 100%);
+  }
+  .ci-val.locked { color:rgba(107,154,122,0.5); background:rgba(107,154,122,0.05); border-color:rgba(107,154,122,0.15); }
+
+  /* ── EXAMPLE ROWS ── */
+  .example-block {
+    background:var(--sf); border-top:1px solid var(--bd); padding:28px;
+  }
+  .ex-head {
+    font-family:var(--fm); font-size:9px; letter-spacing:3px; color:var(--g);
+    text-transform:uppercase; margin-bottom:16px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .ex-head::after { content:''; flex:1; height:1px; background:linear-gradient(to right,var(--bd),transparent); }
+  .ex-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+  .ex-card {
+    background:var(--cd); border:1px solid var(--bd); padding:18px;
+    position:relative; overflow:hidden;
+  }
+  .ex-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:1.5px;
+    background:var(--g); transform:scaleX(0); transform-origin:left; transition:transform 0.3s;
+  }
+  .ex-card:hover::before { transform:scaleX(1); }
+  .ex-game {
+    font-family:var(--fd); font-size:24px; letter-spacing:3px; color:var(--g); line-height:1;
+  }
+  .ex-type { font-family:var(--fm); font-size:8px; letter-spacing:2px; color:var(--mu); margin-top:4px; text-transform:uppercase; }
+  .ex-changes { margin-top:12px; }
+  .ex-change-row {
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:11px; color:var(--mu); line-height:2.4; font-weight:500;
+    border-bottom:1px solid rgba(0,255,136,0.06); padding:0 2px;
+  }
+  .ex-change-row:last-child { border-bottom:none; }
+  .ex-field { font-family:var(--fm); font-size:8px; letter-spacing:1.5px; color:var(--mu); opacity:0.7; }
+  .ex-value { font-family:var(--fm); font-size:9px; letter-spacing:1px; color:var(--g); }
+  .ex-locked { color:rgba(107,154,122,0.4); font-size:9px; }
+
+  /* ── QUICK REF TABLE ── */
+  .qr-table { width:100%; border-collapse:collapse; margin-bottom:48px; }
+  .qr-table th {
+    font-family:var(--fm); font-size:9px; letter-spacing:2px; color:var(--g);
+    text-transform:uppercase; text-align:left; padding:12px 16px;
+    background:var(--cd); border:1px solid var(--bd);
+  }
+  .qr-table td {
+    font-size:12px; color:var(--mu); padding:12px 16px;
+    border:1px solid var(--bd); background:var(--sf);
+    font-weight:500; vertical-align:top;
+  }
+  .qr-table tr:hover td { background:#0c1812; }
+  .qr-table .type-a { color:var(--g); font-family:var(--fd); font-size:16px; letter-spacing:2px; }
+  .qr-table .type-b { color:var(--a); font-family:var(--fd); font-size:16px; letter-spacing:2px; }
+  .qr-table .type-c { color:var(--dim); font-family:var(--fd); font-size:16px; letter-spacing:2px; }
+  .mono { font-family:var(--fm); font-size:10px; letter-spacing:1px; }
+
+  /* ── SIGNAL STATEMENT ── */
+  .signal-statement {
+    border-top:1px solid var(--bd); border-bottom:1px solid var(--bd);
+    padding:40px 0; margin:48px 0; text-align:center;
+  }
+  .signal-word {
+    font-family:var(--fd); font-size:clamp(28px,4vw,52px);
+    letter-spacing:6px; color:var(--g); text-shadow:0 0 28px rgba(0,255,136,0.3); display:block;
+  }
+  .signal-sub { font-family:var(--fm); font-size:10px; letter-spacing:4px; color:var(--mu); margin-top:10px; text-transform:uppercase; }
+
+  /* ── FOOTER ── */
+  .guide-footer {
+    border-top:1px solid var(--bd); padding-top:28px;
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-top:48px;
+  }
+  .footer-logo { font-family:var(--fd); font-size:16px; letter-spacing:3px; color:var(--g); }
+  .footer-logo span { color:var(--tx); }
+  .footer-logo em { font-style:normal; color:var(--a); }
+  .footer-note { font-family:var(--fm); font-size:9px; letter-spacing:2px; color:var(--mu); }
+
+  .print-btn {
+    position:fixed; bottom:28px; right:28px; z-index:200;
+    font-family:var(--fm); font-size:9px; letter-spacing:2px; color:var(--dk);
+    background:var(--g); border:none; padding:10px 20px; cursor:pointer; text-transform:uppercase;
+    clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%); transition:background 0.15s;
+  }
+  .print-btn:hover { background:var(--a); }
+
+  @media print {
+    .scanlines,.grid-bg,.print-btn { display:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scanlines"></div>
+<div class="grid-bg"></div>
+<button class="print-btn" onclick="window.print()">↓ Print / PDF</button>
+
+<div class="page">
+
+  <!-- ═══════════ COVER ═══════════ -->
+  <div class="cover">
+    <div class="cover-eyebrow">
+      <span class="sdot"></span>
+      Greens Screens Entertainment · Production Reference
+    </div>
+    <div class="cover-title">
+      <span class="g">THUMBNAIL</span>
+      <span class="w">PRODUCTION</span>
+      <span class="w">GUIDE</span>
+    </div>
+    <div class="cover-sub">
+      TYPE A · TYPE B · TYPE C · When to use each · What to change · What to keep
+    </div>
+    <div class="cover-meta">
+      GREENS SCREENS ENT<br>
+      THUMBNAIL SYSTEM · 2026<br>
+      greensscreensent.com
+    </div>
+  </div>
+
+
+  <!-- ═══════════ HOW TO USE THIS GUIDE ═══════════ -->
+  <div class="chapter">
+    <div class="chapter-num">00 · How to use this guide</div>
+    <div class="chapter-title">THE <span class="accent">WORKFLOW</span></div>
+    <div class="chapter-intro">
+      Every time you create a new thumbnail, this guide is your first stop. It tells you which template to open, exactly which fields to update for your specific video, and which elements to leave completely untouched. The brand stays consistent. Only the content changes.
+    </div>
+
+    <div style="background:var(--cd);border:1px solid var(--bd);padding:28px;margin-bottom:48px;">
+      <div style="font-family:var(--fd);font-size:18px;letter-spacing:3px;color:var(--g);margin-bottom:20px;">3-STEP PROCESS FOR EVERY THUMBNAIL</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bd);">
+        <div style="background:var(--sf);padding:22px;position:relative;">
+          <div style="font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--g);opacity:0.5;margin-bottom:8px;">STEP 01</div>
+          <div style="font-family:var(--fd);font-size:22px;letter-spacing:2px;color:var(--tx);margin-bottom:8px;">PICK THE TYPE</div>
+          <div style="font-size:12px;color:var(--mu);line-height:1.7;font-weight:500;">Ask: what kind of video is this? Game clip, review, or brand/general content? Your answer determines which HTML file to open.</div>
+        </div>
+        <div style="background:var(--sf);padding:22px;">
+          <div style="font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--g);opacity:0.5;margin-bottom:8px;">STEP 02</div>
+          <div style="font-family:var(--fd);font-size:22px;letter-spacing:2px;color:var(--tx);margin-bottom:8px;">CHANGE ONLY WHAT'S LISTED</div>
+          <div style="font-size:12px;color:var(--mu);line-height:1.7;font-weight:500;">Each type has a short list of fields to update — the title, game name, score, etc. Change only those. Everything else is locked brand elements.</div>
+        </div>
+        <div style="background:var(--sf);padding:22px;">
+          <div style="font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--g);opacity:0.5;margin-bottom:8px;">STEP 03</div>
+          <div style="font-family:var(--fd);font-size:22px;letter-spacing:2px;color:var(--tx);margin-bottom:8px;">RECORD OR EXPORT</div>
+          <div style="font-size:12px;color:var(--mu);line-height:1.7;font-weight:500;">Open the HTML file in a browser. Use OBS Browser Source to record it as an mp4, or screenshot it for a static thumbnail image.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════ DECISION TREE ═══════════ -->
+  <div class="chapter">
+    <div class="chapter-num">01 · Decision</div>
+    <div class="chapter-title">WHICH <span class="accent">TYPE?</span></div>
+    <div class="chapter-intro">
+      Three questions. One answer. Run through these every time — it takes ten seconds and keeps the system consistent.
+    </div>
+
+    <div class="decision-tree">
+      <div class="dt-title">WHAT <span class="g">TYPE</span> IS THIS VIDEO?</div>
+
+      <div class="dt-row">
+        <div class="dt-q">Is this a highlight, clip, play, or gameplay moment?</div>
+        <div class="dt-arrow">→</div>
+        <div class="dt-a a">TYPE A — GAME CLIP</div>
+      </div>
+      <div style="height:4px;"></div>
+      <div class="dt-row">
+        <div class="dt-q">Is this a dedicated review, deep-dive, or verdict on a specific game?</div>
+        <div class="dt-arrow">→</div>
+        <div class="dt-a b">TYPE B — GAME REVIEW</div>
+      </div>
+      <div style="height:4px;"></div>
+      <div class="dt-row">
+        <div class="dt-q">Is this brand content, a community update, collab, or general video?</div>
+        <div class="dt-arrow">→</div>
+        <div class="dt-a c">TYPE C — BRAND / GENERAL</div>
+      </div>
+
+      <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--bd);">
+        <div style="font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--mu);margin-bottom:8px;text-transform:uppercase;">Still unsure?</div>
+        <div style="font-size:12px;color:var(--mu);line-height:1.8;font-weight:500;">
+          If the video is primarily about a specific game moment → <span style="color:var(--g);">Type A</span>.<br>
+          If the video renders a judgment or opinion on a game → <span style="color:var(--a);">Type B</span>.<br>
+          If neither of those is true, or the video is about GSE itself → <span style="color:var(--dim);">Type C</span>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════ TYPE A ═══════════ -->
+  <div class="chapter">
+    <div class="chapter-num">02 · Type A</div>
+    <div class="chapter-title">TYPE <span class="accent">A</span> — GAME CLIPS</div>
+    <div class="chapter-intro">
+      Use for: highlight reels, clutch plays, funny moments, montages, any video where the primary content is gameplay footage. The diagonal slash design communicates speed and energy. It fades to black at ~3 seconds and cuts directly into your clip.
+    </div>
+
+    <div class="type-card">
+      <div class="type-card-header a">
+        <div class="type-badge a">A</div>
+        <div class="type-header-info">
+          <div class="type-name">GAME CLIP / HIGHLIGHTS</div>
+          <div class="type-use">File: gse-thumb-type-a.html · Fades to black at 3s</div>
+        </div>
+        <div class="type-formats">
+          <div class="fmt-pill">16:9 Desktop</div>
+          <div class="fmt-pill">9:16 Shorts</div>
+        </div>
+      </div>
+
+      <div class="cl-grid">
+        <div class="cl-col">
+          <div class="cl-head change">✎ CHANGE THESE</div>
+          <div class="cl-item">
+            <span class="ci-dot ci-green">◆</span>
+            <div>
+              <strong style="color:var(--tx);">Main title — line 1</strong>
+              <span class="ci-val">INSANE</span>
+              <br>The big top word. Use the emotion or action — CLUTCH, INSANE, CLEAN, FINAL, WILD. One word, all caps, as punchy as possible.
+            </div>
+          </div>
+          <div class="cl-item">
+            <span class="ci-dot ci-green">◆</span>
+            <div>
+              <strong style="color:var(--tx);">Main title — line 2</strong>
+              <span class="ci-val">MOMENT</span>
+              <br>The descriptor word. PLAY, WIN, CLIP, KILL, MOMENT, ROUND. Keep it one word.
+            </div>
+          </div>
+          <div class="cl-item">
+            <span class="ci-dot ci-green">◆</span>
+            <div>
+              <strong style="color:var(--tx);">Category pill (top left)</strong>
+              <span class="ci-val">GAME CLIP</span>
+              <br>Swap for the game name — MARIO, WARZONE, ELDEN RING, FIFA. Max 2 words.
+            </div>
+          </div>
+          <div class="cl-item">
+            <span class="ci-dot ci-green">◆</span>
+            <div>
+              <strong style="color:var(--tx);">Live indicator (top right)</strong>
+              <span class="ci-val">LIVE CAPTURE</span>
+              <br>Can stay as LIVE CAPTURE or change to the game title if you prefer.
+            </div>
+          </div>
+        </div>
+
+        <div class="cl-col">
+          <div class="cl-head lock">🔒 NEVER CHANGE THESE</div>
+          <div class="cl-item">
+            <span class="ci-dot ci-lock">◆</span>
+            <div>
+              <strong style="color:var(--mu);">Logo bug</strong>
+              <span class="ci-val locked">GREENS SCREENS ENT</span>
+              <br>Bottom-right corner. Always present. greensscreensent.com beneath it.
+            </div>
+          </div>
+          <div class="cl-item">
+            <span class="ci-dot ci-lock">◆</span>
+            <div>
+              <strong style="color:var(--mu);">GREENS.SCREENS sub-line</strong>
+              <span class="ci-val locked">GREENS.SCREENS</span>
+              <br>Appears beneath line 2 in accent lime. This is the brand handle. Do not remove.
+            </div>
+          </div>
+          <div class="cl-item">
+            <span class="ci-dot ci-lock">◆</span>
+            <div>
+              <strong style="color:var(--mu);">Diagonal slash animation</strong><br>
+              The scrolling background. The glitch bars. The corner marks. The fade-to-black timing. These are fixed design elements.
+            </div>
+          </div>
+          <div class="cl-item">
+            <span class="ci-dot ci-lock">◆</span>
+            <div>
+              <strong style="color:var(--mu);">Colors</strong><br>
+              #00FF88 green. #AAFF44 lime. #050A07 background. Never deviate.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXAMPLES -->
+      <div class="example-block">
+        <div class="ex-head">Real examples — what you'd actually type in</div>
+        <div class="ex-grid">
+          <div class="ex-card">
+            <div class="ex-game">MARIO</div>
+            <div class="ex-type">Super Mario Bros. Wonder · Clip</div>
+            <div class="ex-changes">
+              <div class="ex-change-row"><span class="ex-field">LINE 1</span><span class="ex-value">INSANE</span></div>
+              <div class="ex-change-row"><span class="ex-field">LINE 2</span><span class="ex-value">RUN</span></div>
+              <div class="ex-change-row"><span class="ex-field">PILL</span><span class="ex-value">MARIO</span></div>
+              <div class="ex-change-row"><span class="ex-field">SUB</span><span class="ex-locked">GREENS.SCREENS ←locked</span></div>
+            </div>
+          </div>
+          <div class="ex-card">
+            <div class="ex-game">WARZONE</div>
+            <div class="ex-type">Call of Duty Warzone · Highlight</div>
+            <div class="ex-changes">
+              <div class="ex-change-row"><span class="ex-field">LINE 1</span><span class="ex-value">CLUTCH</span></div>
+              <div class="ex-change-row"><span class="ex-field">LINE 2</span><span class="ex-value">WIN</span></div>
+              <div class="ex-change-row"><span class="ex-field">PILL</span><span class="ex-value">WARZONE</span></div>
+              <div class="ex-change-row"><span class="ex-field">LIVE</span><span class="ex-value">LIVE CAPTURE</span></div>
+            </div>
+          </div>
+          <div class="ex-card">
+            <div class="ex-game">ELDEN</div>
+            <div class="ex-type">Elden Ring · Boss kill moment</div>
+            <div class="ex-changes">
+              <div class="ex-change-row"><span class="ex-field">LINE 1</span><span class="ex-value">FIRST TRY</span></div>
+              <div class="ex-change-row"><span class="ex-field">LINE 2</span><span class="ex-value">KILL</span></div>
+              <div class="ex-change-row"><span class="ex-field">PILL</span><span class="ex-value">ELDEN RING</span></div>
+              <div class="ex-change-row"><span class="ex-field">SUB</span><span class="ex-locked">GREENS.SCREENS ←locked</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════ TYPE B ═══════════ -->
+  <div class="chapter">
+    <div class="chapter-num">03 · Type B</div>
+    <div class="chapter-title">TYPE <span class="accent">B</span> — GAME REVIEWS</div>
+    <div class="chapter-intro">
+      Use for: dedicated game reviews, first impressions, deep-dives, "is it worth it" videos, opinion pieces on a specific title. The score block is the hero — it signals immediately that this is an authoritative verdict, not just a clip.
+    </div>
+
+    <div class="type-card">
+      <div class="type-card-header b">
+        <div class="type-badge b">B</div>
+        <div class="type-header-info">
+          <div class="type-name">GAME REVIEW / VERDICT</div>
+          <div class="type-use">File: gse-thumb-type-b.html · Persistent (no fade)</div>
+        </div>
+        <div class="type-formats">
+          <div class="fmt-pill">16:9 Desktop</div>
+          <div class="fmt-pill">9:16 Shorts</div>
+        </div>
+      </div>
+
+      <div class="cl-grid">
+        <div class="cl-col">
+          <div class="cl-head change">✎ CHANGE THESE</div>
+          <div class="cl-item">
+            <span class="ci-dot ci-green">◆</span>
+            <div>
+              <strong style="color:var(--tx);">Game title — line 1 (green)</strong>
+              <span class="ci-val">GAME</span>
+              <br>First word or franchise name of the game. Examples: ELDEN, MARIO, HALO, ZELDA, FIFA.
+            </div>
+          </div>
+          <div class="cl-item">
+            <span class="ci-dot ci-green">◆</span>
+            <div>
+              <strong style="color:var(--tx);">Game title — line 2 (white)</strong>
+              <span class="ci-val">TITLE HERE</span>
+              <br>Second word or subtitle. Examples: RING, KART 8, INFINITE, TOTK, 25. Keep it short enough to fit the frame.
+            </div>
+          </div>
+          <div class="cl-item">
+            <span class="ci-dot ci-green">◆</span>
+            <div>
+              <strong style="color:var(--tx);">Score number</strong>
+              <span class="ci-val">9.1</span>
+              <br>Your verdict score out of 10. One decimal place. This is the most visible element — make sure it reflects your actual take.
+            </div>
+          </div>
+          <div class="cl-item">
+            <span class="ci-dot ci-green">◆</span>
+            <div>
+              <strong style="color:var(--tx);">Year in meta line</strong>
+              <span class="ci-val">2026</span>
+              <br>Update to the year of the review if different from 2026.
+            </div>
+          </div>
+        </div>
+
+        <div class="cl-col">
+          <div class="cl-head lock">🔒 NEVER CHANGE THESE</div>
+          <div class="cl-item">
+            <span class="ci-dot ci-lock">◆</span>
+            <div>
+              <strong style="color:var(--mu);">Logo bug</strong>
+              <span class="ci-val locked">GREENS SCREENS ENT</span>
+              <br>Bottom-right. Always present.
+            </div>
+          </div>
+          <div class="cl-item">
+            <span class="ci-dot ci-lock">◆</span>
+            <div>
+              <strong style="color:var(--mu);">Meta line prefix</strong>
+              <span class="ci-val locked">GREENS.SCREENS REVIEW ·</span>
+              <br>The attribution text before the year. This stays. Only the year changes.
+            </div>
+          </div>
+          <div class="cl-item">
+            <span class="ci-dot ci-lock">◆</span>
+            <div>
+              <strong style="color:var(--mu);">REVIEW pill (top left)</strong>
+              <span class="ci-val locked">REVIEW</span>
+              <br>Always reads REVIEW on this template. Do not change to the game name.
+            </div>
+          </div>
+          <div class="cl-item">
+            <span class="ci-dot ci-lock">◆</span>
+            <div>
+              <strong style="color:var(--mu);">Score label</strong>
+              <span class="ci-val locked">/ 10 · SIGNAL</span>
+              <br>The denominator and label beneath the score. Do not change.
+            </div>
+          </div>
+          <div class="cl-item">
+            <span class="ci-dot ci-lock">◆</span>
+            <div>
+              <strong style="color:var(--mu);">REVIEWED watermark, scan drift, side bar</strong><br>
+              All background animation elements are fixed. No stars — the numeric score is the only verdict.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="ex-head">Real examples — what you'd actually type in</div>
+        <div class="ex-grid">
+          <div class="ex-card">
+            <div class="ex-game" style="color:var(--a);">ELDEN</div>
+            <div class="ex-type">Elden Ring · Full review</div>
+            <div class="ex-changes">
+              <div class="ex-change-row"><span class="ex-field">LINE 1</span><span class="ex-value">ELDEN</span></div>
+              <div class="ex-change-row"><span class="ex-field">LINE 2</span><span class="ex-value">RING</span></div>
+              <div class="ex-change-row"><span class="ex-field">SCORE</span><span class="ex-value">9.4</span></div>
+              <div class="ex-change-row"><span class="ex-field">YEAR</span><span class="ex-value">2026</span></div>
+            </div>
+          </div>
+          <div class="ex-card">
+            <div class="ex-game" style="color:var(--a);">ZELDA</div>
+            <div class="ex-type">Zelda: Tears of the Kingdom</div>
+            <div class="ex-changes">
+              <div class="ex-change-row"><span class="ex-field">LINE 1</span><span class="ex-value">ZELDA</span></div>
+              <div class="ex-change-row"><span class="ex-field">LINE 2</span><span class="ex-value">TOTK</span></div>
+              <div class="ex-change-row"><span class="ex-field">SCORE</span><span class="ex-value">9.7</span></div>
+              <div class="ex-change-row"><span class="ex-field">PILL</span><span class="ex-locked">REVIEW ←locked</span></div>
+            </div>
+          </div>
+          <div class="ex-card">
+            <div class="ex-game" style="color:var(--a);">FIFA</div>
+            <div class="ex-type">EA FC 25 · Is it worth it?</div>
+            <div class="ex-changes">
+              <div class="ex-change-row"><span class="ex-field">LINE 1</span><span class="ex-value">EA FC</span></div>
+              <div class="ex-change-row"><span class="ex-field">LINE 2</span><span class="ex-value">25</span></div>
+              <div class="ex-change-row"><span class="ex-field">SCORE</span><span class="ex-value">7.2</span></div>
+              <div class="ex-change-row"><span class="ex-field">META</span><span class="ex-locked">GREENS.SCREENS REVIEW ←locked</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════ TYPE C ═══════════ -->
+  <div class="chapter">
+    <div class="chapter-num">04 · Type C</div>
+    <div class="chapter-title">TYPE <span class="accent">C</span> — BRAND CONTENT</div>
+    <div class="chapter-intro">
+      Use for: channel trailers, community updates, collab announcements, "about GSE" videos, newsletter reveals, brand milestones, or any video that isn't tied to a specific game. The radar and concentric rings signal broadcast — GSE reaching outward.
+    </div>
+
+    <div class="type-card">
+      <div class="type-card-header c">
+        <div class="type-badge c">C</div>
+        <div class="type-header-info">
+          <div class="type-name">BRAND / GENERAL CONTENT</div>
+          <div class="type-use">File: gse-thumb-type-c.html · Radar animation · Persistent</div>
+        </div>
+        <div class="type-formats">
+          <div class="fmt-pill">16:9 Desktop</div>
+          <div class="fmt-pill">9:16 Shorts</div>
+        </div>
+      </div>
+
+      <div class="cl-grid">
+        <div class="cl-col">
+          <div class="cl-head change">✎ CHANGE THESE</div>
+          <div class="cl-item">
+            <span class="ci-dot ci-green">◆</span>
+            <div>
+              <strong style="color:var(--tx);">Tagline (top center)</strong>
+              <span class="ci-val">TECHNOLOGY · GAMING · ENTERTAINMENT</span>
+              <br>Can stay as-is for most videos. For specific content, change to the topic — "COMMUNITY UPDATE", "NEW PARTNER · JOIN US", "SEASON 2 · INCOMING".
+            </div>
+          </div>
+          <div class="cl-item">
+            <span class="ci-dot ci-green">◆</span>
+            <div>
+              <strong style="color:var(--tx);">ENT sub-line (accent lime)</strong>
+              <span class="ci-val">ENT</span>
+              <br>For most videos, leave as ENT. For milestone or special content only, this can become a short specific message — "SEASON 2", "NEW ERA", "100K". One word or phrase maximum.
+            </div>
+          </div>
+          <div class="cl-item">
+            <span class="ci-dot ci-green">◆</span>
+            <div>
+              <strong style="color:var(--tx);">Pillar pills (bottom row)</strong>
+              <span class="ci-val">TECH · GAMING · ENT · COMMUNITY</span>
+              <br>These can be reduced or swapped for specific content focus. For a community update, you might show only COMMUNITY. For a tech video, only TECH. Default is all four.
+            </div>
+          </div>
+        </div>
+
+        <div class="cl-col">
+          <div class="cl-head lock">🔒 NEVER CHANGE THESE</div>
+          <div class="cl-item">
+            <span class="ci-dot ci-lock">◆</span>
+            <div>
+              <strong style="color:var(--mu);">GREENS / SCREENS wordmark</strong>
+              <span class="ci-val locked">GREENS · SCREENS</span>
+              <br>The two main lines are always GREENS (green) and SCREENS (white). These never change.
+            </div>
+          </div>
+          <div class="cl-item">
+            <span class="ci-dot ci-lock">◆</span>
+            <div>
+              <strong style="color:var(--mu);">SIGNAL ACTIVE indicator</strong>
+              <span class="ci-val locked">SIGNAL ACTIVE</span>
+              <br>Top right. Always present, always blinking. This is the brand heartbeat.
+            </div>
+          </div>
+          <div class="cl-item">
+            <span class="ci-dot ci-lock">◆</span>
+            <div>
+              <strong style="color:var(--mu);">Radar system</strong><br>
+              The sweep, pulse rings, crosshairs, blips. The full radar is a locked visual. It is what makes Type C unmistakably GSE.
+            </div>
+          </div>
+          <div class="cl-item">
+            <span class="ci-dot ci-lock">◆</span>
+            <div>
+              <strong style="color:var(--mu);">Background, grid, scanlines, bars</strong><br>
+              Deep forest dark background with radial green glow. The grid, top/bottom bars, and scanlines are all locked.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="ex-head">Real examples — what you'd actually type in</div>
+        <div class="ex-grid">
+          <div class="ex-card">
+            <div class="ex-game" style="color:var(--dim);">CHANNEL</div>
+            <div class="ex-type">Channel trailer · Introduction video</div>
+            <div class="ex-changes">
+              <div class="ex-change-row"><span class="ex-field">TAGLINE</span><span class="ex-value">TECH · GAMING · ENTERTAINMENT</span></div>
+              <div class="ex-change-row"><span class="ex-field">SUB-LINE</span><span class="ex-value">ENT</span></div>
+              <div class="ex-change-row"><span class="ex-field">PILLS</span><span class="ex-value">ALL FOUR</span></div>
+              <div class="ex-change-row"><span class="ex-field">RADAR</span><span class="ex-locked">LOCKED ←always on</span></div>
+            </div>
+          </div>
+          <div class="ex-card">
+            <div class="ex-game" style="color:var(--dim);">UPDATE</div>
+            <div class="ex-type">Community update · Monthly news</div>
+            <div class="ex-changes">
+              <div class="ex-change-row"><span class="ex-field">TAGLINE</span><span class="ex-value">COMMUNITY UPDATE</span></div>
+              <div class="ex-change-row"><span class="ex-field">SUB-LINE</span><span class="ex-value">ENT</span></div>
+              <div class="ex-change-row"><span class="ex-field">PILLS</span><span class="ex-value">COMMUNITY only</span></div>
+              <div class="ex-change-row"><span class="ex-field">GREENS/SCREENS</span><span class="ex-locked">LOCKED ←never change</span></div>
+            </div>
+          </div>
+          <div class="ex-card">
+            <div class="ex-game" style="color:var(--dim);">COLLAB</div>
+            <div class="ex-type">Collaboration announcement</div>
+            <div class="ex-changes">
+              <div class="ex-change-row"><span class="ex-field">TAGLINE</span><span class="ex-value">NEW PARTNER · JOIN US</span></div>
+              <div class="ex-change-row"><span class="ex-field">SUB-LINE</span><span class="ex-value">ENT</span></div>
+              <div class="ex-change-row"><span class="ex-field">PILLS</span><span class="ex-value">ALL FOUR</span></div>
+              <div class="ex-change-row"><span class="ex-field">SIGNAL ACTIVE</span><span class="ex-locked">LOCKED ←always blinking</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════ QUICK REFERENCE TABLE ═══════════ -->
+  <div class="chapter">
+    <div class="chapter-num">05 · Quick reference</div>
+    <div class="chapter-title">AT A <span class="accent">GLANCE</span></div>
+    <div class="chapter-intro">Print this page or keep it open as a second tab. Everything you need in one table.</div>
+
+    <table class="qr-table">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Use when</th>
+          <th>File</th>
+          <th>Change</th>
+          <th>Never touch</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="type-a">A</span></td>
+          <td>Game clip, highlight, funny moment, clutch play</td>
+          <td class="mono">gse-thumb-type-a.html</td>
+          <td>Line 1 title · Line 2 title · Category pill · Live tag</td>
+          <td>Logo bug · GREENS.SCREENS sub · Slash animation · Colors · Fade timing</td>
+        </tr>
+        <tr>
+          <td><span class="type-b">B</span></td>
+          <td>Dedicated game review, verdict, first impressions, deep-dive</td>
+          <td class="mono">gse-thumb-type-b.html</td>
+          <td>Game title line 1 · Game title line 2 · Score number · Year</td>
+          <td>Logo bug · REVIEW pill · Score label · Meta prefix · REVIEWED watermark · Scan animation</td>
+        </tr>
+        <tr>
+          <td><span class="type-c">C</span></td>
+          <td>Brand content, community update, collab, channel trailer, general video</td>
+          <td class="mono">gse-thumb-type-c.html</td>
+          <td>Tagline · ENT sub-line (special only) · Pillar pills</td>
+          <td>GREENS / SCREENS wordmark · SIGNAL ACTIVE · Radar system · Background · Grid · Bars</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ═══════════ EXPORT INSTRUCTIONS ═══════════ -->
+  <div class="chapter">
+    <div class="chapter-num">06 · Exporting</div>
+    <div class="chapter-title">HOW TO <span class="accent">EXPORT</span></div>
+    <div class="chapter-intro">Two ways to get your thumbnail out of the HTML file and into YouTube, TikTok, or wherever you need it.</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--bd);margin-bottom:48px;">
+      <div style="background:var(--cd);padding:28px;">
+        <div style="font-family:var(--fd);font-size:20px;letter-spacing:3px;color:var(--g);margin-bottom:16px;">AS AN MP4 — ANIMATED</div>
+        <div style="font-size:12px;color:var(--mu);line-height:2.2;font-weight:500;">
+          1. Open OBS Studio<br>
+          2. Add a Browser Source<br>
+          3. Check "Local File" and select the HTML file<br>
+          4. Set width/height to match the format:<br>
+          &nbsp;&nbsp;&nbsp;Desktop: 1920 × 1080<br>
+          &nbsp;&nbsp;&nbsp;Mobile: 1080 × 1920<br>
+          5. Hit Record — capture the first 3–4 seconds<br>
+          6. Use the mp4 as your video intro or animated thumb
+        </div>
+      </div>
+      <div style="background:var(--cd);padding:28px;">
+        <div style="font-family:var(--fd);font-size:20px;letter-spacing:3px;color:var(--a);margin-bottom:16px;">AS A STILL IMAGE</div>
+        <div style="font-size:12px;color:var(--mu);line-height:2.2;font-weight:500;">
+          1. Open the HTML file in Chrome<br>
+          2. Wait for animations to settle (about 2 seconds)<br>
+          3. Right-click → "Save as image" using a browser extension<br>
+          &nbsp;&nbsp;&nbsp;OR use the screenshot tool (Win: Snipping Tool / Mac: Cmd+Shift+4)<br>
+          4. Crop to the exact canvas size if needed<br>
+          5. Upload as your static YouTube or TikTok thumbnail
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════ SIGNAL STATEMENT ═══════════ -->
+  <div class="signal-statement">
+    <span class="signal-word">SIGNAL_ALWAYS_GREEN</span>
+    <div class="signal-sub">
+      Technology · Gaming · Entertainment · Community<br>
+      greensscreensent.com · @greens.screens
+    </div>
+  </div>
+
+
+  <!-- FOOTER -->
+  <div class="guide-footer">
+    <div class="footer-logo"><span>GREENS </span>SCREENS<em> ENT</em></div>
+    <div class="footer-note">Thumbnail Production Guide · 2026</div>
+    <div class="footer-note">greensscreensent.com</div>
+  </div>
+
+</div>
+</body>
+</html>
