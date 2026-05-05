@@ -61,7 +61,7 @@ export const Hero: React.FC = () => {
             onClick={() => scrollTo('newsletter')}
             className="font-mono text-[12px] tracking-[2px] text-gs-dark bg-gs-green border-none px-8 py-3 cursor-pointer btn-clip transition-all hover:bg-gs-accent hover:-translate-y-0.5 font-bold uppercase"
           >
-            STAY IN THE LOOP
+            JOIN THE COLLECTIVE
           </button>
           <button 
             onClick={() => scrollTo('connect')}

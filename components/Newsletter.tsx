@@ -162,8 +162,8 @@ export const Newsletter: React.FC = () => {
   };
 
   return (
-    <div id="newsletter" className="relative z-10 bg-gs-surface border-y border-gs-border px-10 py-[72px] mt-[72px] overflow-hidden">
-      <div className="absolute -right-[100px] -top-[100px] w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(0,255,136,0.05)_0%,transparent_60%)] pointer-events-none" />
+    <div id="newsletter" className="relative z-10 bg-gs-surface border-y border-[rgba(255,224,51,0.2)] px-10 py-[72px] mt-[72px] overflow-hidden">
+      <div className="absolute -right-[100px] -top-[100px] w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(255,224,51,0.05)_0%,transparent_60%)] pointer-events-none" />
       
       <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-[72px] items-center">
         <motion.div
@@ -173,14 +173,14 @@ export const Newsletter: React.FC = () => {
           transition={{ duration: 0.6 }}
         >
           <div 
-            className="font-mono text-[11px] tracking-[4px] text-gs-green mb-2 cursor-pointer select-none"
+            className="font-mono text-[11px] tracking-[5px] text-[#C9A800] mb-2 cursor-pointer select-none uppercase"
             onClick={() => setShowTest(!showTest)}
           >
-            NEWSLETTER
+            // join the frequency
           </div>
-          <h2 className="font-display text-[clamp(32px,4.5vw,56px)] tracking-[3px] text-gs-text mb-3 leading-tight">STAY IN<br />THE LOOP</h2>
+          <h2 className="font-display text-[clamp(32px,4.5vw,56px)] tracking-[3px] text-[#FFE033] mb-3 leading-tight" style={{ textShadow: '0 0 30px rgba(255,224,51,0.3)' }}>THE COLLECTIVE</h2>
           <p className="text-base text-gs-muted max-w-[520px] leading-[1.6] font-medium">
-            Drop your email and get exclusive updates, early access, and insider content from Greens Screens Ent — straight to your inbox. No spam. Just signal.
+            Subscribe to The Frequency — our newsletter built for the community. Gaming. Tech. Entertainment. Delivered to you.
           </p>
 
           {showTest && (
@@ -263,14 +263,14 @@ export const Newsletter: React.FC = () => {
           transition={{ duration: 0.6 }}
           className="flex flex-col gap-[10px]"
         >
-          <div className="font-mono text-[11px] text-gs-green tracking-[2px] mb-1.5 uppercase">SUBSCRIBE TO THE SIGNAL</div>
+          <div className="font-mono text-[11px] text-[#C9A800] tracking-[2px] mb-1.5 uppercase">SUBSCRIBE TO THE SIGNAL</div>
           <form onSubmit={handleSubmit} className="flex flex-col gap-[10px]">
             <input 
               type="text" 
               placeholder="YOUR NAME" 
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-gs-card border border-gs-border text-gs-text font-sans text-[15px] font-medium px-[18px] py-3 outline-none transition-colors focus:border-gs-green/40"
+              className="w-full bg-gs-card border border-gs-border text-gs-text font-sans text-[15px] font-medium px-[18px] py-3 outline-none transition-colors focus:border-[#FFE033]/40"
               disabled={status === 'loading'}
             />
             <div className="flex">
@@ -279,13 +279,13 @@ export const Newsletter: React.FC = () => {
                 placeholder="YOUR EMAIL ADDRESS" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 bg-gs-card border border-gs-border border-r-0 text-gs-text font-sans text-[15px] font-medium px-[18px] py-3 outline-none transition-colors focus:border-gs-green/40"
+                className="flex-1 bg-gs-card border border-gs-border border-r-0 text-gs-text font-sans text-[15px] font-medium px-[18px] py-3 outline-none transition-colors focus:border-[#FFE033]/40"
                 disabled={status === 'loading'}
               />
               <button 
                 type="submit"
                 disabled={status === 'loading'}
-                className="font-mono text-[12px] tracking-[2px] text-gs-dark bg-gs-green border border-gs-green px-7 py-3 cursor-pointer font-bold transition-all hover:bg-gs-accent hover:border-gs-accent disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap btn-clip"
+                className="font-mono text-[12px] tracking-[2px] text-black bg-[#FFE033] border border-[#FFE033] px-7 py-3 cursor-pointer font-bold transition-all hover:bg-[#FFE033] hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap btn-clip"
               >
                 {status === 'loading' ? 'SENDING...' : 'SUBSCRIBE'}
               </button>

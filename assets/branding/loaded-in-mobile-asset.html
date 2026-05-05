@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GSE — Loaded In · Mobile</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --g:   #00ff88;
+    --a:   #aaff44;
+    --dk:  #050a07;
+    --tx:  #e8f5ee;
+    --mu:  #6b9a7a;
+    --b:   #00d4ff;
+    --b2:  #00a8d4;
+    --b3:  #60e8ff;
+    --bdim: #006680;
+    --bglow: rgba(0,212,255,0.55);
+    --fd: 'Bebas Neue', sans-serif;
+    --fb: 'Rajdhani', sans-serif;
+    --fm: 'Share Tech Mono', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1080px; height: 1920px;
+    overflow: hidden; background: var(--dk);
+  }
+
+  .canvas {
+    position: relative;
+    width: 1080px; height: 1920px;
+    background: radial-gradient(ellipse at 50% 44%, #001a22 0%, #040d10 45%, #050a07 72%);
+    overflow: hidden;
+  }
+
+  .grid {
+    position: absolute; inset: 0; z-index: 1;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.022) 1px, transparent 1px);
+    background-size: 54px 54px;
+  }
+
+  .scanlines {
+    position: absolute; inset: 0; z-index: 50; pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 3px
+    );
+  }
+
+  /* ── SCANNING BARS ── */
+  .load-bars {
+    position: absolute; z-index: 4;
+    left: 0; right: 0;
+    top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 0;
+  }
+  .lb {
+    height: 2px; background: rgba(0,212,255,0.06);
+    position: relative; overflow: hidden;
+  }
+  .lb::after {
+    content: '';
+    position: absolute; top: 0; left: -100%; height: 100%;
+    background: linear-gradient(to right, transparent, rgba(0,212,255,0.35), transparent);
+    animation: scanBar 4s ease-in-out infinite;
+  }
+  .lb:nth-child(2)::after { animation-delay: 0.4s; animation-duration: 5s; }
+  .lb:nth-child(3)::after { animation-delay: 0.8s; animation-duration: 3.5s; }
+  .lb:nth-child(4)::after { animation-delay: 1.2s; animation-duration: 4.5s; }
+  .lb:nth-child(5)::after { animation-delay: 0.2s; animation-duration: 5.5s; }
+  @keyframes scanBar { 0% { left: -100%; } 100% { left: 200%; } }
+
+  /* ── RINGS ── */
+  .rings {
+    position: absolute;
+    width: 1200px; height: 1200px;
+    top: 44%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+  }
+  .ring {
+    position: absolute; border-radius: 50%;
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    border-style: solid;
+  }
+  .ring-pulse {
+    position: absolute; border-radius: 50%;
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    border: 1px solid rgba(0,212,255,0.25);
+    animation: ringOut 4s ease-out infinite;
+  }
+  .ring-pulse:nth-child(2) { animation-delay: 1.3s; }
+  .ring-pulse:nth-child(3) { animation-delay: 2.6s; }
+  @keyframes ringOut {
+    0%   { transform: translate(-50%,-50%) scale(0.15); opacity: 0.9; border-color: rgba(0,212,255,0.6); }
+    100% { transform: translate(-50%,-50%) scale(1.05); opacity: 0;   border-color: rgba(0,212,255,0); }
+  }
+  .xhair { position: absolute; background: rgba(0,212,255,0.08); }
+
+  /* ── CORNER BRACKETS ── */
+  .bracket {
+    position: absolute; z-index: 15;
+    width: 52px; height: 52px;
+    border-color: rgba(0,212,255,0.4); border-style: solid;
+    opacity: 0; animation: fadeIn 0.6s ease forwards 1.8s;
+  }
+  .bracket.tl { top: 52px; left: 52px; border-width: 2px 0 0 2px; }
+  .bracket.tr { top: 52px; right: 52px; border-width: 2px 2px 0 0; }
+  .bracket.bl { bottom: 52px; left: 52px; border-width: 0 0 2px 2px; }
+  .bracket.br { bottom: 52px; right: 52px; border-width: 0 2px 2px 0; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    position: absolute; z-index: 20;
+    top: 24%; left: 50%; transform: translateX(-50%);
+    width: 820px; text-align: center;
+    opacity: 0; animation: fadeUp 0.6s ease forwards 0.4s;
+  }
+  .progress-label {
+    font-family: var(--fm);
+    font-size: 14px; letter-spacing: 5px; color: var(--bdim);
+    text-transform: uppercase; margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .progress-track {
+    width: 100%; height: 3px;
+    background: rgba(0,212,255,0.1); border-radius: 2px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(to right, var(--b2), var(--b), var(--b3));
+    box-shadow: 0 0 12px var(--bglow); border-radius: 2px;
+    animation: loadFill 2.5s cubic-bezier(0.4,0,0.2,1) forwards 0.6s;
+    width: 0%;
+  }
+  @keyframes loadFill {
+    0% { width: 0%; } 60% { width: 85%; } 80% { width: 85%; } 100% { width: 100%; }
+  }
+  .progress-pct { font-family: var(--fm); font-size: 14px; color: var(--b); }
+
+  /* ── MAIN TITLE ── */
+  .main-block {
+    position: absolute; z-index: 20;
+    width: 100%; text-align: center;
+    top: 50%; transform: translateY(-50%);
+  }
+
+  .li-eyebrow {
+    font-family: var(--fm);
+    font-size: 16px; letter-spacing: 6px; color: var(--bdim);
+    text-transform: uppercase;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    margin-bottom: 26px;
+    opacity: 0; animation: fadeUp 0.6s ease forwards 0.3s;
+  }
+  .li-eyebrow::before, .li-eyebrow::after {
+    content: ''; height: 1px; width: 36px; background: rgba(0,212,255,0.3);
+  }
+
+  .li-title {
+    font-family: var(--fd);
+    font-size: 220px; letter-spacing: 10px; line-height: 0.82;
+    color: var(--b);
+    text-shadow:
+      0 0 20px var(--bglow),
+      0 0 60px rgba(0,212,255,0.3),
+      0 0 120px rgba(0,212,255,0.1);
+    display: block;
+    opacity: 0; animation: neonFlicker 0.7s ease forwards 0.8s;
+  }
+
+  .li-divider-wrap {
+    display: flex; align-items: center; justify-content: center; gap: 18px;
+    margin: 34px auto 28px;
+    opacity: 0; animation: fadeUp 0.5s ease forwards 1.5s;
+  }
+  .li-div-line {
+    height: 1px; width: 100px;
+    background: linear-gradient(to right, transparent, rgba(0,212,255,0.5));
+  }
+  .li-div-line.r { background: linear-gradient(to left, transparent, rgba(0,212,255,0.5)); }
+  .li-div-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--b); box-shadow: 0 0 10px var(--bglow);
+  }
+
+  .li-sub {
+    font-family: var(--fb);
+    font-size: 28px; letter-spacing: 6px; font-weight: 600;
+    color: rgba(255,255,255,0.55); text-transform: uppercase;
+    display: block;
+    opacity: 0; animation: fadeUp 0.6s ease forwards 1.7s;
+  }
+  .li-sub em { color: var(--b); font-style: normal; text-shadow: 0 0 10px var(--bglow); }
+
+  /* ── STATUS PILL ── */
+  .status-row {
+    position: absolute; z-index: 20;
+    bottom: 340px; left: 0; right: 0;
+    display: flex; justify-content: center; align-items: center;
+    opacity: 0; animation: fadeUp 0.6s ease forwards 2s;
+  }
+  .status-pill {
+    font-family: var(--fm);
+    font-size: 14px; letter-spacing: 6px; color: var(--b);
+    text-transform: uppercase;
+    border: 1px solid rgba(0,212,255,0.5);
+    padding: 14px 54px;
+    background: rgba(0,212,255,0.08);
+  }
+
+  /* ── SESSION ACTIVE — top right ── */
+  .session-active {
+    position: absolute; z-index: 25;
+    top: 60px; right: 60px;
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--fm);
+    font-size: 13px; letter-spacing: 3px; color: var(--b);
+    text-transform: uppercase;
+    opacity: 0; animation: fadeIn 0.5s ease forwards 2.2s;
+  }
+  .sa-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--b); box-shadow: 0 0 10px var(--bglow);
+    animation: saBlink 1.2s step-end infinite 2.2s;
+  }
+  @keyframes saBlink {
+    0%,49% { opacity:1; } 50%,100% { opacity:0.15; }
+  }
+
+  /* ── TOP CENTER TAG ── */
+  .seg-tag {
+    position: absolute; z-index: 25;
+    top: 64px; left: 50%; transform: translateX(-50%);
+    font-family: var(--fm);
+    font-size: 14px; letter-spacing: 5px; color: var(--bdim);
+    text-transform: uppercase; white-space: nowrap;
+    display: flex; align-items: center; gap: 10px;
+    opacity: 0; animation: fadeIn 0.5s ease forwards 2.1s;
+  }
+  .seg-tag::before, .seg-tag::after {
+    content: ''; width: 18px; height: 1px; background: rgba(0,212,255,0.3);
+  }
+
+  /* ── GSE BRAND ── */
+  .brand-block {
+    position: absolute; z-index: 20;
+    bottom: 80px; left: 0; right: 0;
+    text-align: center;
+    display: flex; flex-direction: column; align-items: center;
+    opacity: 0; animation: fadeUp 0.8s ease forwards 2.3s;
+  }
+  .brand-divider {
+    width: 120px; height: 1px;
+    background: linear-gradient(to right, transparent, rgba(0,212,255,0.3), transparent);
+    margin: 0 auto 16px;
+  }
+  .brand-name {
+    font-family: var(--fd);
+    font-size: 38px; letter-spacing: 10px; line-height: 0.9;
+  }
+  .brand-name .g { color: var(--g); display: block; text-shadow: 0 0 14px rgba(0,255,136,0.35); }
+  .brand-name .w { color: var(--tx); display: block; }
+  .brand-name .e { color: var(--a); display: block; font-size: 15px; letter-spacing: 14px; margin-top: 7px; }
+  .brand-url {
+    font-size: 13px; letter-spacing: 3px; color: var(--mu);
+    margin-top: 8px; font-family: var(--fm); text-transform: uppercase;
+  }
+
+  /* ── BARS ── */
+  .tbar {
+    position: absolute; top: 0; left: 0; right: 0; height: 4px; z-index: 30;
+    background: linear-gradient(to right, var(--b), rgba(0,212,255,0.3), transparent);
+  }
+  .bbar {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 5px; z-index: 30;
+    background: linear-gradient(to right, var(--g), var(--a), rgba(0,255,136,0.1));
+  }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes neonFlicker {
+    0%   { opacity: 0; text-shadow: none; }
+    20%  { opacity: 0.95; text-shadow: 0 0 30px var(--bglow), 0 0 80px rgba(0,212,255,0.35); }
+    40%  { opacity: 0.35; }
+    65%  { opacity: 1; text-shadow: 0 0 20px var(--bglow), 0 0 60px rgba(0,212,255,0.3); }
+    80%  { opacity: 0.8; }
+    100% { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="grid"></div>
+
+  <div class="load-bars">
+    <div class="lb" style="margin-top:240px;"></div>
+    <div class="lb" style="margin-top:160px;"></div>
+    <div class="lb" style="margin-top:120px;"></div>
+    <div class="lb" style="margin-top:200px;"></div>
+    <div class="lb" style="margin-top:140px;"></div>
+  </div>
+
+  <div class="rings">
+    <div class="ring" style="width:1200px;height:1200px;border:1px solid rgba(0,212,255,0.04);"></div>
+    <div class="ring" style="width:900px;height:900px;border:1px solid rgba(0,212,255,0.06);"></div>
+    <div class="ring" style="width:600px;height:600px;border:1px solid rgba(0,212,255,0.08);"></div>
+    <div class="ring" style="width:300px;height:300px;border:1px solid rgba(0,212,255,0.10);"></div>
+    <div class="xhair" style="left:0;right:0;top:50%;height:1px;transform:translateY(-50%);"></div>
+    <div class="xhair" style="top:0;bottom:0;left:50%;width:1px;transform:translateX(-50%);"></div>
+    <div class="ring-pulse" style="width:1200px;height:1200px;"></div>
+    <div class="ring-pulse" style="width:1200px;height:1200px;"></div>
+    <div class="ring-pulse" style="width:1200px;height:1200px;"></div>
+  </div>
+
+  <div class="bracket tl"></div>
+  <div class="bracket tr"></div>
+  <div class="bracket bl"></div>
+  <div class="bracket br"></div>
+
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>// session init</span>
+      <span class="progress-pct">LOADING...</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill"></div>
+    </div>
+  </div>
+
+  <div class="seg-tag">GSE · Currently Playing</div>
+  <div class="session-active"><span class="sa-dot"></span>SESSION ACTIVE</div>
+
+  <div class="main-block">
+    <div class="li-eyebrow">// player one — ready</div>
+    <span class="li-title">LOADING...</span>
+    <div class="li-divider-wrap">
+      <div class="li-div-line"></div>
+      <div class="li-div-dot"></div>
+      <div class="li-div-line r"></div>
+    </div>
+    <span class="li-sub">what we are <em>currently playing</em></span>
+  </div>
+
+  <div class="status-row">
+    <div class="status-pill">Resume</div>
+  </div>
+
+  <div class="brand-block">
+    <div class="brand-divider"></div>
+    <div class="brand-name">
+      <span class="g">GREENS</span>
+      <span class="w">SCREENS</span>
+      <span class="e">ENT</span>
+    </div>
+    <div class="brand-url">greensscreensent.com</div>
+  </div>
+
+  <div class="tbar"></div>
+  <div class="bbar"></div>
+  <div class="scanlines"></div>
+</div>
+</body>
+</html>

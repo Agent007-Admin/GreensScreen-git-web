@@ -25,13 +25,15 @@ export const Navbar: React.FC = () => {
       </div>
       
       <ul className="hidden md:flex gap-7 list-none">
-        {['about', 'connect', 'newsletter', 'founder'].map((item) => (
+        {['about', 'segments', 'newsletter', 'connect', 'team'].map((item) => (
           <li key={item}>
             <button 
               onClick={() => scrollTo(item)}
               className="font-sans font-semibold text-[12px] tracking-[2px] uppercase text-gs-muted hover:text-gs-green transition-colors cursor-pointer"
             >
-              {item === 'founder' ? 'Team' : item}
+              {item === 'segments' ? 'Signals' : 
+               item === 'newsletter' ? 'Collective' :
+               item}
             </button>
           </li>
         ))}
@@ -39,9 +41,9 @@ export const Navbar: React.FC = () => {
       
       <button 
         onClick={() => scrollTo('newsletter')}
-        className="font-mono text-[11px] text-gs-dark bg-gs-green border-none px-[18px] py-[7px] cursor-pointer tracking-[1px] nav-btn-clip transition-all hover:bg-gs-accent hover:scale-[1.03] font-bold"
+        className="font-mono text-[11px] text-gs-dark bg-gs-green border-none px-[18px] py-[7px] cursor-pointer tracking-[1px] nav-btn-clip transition-all hover:bg-gs-accent hover:scale-[1.03] font-bold uppercase"
       >
-        JOIN THE LIST
+        Join the Collective
       </button>
     </nav>
   );

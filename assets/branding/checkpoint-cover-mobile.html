@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GSE — Checkpoint · Join The Collective · Mobile</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --g:    #00ff88;
+    --a:    #aaff44;
+    --dk:   #050a07;
+    --tx:   #e8f5ee;
+    --mu:   #6b9a7a;
+    --gold: #ffe033;
+    --gold-dim:    #c9a800;
+    --gold-glow:   rgba(255,224,51,0.55);
+    --fd: 'Bebas Neue', sans-serif;
+    --fb: 'Rajdhani', sans-serif;
+    --fm: 'Share Tech Mono', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1080px; height: 1920px;
+    overflow: hidden; background: var(--dk);
+  }
+
+  .canvas {
+    position: relative;
+    width: 1080px; height: 1920px;
+    background: radial-gradient(ellipse at 50% 42%, #1a1500 0%, #0a0c06 40%, #050a07 72%);
+    overflow: hidden;
+  }
+
+  .grid {
+    position: absolute; inset: 0; z-index: 1;
+    background-image:
+      linear-gradient(rgba(255,224,51,0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,224,51,0.018) 1px, transparent 1px);
+    background-size: 54px 54px;
+  }
+
+  .scanlines {
+    position: absolute; inset: 0; z-index: 50; pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 3px
+    );
+  }
+
+  /* ── RINGS ── */
+  .rings {
+    position: absolute;
+    width: 1160px; height: 1160px;
+    top: 44%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 2;
+  }
+  .ring {
+    position: absolute; border-radius: 50%;
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    border-style: solid;
+  }
+  .ring-pulse {
+    position: absolute; border-radius: 50%;
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    border: 1px solid rgba(255,224,51,0.25);
+    animation: ringOut 5s ease-out infinite;
+  }
+  .ring-pulse:nth-child(2) { animation-delay: 1.7s; }
+  .ring-pulse:nth-child(3) { animation-delay: 3.4s; }
+  @keyframes ringOut {
+    0%   { transform: translate(-50%,-50%) scale(0.15); opacity: 0.8; border-color: rgba(255,224,51,0.5); }
+    100% { transform: translate(-50%,-50%) scale(1.1);  opacity: 0;   border-color: rgba(255,224,51,0); }
+  }
+  .xhair { position: absolute; background: rgba(255,224,51,0.08); }
+
+  /* ── CORNER BRACKETS ── */
+  .bracket {
+    position: absolute; z-index: 15;
+    width: 50px; height: 50px;
+    border-color: rgba(255,224,51,0.35); border-style: solid;
+    opacity: 0; animation: fadeIn 0.6s ease forwards 2s;
+  }
+  .bracket.tl { top: 52px; left: 52px; border-width: 2px 0 0 2px; }
+  .bracket.tr { top: 52px; right: 52px; border-width: 2px 2px 0 0; }
+  .bracket.bl { bottom: 52px; left: 52px; border-width: 0 0 2px 2px; }
+  .bracket.br { bottom: 52px; right: 52px; border-width: 0 2px 2px 0; }
+
+  /* ── MAIN BLOCK ── */
+  .main-block {
+    position: absolute; z-index: 20;
+    width: 100%; text-align: center;
+    top: 50%; transform: translateY(-52%);
+  }
+
+  .cp-eyebrow {
+    font-family: var(--fm);
+    font-size: 16px; letter-spacing: 6px;
+    color: var(--mu); text-transform: uppercase;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    margin-bottom: 28px;
+    opacity: 0; animation: fadeUp 0.7s ease forwards 0.3s;
+  }
+  .cp-eyebrow::before, .cp-eyebrow::after {
+    content: ''; height: 1px; width: 36px;
+    background: rgba(255,224,51,0.3);
+  }
+
+  .cp-title {
+    font-family: var(--fd);
+    font-size: 290px; letter-spacing: 16px; line-height: 0.82;
+    color: var(--gold);
+    text-shadow:
+      0 0 20px var(--gold-glow),
+      0 0 60px rgba(255,224,51,0.3),
+      0 0 120px rgba(255,224,51,0.1);
+    display: block;
+    opacity: 0; animation: neonFlicker 0.7s ease forwards 0.7s;
+  }
+
+  .cp-divider-wrap {
+    display: flex; align-items: center; justify-content: center; gap: 18px;
+    margin: 36px auto 30px;
+    opacity: 0; animation: fadeUp 0.6s ease forwards 1.4s;
+  }
+  .cp-divider-line {
+    height: 1px; width: 100px;
+    background: linear-gradient(to right, transparent, rgba(255,224,51,0.5));
+  }
+  .cp-divider-line.r { background: linear-gradient(to left, transparent, rgba(255,224,51,0.5)); }
+  .cp-divider-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gold); box-shadow: 0 0 10px var(--gold-glow);
+  }
+
+  .cp-sub {
+    font-family: var(--fb);
+    font-size: 30px; letter-spacing: 6px; font-weight: 600;
+    color: rgba(255,255,255,0.6); text-transform: uppercase;
+    display: block;
+    opacity: 0; animation: fadeUp 0.7s ease forwards 1.6s;
+  }
+  .cp-sub em { color: var(--gold); font-style: normal; text-shadow: 0 0 14px var(--gold-glow); }
+
+  /* ── TOP TAG ── */
+  .seg-tag {
+    position: absolute; z-index: 25;
+    top: 62px; left: 50%; transform: translateX(-50%);
+    font-family: var(--fm);
+    font-size: 14px; letter-spacing: 5px; color: var(--gold-dim);
+    text-transform: uppercase; white-space: nowrap;
+    display: flex; align-items: center; gap: 12px;
+    opacity: 0; animation: fadeIn 0.5s ease forwards 2.3s;
+  }
+  .seg-tag::before, .seg-tag::after {
+    content: ''; width: 18px; height: 1px; background: rgba(255,224,51,0.3);
+  }
+
+  /* ── ANTENNA ── */
+  .antenna-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    margin-bottom: 26px;
+    opacity: 0; animation: fadeIn 0.8s ease forwards 0.2s;
+  }
+  .antenna-svg { overflow: visible; }
+  .arc-1 { animation: arcPulse 2.2s ease-out infinite 0s; }
+  .arc-2 { animation: arcPulse 2.2s ease-out infinite 0.4s; }
+  .arc-3 { animation: arcPulse 2.2s ease-out infinite 0.8s; }
+  @keyframes arcPulse {
+    0%   { opacity: 0; } 15% { opacity: 0.7; } 60% { opacity: 0.15; } 100% { opacity: 0; }
+  }
+  .antenna-tip { animation: tipBlink 1.1s step-end infinite; }
+  @keyframes tipBlink {
+    0%,45%  { opacity: 1; filter: drop-shadow(0 0 5px var(--gold-glow)); }
+    50%,100% { opacity: 0.15; filter: none; }
+  }
+  .antenna-body { animation: bodyGlow 2.2s ease-in-out infinite; }
+  @keyframes bodyGlow { 0%,100% { opacity: 0.25; } 50% { opacity: 0.45; } }
+
+  /* ── SIGNAL SOURCE ── */
+  .signal-src {
+    position: absolute; z-index: 25;
+    bottom: 76px; right: 64px;
+    font-family: var(--fm);
+    font-size: 13px; letter-spacing: 3px;
+    color: var(--mu); text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px;
+    opacity: 0; animation: fadeIn 0.5s ease forwards 2.4s;
+  }
+  .src-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--gold); box-shadow: 0 0 6px var(--gold-glow);
+    animation: srcBlink 1.4s step-end infinite 2.4s;
+  }
+  @keyframes srcBlink { 0%,49% { opacity:1; } 50%,100% { opacity:0.15; } }
+
+  /* ── GSE BRAND ── */
+  .brand-block {
+    position: absolute; z-index: 20;
+    bottom: 76px; left: 0; right: 0;
+    text-align: center;
+    display: flex; flex-direction: column; align-items: center;
+    opacity: 0; animation: fadeUp 0.8s ease forwards 2.1s;
+  }
+  .brand-name {
+    font-family: var(--fd);
+    font-size: 38px; letter-spacing: 10px; line-height: 0.9;
+  }
+  .brand-name .g { color: var(--g); display: block; text-shadow: 0 0 14px rgba(0,255,136,0.35); }
+  .brand-name .w { color: var(--tx); display: block; }
+  .brand-name .e { color: var(--a); display: block; font-size: 15px; letter-spacing: 14px; margin-top: 7px; }
+  .brand-url {
+    font-size: 13px; letter-spacing: 3px; color: var(--mu);
+    margin-top: 8px; font-family: var(--fm); text-transform: uppercase;
+  }
+
+  /* ── BARS ── */
+  .tbar { position: absolute; top: 0; left: 0; right: 0; height: 4px; z-index: 30;
+    background: linear-gradient(to right, var(--gold), rgba(255,224,51,0.4), transparent); }
+  .bbar { position: absolute; bottom: 0; left: 0; right: 0; height: 5px; z-index: 30;
+    background: linear-gradient(to right, var(--g), var(--a), rgba(0,255,136,0.1)); }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes neonFlicker {
+    0%   { opacity: 0; text-shadow: none; }
+    20%  { opacity: 0.95; text-shadow: 0 0 30px var(--gold-glow), 0 0 80px rgba(255,224,51,0.35); }
+    40%  { opacity: 0.4; }
+    65%  { opacity: 1; text-shadow: 0 0 20px var(--gold-glow), 0 0 60px rgba(255,224,51,0.3); }
+    80%  { opacity: 0.8; }
+    100% { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="grid"></div>
+
+  <div class="rings">
+    <div class="ring" style="width:1160px;height:1160px;border:1px solid rgba(255,224,51,0.04);"></div>
+    <div class="ring" style="width:870px;height:870px;border:1px solid rgba(255,224,51,0.06);"></div>
+    <div class="ring" style="width:580px;height:580px;border:1px solid rgba(255,224,51,0.08);"></div>
+    <div class="ring" style="width:290px;height:290px;border:1px solid rgba(255,224,51,0.10);"></div>
+    <div class="xhair" style="left:0;right:0;top:50%;height:1px;transform:translateY(-50%);"></div>
+    <div class="xhair" style="top:0;bottom:0;left:50%;width:1px;transform:translateX(-50%);"></div>
+    <div class="ring-pulse" style="width:1160px;height:1160px;"></div>
+    <div class="ring-pulse" style="width:1160px;height:1160px;"></div>
+    <div class="ring-pulse" style="width:1160px;height:1160px;"></div>
+  </div>
+
+  <div class="bracket tl"></div>
+  <div class="bracket tr"></div>
+  <div class="bracket bl"></div>
+  <div class="bracket br"></div>
+
+  <div class="seg-tag">GSE · The Frequency</div>
+
+  <div class="main-block">
+    <!-- ANTENNA -->
+    <div class="antenna-wrap">
+      <svg class="antenna-svg" width="80" height="106" viewBox="0 0 60 80">
+        <path class="arc-3" d="M30,8 Q10,-8 -4,12" fill="none" stroke="rgba(255,224,51,0.5)" stroke-width="1"/>
+        <path class="arc-3" d="M30,8 Q50,-8 64,12" fill="none" stroke="rgba(255,224,51,0.5)" stroke-width="1"/>
+        <path class="arc-2" d="M30,8 Q8,-18 -14,16" fill="none" stroke="rgba(255,224,51,0.45)" stroke-width="0.9"/>
+        <path class="arc-2" d="M30,8 Q52,-18 74,16" fill="none" stroke="rgba(255,224,51,0.45)" stroke-width="0.9"/>
+        <path class="arc-1" d="M30,8 Q6,-28 -22,20" fill="none" stroke="rgba(255,224,51,0.35)" stroke-width="0.8"/>
+        <path class="arc-1" d="M30,8 Q54,-28 82,20" fill="none" stroke="rgba(255,224,51,0.35)" stroke-width="0.8"/>
+        <line class="antenna-body" x1="30" y1="8" x2="20" y2="78" stroke="rgba(255,224,51,0.6)" stroke-width="1.5" stroke-linecap="round"/>
+        <line class="antenna-body" x1="10" y1="78" x2="50" y2="78" stroke="rgba(255,224,51,0.4)" stroke-width="1.5" stroke-linecap="round"/>
+        <line class="antenna-body" x1="20" y1="42" x2="6" y2="60" stroke="rgba(255,224,51,0.35)" stroke-width="1" stroke-linecap="round"/>
+        <line class="antenna-body" x1="20" y1="42" x2="34" y2="60" stroke="rgba(255,224,51,0.35)" stroke-width="1" stroke-linecap="round"/>
+        <circle class="antenna-tip" cx="30" cy="7" r="2.5" fill="rgba(255,224,51,0.9)"/>
+      </svg>
+    </div>
+    <div class="cp-eyebrow">// message intercepted</div>
+    <span class="cp-title">CHECK<br>POINT</span>
+    <div class="cp-divider-wrap">
+      <div class="cp-divider-line"></div>
+      <div class="cp-divider-dot"></div>
+      <div class="cp-divider-line r"></div>
+    </div>
+    <span class="cp-sub">a signal from <em>The Frequency</em></span>
+  </div>
+
+  <div class="signal-src"><span class="src-dot"></span>LIVE SIGNAL</div>
+
+  <div class="brand-block">
+    <div class="brand-name">
+      <span class="g">GREENS</span>
+      <span class="w">SCREENS</span>
+      <span class="e">ENT</span>
+    </div>
+    <div class="brand-url">greensscreensent.com</div>
+  </div>
+
+  <div class="tbar"></div>
+  <div class="bbar"></div>
+  <div class="scanlines"></div>
+</div>
+</body>
+</html>

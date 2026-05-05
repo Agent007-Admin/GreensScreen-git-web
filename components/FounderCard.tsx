@@ -3,14 +3,14 @@ import { motion } from 'framer-motion';
 
 export const FounderCard: React.FC = () => {
   return (
-    <div id="founder" className="relative z-10 max-w-[1100px] mx-auto px-10 py-[72px]">
+    <div id="team" className="relative z-10 max-w-[1100px] mx-auto px-10 py-[72px]">
       <motion.div 
         initial={{ opacity: 0, x: -20 }}
         whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true }}
-        className="font-mono text-[11px] tracking-[4px] text-gs-green mb-6"
+        className="font-display text-[84px] tracking-[8px] text-gs-green mb-10"
       >
-        THE COLLECTIVE
+        THE TEAM
       </motion.div>
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}

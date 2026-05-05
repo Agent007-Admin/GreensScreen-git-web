@@ -3,6 +3,7 @@ import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { Ticker } from './components/Ticker';
 import { Pillars } from './components/Pillars';
+import { SegmentsGuide } from './components/SegmentsGuide';
 import { SocialGrid } from './components/SocialGrid';
 import { Newsletter } from './components/Newsletter';
 import { FounderCard } from './components/FounderCard';
@@ -21,8 +22,9 @@ const App: React.FC = () => {
         <Hero />
         <Ticker />
         <Pillars />
-        <SocialGrid />
+        <SegmentsGuide />
         <Newsletter />
+        <SocialGrid />
         <FounderCard />
       </main>
       

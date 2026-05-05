@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GSE — Know Your Signal</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gs-green:  #00ff88;
+    --gs-accent: #aaff44;
+    --gs-dark:   #050a07;
+    --gs-text:   #e8f5ee;
+    --gs-muted:  #6b9a7a;
+    --gs-border: rgba(0,255,136,0.12);
+    --red:       #ff2020;
+    --gold:      #ffe033;
+    --blue:      #00d4ff;
+    --fd: 'Bebas Neue', sans-serif;
+    --fb: 'Rajdhani', sans-serif;
+    --fm: 'Share Tech Mono', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--gs-dark); color: var(--gs-text); font-family: var(--fb); font-size: 16px; line-height: 1.75; }
+
+  .scanlines { position: fixed; inset: 0; pointer-events: none; z-index: 100; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.022) 2px, rgba(0,0,0,0.022) 4px); }
+  .grid-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; background-image: linear-gradient(rgba(0,255,136,0.016) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,136,0.016) 1px, transparent 1px); background-size: 54px 54px; }
+
+  .page { position: relative; z-index: 1; max-width: 820px; margin: 0 auto; padding: 0 48px 100px; }
+
+  /* ── HERO ── */
+  .hero { padding: 80px 0 64px; border-bottom: 1px solid var(--gs-border); }
+  .hero-eyebrow { font-family: var(--fm); font-size: 11px; letter-spacing: 6px; color: var(--gs-muted); text-transform: uppercase; margin-bottom: 24px; display: flex; align-items: center; gap: 14px; }
+  .hero-eyebrow::before { content: ''; width: 28px; height: 1px; background: linear-gradient(to right, var(--gs-green), transparent); }
+  .hero-title { font-family: var(--fd); font-size: 96px; letter-spacing: 8px; line-height: 0.86; margin-bottom: 28px; }
+  .hero-title .g { color: var(--gs-green); text-shadow: 0 0 40px rgba(0,255,136,0.18); display: block; }
+  .hero-title .w { color: var(--gs-text); display: block; }
+  .hero-title .s { color: rgba(232,245,238,0.3); display: block; font-size: 44px; letter-spacing: 12px; margin-top: 6px; }
+  .hero-blurb { max-width: 540px; font-size: 16px; line-height: 1.8; color: rgba(232,245,238,0.6); }
+  .hero-blurb em { color: var(--gs-green); font-style: normal; }
+  .signal-row { display: flex; gap: 28px; flex-wrap: wrap; margin-top: 32px; }
+  .signal-tag { display: flex; align-items: center; gap: 9px; font-family: var(--fm); font-size: 10px; letter-spacing: 4px; text-transform: uppercase; }
+  .sig-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .sig-red  { background: var(--red);  box-shadow: 0 0 8px rgba(255,32,32,0.5); }
+  .sig-blue { background: var(--blue); box-shadow: 0 0 8px rgba(0,212,255,0.5); }
+  .sig-gold { background: var(--gold); box-shadow: 0 0 8px rgba(255,224,51,0.5); }
+  .sig-label-red  { color: var(--red); }
+  .sig-label-blue { color: var(--blue); }
+  .sig-label-gold { color: var(--gold); }
+
+  /* ── INTRO DIVIDER ── */
+  .divider { display: flex; align-items: center; gap: 16px; padding: 52px 0 44px; }
+  .div-line { flex: 1; height: 1px; background: var(--gs-border); }
+  .div-label { font-family: var(--fm); font-size: 10px; letter-spacing: 5px; color: var(--gs-muted); text-transform: uppercase; white-space: nowrap; }
+
+  /* ══════════════════════════════
+     COLORED STRIKE DIVIDERS
+  ══════════════════════════════ */
+  .strike {
+    position: relative; margin: 0 -48px;
+    padding: 28px 48px 28px;
+    display: flex; align-items: center; gap: 20px;
+    overflow: hidden;
+  }
+  .strike::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 100%;
+    opacity: 0.04;
+  }
+  .strike-red::before   { background: var(--red); }
+  .strike-blue::before  { background: var(--blue); }
+  .strike-gold::before  { background: var(--gold); }
+
+  .strike-bar {
+    flex: 1; height: 2px;
+    border-radius: 1px;
+  }
+  .strike-red  .strike-bar  { background: linear-gradient(to right, var(--red), rgba(255,32,32,0.1)); box-shadow: 0 0 12px rgba(255,32,32,0.4); }
+  .strike-blue .strike-bar  { background: linear-gradient(to right, var(--blue), rgba(0,212,255,0.1)); box-shadow: 0 0 12px rgba(0,212,255,0.4); }
+  .strike-gold .strike-bar  { background: linear-gradient(to right, var(--gold), rgba(255,224,51,0.1)); box-shadow: 0 0 12px rgba(255,224,51,0.4); }
+
+  .strike-label {
+    font-family: var(--fm); font-size: 9px; letter-spacing: 5px;
+    text-transform: uppercase; white-space: nowrap; flex-shrink: 0;
+  }
+  .strike-red  .strike-label { color: rgba(255,32,32,0.6); }
+  .strike-blue .strike-label { color: rgba(0,212,255,0.6); }
+  .strike-gold .strike-label { color: rgba(255,224,51,0.6); }
+
+  .strike-dot {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  }
+  .strike-red  .strike-dot { background: var(--red);  box-shadow: 0 0 8px rgba(255,32,32,0.8); animation: dotPulse 1.8s ease-in-out infinite; }
+  .strike-blue .strike-dot { background: var(--blue); box-shadow: 0 0 8px rgba(0,212,255,0.8); animation: dotPulse 1.8s ease-in-out infinite 0.6s; }
+  .strike-gold .strike-dot { background: var(--gold); box-shadow: 0 0 8px rgba(255,224,51,0.8); animation: dotPulse 1.8s ease-in-out infinite 1.2s; }
+
+  @keyframes dotPulse {
+    0%,100% { opacity: 0.4; transform: scale(0.8); }
+    50%      { opacity: 1;   transform: scale(1.2); }
+  }
+
+  /* ── SEGMENT BLOCK ── */
+  .seg { margin-bottom: 0; padding-bottom: 48px; }
+
+  .seg-meta { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .seg-num { font-family: var(--fm); font-size: 10px; letter-spacing: 4px; color: var(--gs-muted); text-transform: uppercase; }
+  .seg-meta-sep { color: rgba(255,255,255,0.15); }
+  .seg-cat { font-family: var(--fm); font-size: 10px; letter-spacing: 4px; text-transform: uppercase; }
+  .cat-red  { color: rgba(255,32,32,0.65); }
+  .cat-blue { color: rgba(0,212,255,0.65); }
+  .cat-gold { color: rgba(255,224,51,0.65); }
+
+  /* ── TITLE ROW — name + HUD side by side ── */
+  .seg-title-row {
+    display: flex; align-items: flex-start;
+    gap: 0; margin-bottom: 8px;
+    position: relative;
+  }
+  .seg-name { font-family: var(--fd); font-size: 88px; letter-spacing: 6px; line-height: 0.84; display: block; flex-shrink: 0; }
+  .name-red  { color: var(--red);  text-shadow: 0 0 40px rgba(255,32,32,0.2); }
+  .name-blue { color: var(--blue); text-shadow: 0 0 40px rgba(0,212,255,0.2); }
+  .name-gold { color: var(--gold); text-shadow: 0 0 40px rgba(255,224,51,0.2); }
+
+  /* HUD container floats to right of name */
+  .seg-hud {
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    margin-left: 24px; margin-top: 4px;
+    opacity: 0.55;
+  }
+
+  .seg-tagline { font-family: var(--fb); font-size: 16px; letter-spacing: 2px; font-weight: 600; color: rgba(232,245,238,0.4); text-transform: uppercase; margin-bottom: 24px; }
+  .seg-rule { height: 1px; margin-bottom: 24px; }
+  .rule-red  { background: linear-gradient(to right, rgba(255,32,32,0.35), transparent); }
+  .rule-blue { background: linear-gradient(to right, rgba(0,212,255,0.35), transparent); }
+  .rule-gold { background: linear-gradient(to right, rgba(255,224,51,0.35), transparent); }
+  .seg-blurb { font-size: 15px; line-height: 1.8; color: rgba(232,245,238,0.62); max-width: 580px; margin-bottom: 28px; }
+  .seg-blurb strong { color: var(--gs-text); font-weight: 700; }
+
+  .benefits-label { font-family: var(--fm); font-size: 9px; letter-spacing: 5px; text-transform: uppercase; color: var(--gs-muted); margin-bottom: 14px; }
+  .benefits { list-style: none; }
+  .benefits li { display: flex; align-items: baseline; gap: 14px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 15px; line-height: 1.55; color: rgba(232,245,238,0.68); }
+  .benefits li:last-child { border-bottom: none; }
+  .b-arrow { flex-shrink: 0; font-family: var(--fm); font-size: 11px; }
+  .arrow-red  { color: var(--red); }
+  .arrow-blue { color: var(--blue); }
+  .arrow-gold { color: var(--gold); }
+  .benefits li strong { color: var(--gs-text); font-weight: 700; }
+
+  /* ══════════════════════════════
+     RADAR HUD ANIMATION
+  ══════════════════════════════ */
+  .radar-hud { width: 140px; height: 140px; position: relative; }
+  .radar-hud svg { width: 100%; height: 100%; overflow: visible; }
+
+  .rh-sweep { animation: rhRotate 4s linear infinite; transform-origin: 70px 70px; }
+  @keyframes rhRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  .rh-pulse { animation: rhPulse 3.5s ease-out infinite; }
+  .rh-pulse:nth-child(2) { animation-delay: 1.2s; }
+  .rh-pulse:nth-child(3) { animation-delay: 2.4s; }
+  @keyframes rhPulse {
+    0%   { r: 10; opacity: 0.8; }
+    100% { r: 72; opacity: 0; }
+  }
+
+  .rh-blip { animation: rhBlip 3s ease-in-out infinite; }
+  .rh-blip2 { animation: rhBlip 4.2s ease-in-out infinite 1.5s; }
+  .rh-blip3 { animation: rhBlip 3.7s ease-in-out infinite 0.8s; }
+  @keyframes rhBlip {
+    0%,100% { opacity: 0.15; r: 2; }
+    50%      { opacity: 1;   r: 3.5; }
+  }
+
+  /* ══════════════════════════════
+     ANTENNA ANIMATION
+  ══════════════════════════════ */
+  .antenna-hud { width: 80px; height: 110px; position: relative; }
+  .antenna-hud svg { width: 100%; height: 100%; overflow: visible; }
+
+  .ah-arc1 { animation: ahArc 2.2s ease-out infinite 0s; }
+  .ah-arc2 { animation: ahArc 2.2s ease-out infinite 0.4s; }
+  .ah-arc3 { animation: ahArc 2.2s ease-out infinite 0.8s; }
+  @keyframes ahArc {
+    0%   { opacity: 0; }
+    15%  { opacity: 0.8; }
+    70%  { opacity: 0.1; }
+    100% { opacity: 0; }
+  }
+
+  .ah-tip { animation: ahBlink 1.1s step-end infinite; }
+  @keyframes ahBlink {
+    0%,45%  { opacity: 1; }
+    50%,100% { opacity: 0.15; }
+  }
+
+  .ah-body { animation: ahGlow 2.5s ease-in-out infinite; }
+  @keyframes ahGlow {
+    0%,100% { opacity: 0.3; }
+    50%      { opacity: 0.55; }
+  }
+
+  /* ── CLOSING ── */
+  .closing { padding: 60px 0 52px; border-top: 1px solid var(--gs-border); text-align: center; }
+  .closing-title { font-family: var(--fd); font-size: 54px; letter-spacing: 8px; line-height: 0.9; color: var(--gs-green); margin-bottom: 18px; text-shadow: 0 0 30px rgba(0,255,136,0.12); }
+  .closing-blurb { font-size: 15px; line-height: 1.85; color: rgba(232,245,238,0.5); max-width: 460px; margin: 0 auto 36px; }
+  .closing-blurb em { color: var(--gs-green); font-style: normal; }
+  .freq-box { display: inline-block; border: 1px solid rgba(0,255,136,0.2); padding: 26px 48px; background: rgba(0,255,136,0.02); }
+  .freq-label { font-family: var(--fm); font-size: 9px; letter-spacing: 5px; color: var(--gs-muted); text-transform: uppercase; margin-bottom: 8px; }
+  .freq-name { font-family: var(--fd); font-size: 34px; letter-spacing: 6px; color: var(--gs-green); margin-bottom: 6px; }
+  .freq-url { font-family: var(--fm); font-size: 11px; letter-spacing: 3px; color: var(--gs-accent); text-transform: uppercase; }
+
+  /* ── FOOTER ── */
+  .doc-footer { padding: 40px 0 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-top: 1px solid var(--gs-border); }
+  .footer-brand { font-family: var(--fd); font-size: 24px; letter-spacing: 8px; }
+  .footer-brand .g { color: var(--gs-green); }
+  .footer-brand .w { color: var(--gs-text); }
+  .footer-meta { font-family: var(--fm); font-size: 10px; letter-spacing: 3px; color: var(--gs-muted); text-transform: uppercase; text-align: right; line-height: 1.9; }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div class="grid-bg"></div>
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">Greens Screens Entertainment · For The Community</div>
+    <div class="hero-title">
+      <span class="g">KNOW YOUR</span>
+      <span class="w">SIGNAL</span>
+      <span class="s">A Guide to GSE Content</span>
+    </div>
+    <p class="hero-blurb">Everything we put out has a purpose. Each segment was built with <em>you</em> in mind — here's what each one delivers and why it exists.</p>
+    <div class="signal-row">
+      <div class="signal-tag"><span class="sig-dot sig-red"></span><span class="sig-label-red">On The Radar</span></div>
+      <div class="signal-tag"><span class="sig-dot sig-blue"></span><span class="sig-label-blue">Loading...</span></div>
+      <div class="signal-tag"><span class="sig-dot sig-gold"></span><span class="sig-label-gold">Checkpoint</span></div>
+    </div>
+  </div>
+
+  <div class="divider">
+    <div class="div-line"></div>
+    <div class="div-label">// the segments</div>
+    <div class="div-line"></div>
+  </div>
+
+  <!-- ══ RED STRIKE ══ -->
+  <div class="strike strike-red">
+    <div class="strike-dot"></div>
+    <div class="strike-bar"></div>
+    <div class="strike-label">Segment 01 · On The Radar</div>
+    <div class="strike-bar" style="max-width:60px;"></div>
+  </div>
+
+  <!-- ON THE RADAR -->
+  <div class="seg">
+    <div class="seg-meta">
+      <span class="seg-num">01</span>
+      <span class="seg-meta-sep">·</span>
+      <span class="seg-cat cat-red">Awareness &amp; Discovery</span>
+    </div>
+
+    <div class="seg-title-row">
+      <span class="seg-name name-red">ON THE<br>RADAR</span>
+      <!-- RADAR HUD -->
+      <div class="seg-hud">
+        <div class="radar-hud">
+          <svg viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="70" cy="70" r="65" fill="none" stroke="rgba(255,32,32,0.12)" stroke-width="1"></circle>
+            <circle cx="70" cy="70" r="48" fill="none" stroke="rgba(255,32,32,0.14)" stroke-width="1"></circle>
+            <circle cx="70" cy="70" r="32" fill="none" stroke="rgba(255,32,32,0.16)" stroke-width="1"></circle>
+            <circle cx="70" cy="70" r="16" fill="none" stroke="rgba(255,32,32,0.18)" stroke-width="1"></circle>
+            <line x1="5" y1="70" x2="135" y2="70" stroke="rgba(255,32,32,0.1)" stroke-width="0.5"></line>
+            <line x1="70" y1="5" x2="70" y2="135" stroke="rgba(255,32,32,0.1)" stroke-width="0.5"></line>
+            <g class="rh-sweep">
+              <path d="M70,70 L70,5 A65,65 0 0,1 130,82 Z" fill="url(#redSweep)" opacity="0.5"></path>
+            </g>
+            <defs>
+              <radialgradient id="redSweep" cx="50%" cy="100%" r="100%">
+                <stop offset="0%" stop-color="rgba(255,32,32,0)"></stop>
+                <stop offset="100%" stop-color="rgba(255,32,32,0.35)"></stop>
+              </radialgradient>
+            </defs>
+            <circle class="rh-pulse" cx="70" cy="70" r="10" fill="none" stroke="rgba(255,32,32,0.5)" stroke-width="1"></circle>
+            <circle class="rh-pulse" cx="70" cy="70" r="10" fill="none" stroke="rgba(255,32,32,0.5)" stroke-width="1"></circle>
+            <circle class="rh-pulse" cx="70" cy="70" r="10" fill="none" stroke="rgba(255,32,32,0.5)" stroke-width="1"></circle>
+            <circle class="rh-blip" cx="95" cy="38" r="2.5" fill="rgba(255,32,32,0.9)"></circle>
+            <circle class="rh-blip2" cx="48" cy="98" r="2" fill="rgba(255,32,32,0.9)"></circle>
+            <circle class="rh-blip3" cx="108" cy="78" r="2" fill="rgba(255,32,32,0.9)"></circle>
+            <circle cx="70" cy="70" r="2" fill="rgba(255,32,32,0.6)"></circle>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="seg-tagline">Games &amp; news that deserve your attention — right now</div>
+    <div class="seg-rule rule-red"></div>
+    <p class="seg-blurb">Your early warning system for everything worth knowing in gaming. We watch the horizon so you don't have to — surfacing games that are <strong>trending, newly announced, or releasing soon</strong> before most people have heard of them.</p>
+    <div class="benefits-label">// what you get</div>
+    <ul class="benefits">
+      <li><span class="b-arrow arrow-red">▸</span><span><strong>Early discovery</strong> — know about the games worth playing before they peak and the internet catches up</span></li>
+      <li><span class="b-arrow arrow-red">▸</span><span><strong>Trending titles</strong> — we track what's gaining real momentum in the community, not just what has the biggest ad budget</span></li>
+      <li><span class="b-arrow arrow-red">▸</span><span><strong>Release awareness</strong> — never get caught off guard by a launch date on something you've been waiting for</span></li>
+      <li><span class="b-arrow arrow-red">▸</span><span><strong>Hidden gems</strong> — smaller titles that deserve a spotlight, because great games don't always come with loud marketing</span></li>
+    </ul>
+  </div>
+
+  <div class="strike strike-blue">
+    <div class="strike-dot"></div>
+    <div class="strike-bar"></div>
+    <div class="strike-label">Segment 02 · Loading...</div>
+    <div class="strike-bar" style="max-width:60px;"></div>
+  </div>
+
+  <div class="seg" style="padding-top:48px;">
+    <div class="seg-meta">
+      <span class="seg-num">02</span>
+      <span class="seg-meta-sep">·</span>
+      <span class="seg-cat cat-blue">Currently Active · Daily Sessions</span>
+    </div>
+    <span class="seg-name name-blue">LOADING...</span>
+    <div class="seg-tagline">What's in the console — what we're actually playing today</div>
+    <div class="seg-rule rule-blue"></div>
+    <p class="seg-blurb">No hype. No previews. Just the honest answer to the question every gamer asks — <strong>"What are you playing right now?"</strong> Active campaigns, core titles in heavy rotation, stories we're deep into.</p>
+    <div class="benefits-label">// what you get</div>
+    <ul class="benefits">
+      <li><span class="b-arrow arrow-blue">▸</span><span><strong>Genuine recommendations</strong> — if it's featured here we're actually playing it, no sponsorship, no obligation, just real sessions</span></li>
+      <li><span class="b-arrow arrow-blue">▸</span><span><strong>Community connection</strong> — find common ground with others in the GSE community who are locked into the same titles</span></li>
+      <li><span class="b-arrow arrow-blue">▸</span><span><strong>Play inspiration</strong> — when you don't know what to load next, this is the most honest place to get your answer</span></li>
+      <li><span class="b-arrow arrow-blue">▸</span><span><strong>Real player perspective</strong> — not a review, not a preview — how a game actually feels when you're living inside it daily</span></li>
+    </ul>
+  </div>
+
+  <div class="strike strike-gold">
+    <div class="strike-dot"></div>
+    <div class="strike-bar"></div>
+    <div class="strike-label">Segment 03 · Checkpoint</div>
+    <div class="strike-bar" style="max-width:60px;"></div>
+  </div>
+
+  <div class="seg" style="padding-top:48px;">
+    <div class="seg-meta">
+      <span class="seg-num">03</span>
+      <span class="seg-meta-sep">·</span>
+      <span class="seg-cat cat-gold">Reading · Stories Worth Sharing</span>
+    </div>
+
+    <div class="seg-title-row">
+      <span class="seg-name name-gold">CHECK<br>POINT</span>
+      <div class="seg-hud" style="margin-top:8px; opacity:0.5;">
+        <div class="antenna-hud">
+          <svg viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+            <path class="ah-arc3" d="M30,10 Q12,-4 0,14" fill="none" stroke="rgba(255,224,51,0.7)" stroke-width="1.2"></path>
+            <path class="ah-arc3" d="M30,10 Q48,-4 60,14" fill="none" stroke="rgba(255,224,51,0.7)" stroke-width="1.2"></path>
+            <path class="ah-arc2" d="M30,10 Q8,-16 -10,18" fill="none" stroke="rgba(255,224,51,0.6)" stroke-width="1"></path>
+            <path class="ah-arc2" d="M30,10 Q52,-16 70,18" fill="none" stroke="rgba(255,224,51,0.6)" stroke-width="1"></path>
+            <path class="ah-arc1" d="M30,10 Q4,-28 -18,22" fill="none" stroke="rgba(255,224,51,0.45)" stroke-width="0.8"></path>
+            <path class="ah-arc1" d="M30,10 Q56,-28 78,22" fill="none" stroke="rgba(255,224,51,0.45)" stroke-width="0.8"></path>
+            <line class="ah-body" x1="30" y1="10" x2="20" y2="95" stroke="rgba(255,224,51,0.7)" stroke-width="1.5" stroke-linecap="round"></line>
+            <line class="ah-body" x1="8" y1="95" x2="52" y2="95" stroke="rgba(255,224,51,0.45)" stroke-width="1.5" stroke-linecap="round"></line>
+            <line class="ah-body" x1="20" y1="54" x2="6" y2="72" stroke="rgba(255,224,51,0.35)" stroke-width="1" stroke-linecap="round"></line>
+            <line class="ah-body" x1="20" y1="54" x2="34" y2="72" stroke="rgba(255,224,51,0.35)" stroke-width="1" stroke-linecap="round"></line>
+            <circle class="ah-tip" cx="30" cy="9" r="3" fill="rgba(255,224,51,1)"></circle>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="seg-tagline">A signal from The Frequency — stories that go beyond the feed</div>
+    <div class="seg-rule rule-gold"></div>
+    <p class="seg-blurb">Some stories deserve more than a caption. Checkpoint takes one standout story from <strong>The Frequency</strong>, our newsletter, and brings it directly to your feed — depth over speed.</p>
+    <div class="benefits-label">// what you get</div>
+    <ul class="benefits">
+      <li><span class="b-arrow arrow-gold">▸</span><span><strong>Depth over speed</strong> — a story given the space it actually needs, not squeezed into a caption or a 15-second clip</span></li>
+      <li><span class="b-arrow arrow-gold">▸</span><span><strong>The Frequency, unlocked</strong> — real newsletter content brought to your feed, no subscription required to receive the signal</span></li>
+      <li><span class="b-arrow arrow-gold">▸</span><span><strong>Context and perspective</strong> — gaming stories and industry moments covered with actual analysis, not just a headline and a take</span></li>
+      <li><span class="b-arrow arrow-gold">▸</span><span><strong>A reason to read</strong> — in a world built for scrolling, Checkpoint is the content that makes you stop and actually take something in</span></li>
+    </ul>
+  </div>
+
+  <div class="closing">
+    <div class="closing-title">ONE BRAND.<br>THREE SIGNALS.</div>
+    <p class="closing-blurb">Every segment exists because the community deserves content with purpose. Not noise — <em>transmissions that actually mean something.</em></p>
+    <div class="freq-box">
+      <div class="freq-label">// want more?</div>
+      <div class="freq-name">THE FREQUENCY</div>
+      <div class="freq-url">greensscreensent.com</div>
+    </div>
+  </div>
+
+  <div class="doc-footer">
+    <div class="footer-brand"><span class="g">GREENS</span><span class="w">SCREENS</span></div>
+    <div class="footer-meta">Know Your Signal · Community Guide<br>greensscreensent.com</div>
+  </div>
+
+</div>
+
+</body>
+</html>

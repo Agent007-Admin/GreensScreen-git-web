@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GSE — On The Radar</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --g: #00ff88;
+    --a: #aaff44;
+    --dk: #050a07;
+    --tx: #e8f5ee;
+    --mu: #6b9a7a;
+    --red: #ff2020;
+    --red-glow: rgba(255,32,32,0.55);
+    --red-soft: rgba(255,32,32,0.15);
+    --fd: 'Bebas Neue', sans-serif;
+    --fm: 'Share Tech Mono', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--dk);
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    font-family: var(--fm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── CANVAS ── */
+  .canvas {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    background: radial-gradient(ellipse at 50% 50%, #0b1f10 0%, #050a07 70%);
+    overflow: hidden;
+  }
+
+  /* ── GRID ── */
+  .grid {
+    position: absolute; inset: 0; z-index: 1;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.025) 1px, transparent 1px);
+    background-size: 80px 80px;
+  }
+
+  /* ── SCANLINES ── */
+  .scanlines {
+    position: absolute; inset: 0; z-index: 50; pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,transparent,transparent 2px,
+      rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 3px
+    );
+  }
+
+  /* ══════════════════════════════
+     RADAR SYSTEM
+  ══════════════════════════════ */
+  .radar-system {
+    position: absolute;
+    width: 1040px; height: 1040px;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+  }
+
+  .static-ring {
+    position: absolute; border-radius: 50%;
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+  }
+
+  .radar-sweep-wrap {
+    position: absolute; border-radius: 50%;
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    overflow: hidden;
+  }
+  .radar-sweep {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 300deg,
+      rgba(0,255,136,0.03) 300deg,
+      rgba(0,255,136,0.14) 355deg,
+      rgba(0,255,136,0.22) 358deg,
+      transparent 360deg
+    );
+    animation: radarRotate 5s linear infinite;
+  }
+  @keyframes radarRotate {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  .radar-ring-pulse {
+    position: absolute; border-radius: 50%;
+    border: 1px solid rgba(0,255,136,0.3);
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    animation: ringPulse 4s ease-out infinite;
+  }
+  .radar-ring-pulse:nth-child(2) { animation-delay: 1.3s; }
+  .radar-ring-pulse:nth-child(3) { animation-delay: 2.6s; }
+  @keyframes ringPulse {
+    0%   { transform: translate(-50%,-50%) scale(0.2); opacity: 0.9; border-color: rgba(0,255,136,0.5); }
+    100% { transform: translate(-50%,-50%) scale(1.05); opacity: 0; border-color: rgba(0,255,136,0); }
+  }
+
+  .crosshair {
+    position: absolute; background: rgba(0,255,136,0.12);
+  }
+
+  /* RED BLIPS — things on the radar */
+  .red-blip {
+    position: absolute; z-index: 10; border-radius: 50%;
+    background: var(--red);
+    box-shadow: 0 0 8px 2px var(--red-glow), 0 0 20px 4px rgba(255,32,32,0.3);
+    animation: redBlipPulse 3s ease-in-out infinite;
+  }
+  @keyframes redBlipPulse {
+    0%, 100% { opacity: 0.2; transform: scale(0.8); }
+    50%       { opacity: 1;   transform: scale(1.2); }
+  }
+
+  /* GREEN BLIPS — existing signals */
+  .green-blip {
+    position: absolute; z-index: 10; border-radius: 50%;
+    background: var(--g);
+    box-shadow: 0 0 6px rgba(0,255,136,0.8);
+    animation: blipFade 5s ease-in-out infinite;
+  }
+  @keyframes blipFade {
+    0%,100% { opacity: 0.1; }
+    50%      { opacity: 0.85; }
+  }
+
+  /* ON THE RADAR — MAIN HEADLINE */
+  .on-the-radar {
+    position: absolute; z-index: 20;
+    width: 100%;
+    text-align: center;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--fd);
+    letter-spacing: 14px;
+    line-height: 1;
+  }
+
+  .otr-pre {
+    display: block;
+    font-size: 38px;
+    color: var(--mu);
+    letter-spacing: 18px;
+    margin-bottom: 12px;
+    opacity: 0;
+    animation: slideDown 0.8s cubic-bezier(0.22,1,0.36,1) forwards 0.6s;
+  }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .otr-on {
+    display: block;
+    font-size: 220px;
+    color: var(--red);
+    text-shadow:
+      0 0 30px var(--red-glow),
+      0 0 80px rgba(255,32,32,0.35),
+      0 0 160px rgba(255,32,32,0.12);
+    letter-spacing: 20px;
+    opacity: 0;
+    animation: neonFlicker 0.6s ease forwards 1s, neonHold 0.1s ease forwards 1.6s;
+    line-height: 0.85;
+  }
+
+  .otr-the {
+    display: block;
+    font-size: 120px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 35px;
+    opacity: 0;
+    animation: slideReveal 0.7s cubic-bezier(0.22,1,0.36,1) forwards 1.1s;
+    line-height: 1;
+    margin: 4px 0;
+  }
+
+  .otr-radar {
+    display: block;
+    font-size: 220px;
+    color: var(--red);
+    text-shadow:
+      0 0 30px var(--red-glow),
+      0 0 80px rgba(255,32,32,0.35),
+      0 0 160px rgba(255,32,32,0.12);
+    letter-spacing: 20px;
+    opacity: 0;
+    animation: neonFlicker 0.6s ease forwards 1.2s, neonHold 0.1s ease forwards 1.8s;
+    line-height: 0.85;
+  }
+
+  @keyframes neonFlicker {
+    0%   { opacity: 0; text-shadow: none; }
+    20%  { opacity: 0.9; text-shadow: 0 0 40px var(--red-glow), 0 0 100px rgba(255,32,32,0.4); }
+    40%  { opacity: 0.3; }
+    60%  { opacity: 1;   text-shadow: 0 0 30px var(--red-glow), 0 0 80px rgba(255,32,32,0.35); }
+    80%  { opacity: 0.7; }
+    100% { opacity: 1; }
+  }
+  @keyframes neonHold {
+    to { opacity: 1; }
+  }
+  @keyframes slideReveal {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ON AIR indicator */
+  .on-air-light {
+    position: absolute; z-index: 25;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards 2s;
+  }
+  .air-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--red);
+    box-shadow: 0 0 8px 3px var(--red-glow), 0 0 20px 6px rgba(255,32,32,0.3);
+    animation: airBlink 1s step-end infinite;
+    animation-delay: 2s;
+  }
+  @keyframes airBlink {
+    0%, 49%  { opacity: 1; box-shadow: 0 0 8px 3px var(--red-glow), 0 0 20px 6px rgba(255,32,32,0.3); }
+    50%, 100% { opacity: 0.2; box-shadow: none; }
+  }
+  .air-label {
+    font-size: 14px; letter-spacing: 6px; color: var(--red);
+    text-shadow: 0 0 12px var(--red-glow);
+    text-transform: uppercase;
+  }
+
+  /* GSE BRAND BLOCK */
+  .brand-block {
+    position: absolute; z-index: 20;
+    bottom: 80px;
+    left: 50%; transform: translateX(-50%);
+    text-align: center;
+    opacity: 0;
+    animation: fadeIn 1s ease forwards 2.2s;
+  }
+  .brand-divider {
+    width: 120px; height: 1px;
+    background: linear-gradient(to right, transparent, rgba(0,255,136,0.5), transparent);
+    margin: 0 auto 14px;
+  }
+  .brand-name {
+    font-family: var(--fd);
+    font-size: 38px;
+    letter-spacing: 8px;
+    line-height: 0.9;
+  }
+  .brand-name .g  { display: block; color: var(--g); text-shadow: 0 0 20px rgba(0,255,136,0.4); }
+  .brand-name .w  { display: block; color: var(--tx); }
+  .brand-name .e  { display: block; color: var(--a); font-size: 16px; letter-spacing: 14px; margin-top: 6px; }
+  .brand-url {
+    font-size: 11px; letter-spacing: 3px; color: var(--mu);
+    margin-top: 8px; text-transform: uppercase;
+  }
+
+  /* SIGNAL ACTIVE (top right) */
+  .signal-active {
+    position: absolute; z-index: 25;
+    top: 36px; right: 48px;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; letter-spacing: 3px; color: var(--g);
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards 2.5s;
+  }
+  .sdot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--g); box-shadow: 0 0 8px rgba(0,255,136,1);
+    animation: blinkDot 1.2s step-end infinite;
+    animation-delay: 2.5s;
+  }
+  @keyframes blinkDot {
+    0%, 49%  { opacity: 1; box-shadow: 0 0 8px rgba(0,255,136,1); }
+    50%, 100% { opacity: 0.15; box-shadow: none; }
+  }
+
+  /* TAGLINE (top center) */
+  .top-tagline {
+    position: absolute; z-index: 25;
+    top: 36px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; letter-spacing: 4px; color: var(--mu);
+    white-space: nowrap; text-transform: uppercase;
+    display: flex; align-items: center; gap: 12px;
+    opacity: 0;
+    animation: fadeIn 0.6s ease forwards 2.4s;
+  }
+  .top-tagline::before,
+  .top-tagline::after {
+    content: ''; height: 1px; width: 20px;
+    background: rgba(0,255,136,0.3);
+  }
+
+  /* SEGMENT DESCRIPTOR */
+  .segment-descriptor {
+    position: absolute; z-index: 20;
+    width: 100%;
+    text-align: center;
+    bottom: 240px;
+    font-size: 13px; letter-spacing: 5px;
+    color: var(--mu); text-transform: uppercase;
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    opacity: 0;
+    animation: fadeIn 1s ease forwards 2.6s;
+  }
+  .seg-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--red); box-shadow: 0 0 6px var(--red-glow); }
+
+  /* TOP + BOTTOM BARS */
+  .tbar { position: absolute; top: 0; left: 0; right: 0; height: 2px; z-index: 30;
+    background: linear-gradient(to right, var(--red), rgba(255,32,32,0.3), transparent); }
+  .bbar { position: absolute; bottom: 0; left: 0; right: 0; height: 4px; z-index: 30;
+    background: linear-gradient(to right, var(--g), var(--a), rgba(0,255,136,0.1)); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="grid"></div>
+
+  <!-- RADAR SYSTEM -->
+  <div class="radar-system">
+    <!-- static depth rings -->
+    <div class="static-ring" style="width:1040px;height:1040px;border:1px solid rgba(0,255,136,0.05);"></div>
+    <div class="static-ring" style="width:780px;height:780px;border:1px solid rgba(0,255,136,0.07);"></div>
+    <div class="static-ring" style="width:520px;height:520px;border:1px solid rgba(0,255,136,0.09);"></div>
+    <div class="static-ring" style="width:260px;height:260px;border:1px solid rgba(0,255,136,0.11);"></div>
+
+    <!-- crosshairs -->
+    <div class="crosshair" style="left:0;right:0;top:50%;height:1px;transform:translateY(-50%);"></div>
+    <div class="crosshair" style="top:0;bottom:0;left:50%;width:1px;transform:translateX(-50%);"></div>
+
+    <!-- sweep -->
+    <div class="radar-sweep-wrap" style="width:1040px;height:1040px;">
+      <div class="radar-sweep"></div>
+    </div>
+
+    <!-- pulse rings -->
+    <div class="radar-ring-pulse" style="width:1040px;height:1040px;"></div>
+    <div class="radar-ring-pulse" style="width:1040px;height:1040px;"></div>
+    <div class="radar-ring-pulse" style="width:1040px;height:1040px;"></div>
+
+    <!-- RED BLIPS — things on the radar, unknown targets -->
+    <div class="red-blip" style="width:10px;height:10px;top:22%;left:65%;animation-delay:0s;animation-duration:3.2s;"></div>
+    <div class="red-blip" style="width:8px;height:8px;top:68%;left:72%;animation-delay:1.1s;animation-duration:4s;"></div>
+    <div class="red-blip" style="width:12px;height:12px;top:34%;left:24%;animation-delay:2.3s;animation-duration:3.5s;"></div>
+    <div class="red-blip" style="width:7px;height:7px;top:75%;left:38%;animation-delay:0.7s;animation-duration:4.5s;"></div>
+    <div class="red-blip" style="width:9px;height:9px;top:18%;left:45%;animation-delay:1.8s;animation-duration:2.8s;"></div>
+
+    <!-- GREEN BLIPS — confirmed signals -->
+    <div class="green-blip" style="width:6px;height:6px;top:55%;left:58%;animation-delay:0.5s;animation-duration:5s;"></div>
+    <div class="green-blip" style="width:5px;height:5px;top:42%;left:30%;animation-delay:2.8s;animation-duration:6.5s;"></div>
+  </div>
+
+  <div class="top-tagline">Technology · Gaming · Entertainment · Community</div>
+
+  <div class="signal-active">
+    <span class="sdot"></span>SIGNAL ACTIVE
+  </div>
+
+  <!-- MAIN HEADLINE — ON THE RADAR -->
+  <div class="on-the-radar">
+    <span class="otr-pre">// incoming transmission</span>
+    <span class="otr-on">ON</span>
+    <span class="otr-the">THE</span>
+    <span class="otr-radar">RADAR</span>
+  </div>
+
+  <!-- SEGMENT DESCRIPTOR -->
+  <div class="segment-descriptor">
+    <div class="seg-dot"></div>
+    <span>Upcoming Games &amp; News · What's on the Horizon</span>
+    <div class="seg-dot"></div>
+  </div>
+
+  <!-- GSE BRAND BLOCK — BOTTOM -->
+  <div class="brand-block">
+    <div class="brand-divider"></div>
+    <div class="brand-name">
+      <span class="g">GREENS</span>
+      <span class="w">SCREENS</span>
+      <span class="e">ENT</span>
+    </div>
+    <div class="brand-url">greensscreensent.com</div>
+  </div>
+
+  <!-- ATMOSPHERE -->
+  <div class="tbar"></div>
+  <div class="bbar"></div>
+  <div class="scanlines"></div>
+</div>
+</body>
+</html>
