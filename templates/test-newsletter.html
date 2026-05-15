@@ -66,41 +66,67 @@
   .body { background:{{BG_DARK}}; }
   .sec { border-top:1px solid rgba(255,255,255,0.04); padding:0 40px 28px; }
 
+  @keyframes pulse-releases {
+    0% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4); transform: scale(1); }
+    70% { box-shadow: 0 0 0 10px rgba(0, 255, 136, 0); transform: scale(1.05); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0); transform: scale(1); }
+  }
+  @keyframes pulse-indie {
+    0% { box-shadow: 0 0 0 0 rgba(170, 255, 68, 0.4); transform: scale(1); }
+    70% { box-shadow: 0 0 0 10px rgba(170, 255, 68, 0); transform: scale(1.05); }
+    100% { box-shadow: 0 0 0 0 rgba(170, 255, 68, 0); transform: scale(1); }
+  }
+  @keyframes pulse-tech {
+    0% { box-shadow: 0 0 0 0 rgba(0, 207, 255, 0.4); transform: scale(1); }
+    70% { box-shadow: 0 0 0 10px rgba(0, 207, 255, 0); transform: scale(1.05); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 207, 255, 0); transform: scale(1); }
+  }
+  @keyframes pulse-entertainment {
+    0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); transform: scale(1); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 215, 0, 0); transform: scale(1.05); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); transform: scale(1); }
+  }
   .sec-header {
-    display:flex; align-items:center; gap:12px;
+    display:flex; align-items:center; gap:14px;
     padding:20px 0 16px; border-bottom:1px solid; margin-bottom:16px;
   }
   .sec-icon {
-    width:28px; height:28px; display:flex; align-items:center; justify-content:center;
-    font-size:14px; border:1px solid; flex-shrink:0;
+    width:12px; height:12px; border-radius:50%;
+    flex-shrink:0;
   }
   .sec-title-wrap { flex:1; }
-  .sec-name { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:3px; }
+  .sec-name { font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:3px; }
   .sec-desc { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:2px; opacity:0.6; margin-top:1px; }
 
   .sec-releases .sec-header { border-color:{{ACCENT_COLOR_BORDER}}; }
-  .sec-releases .sec-icon { color:{{ACCENT_COLOR}}; border-color:{{ACCENT_COLOR_BORDER}}; background:{{ACCENT_COLOR_DIM}}; }
+  .sec-releases .sec-icon { background:{{ACCENT_COLOR}}; box-shadow:0 0 8px {{ACCENT_COLOR}}; animation:pulse-releases 2s infinite; }
   .sec-releases .sec-name { color:{{ACCENT_COLOR}}; }
   .sec-releases .sec-desc { color:{{ACCENT_COLOR}}; }
   .sec-releases .story-link { color:{{ACCENT_COLOR}}; }
+  .sec-releases .summary-label { color:{{ACCENT_COLOR}}; }
+  .sec-releases .story-summary-box { border-left-color:{{ACCENT_COLOR}}; }
 
   .sec-indie .sec-header { border-color:rgba(170,255,68,0.2); }
-  .sec-indie .sec-icon { color:#aaff44; border-color:rgba(170,255,68,0.2); background:rgba(170,255,68,0.08); }
-  .sec-indie .sec-name { color:#aaff44; }
-  .sec-indie .sec-desc { color:#aaff44; }
-  .sec-indie .story-link { color:#aaff44; }
+  .sec-indie .sec-icon { background:{{ACCENT_LIME}}; box-shadow:0 0 8px {{ACCENT_LIME}}; animation:pulse-indie 2s infinite; }
+  .sec-indie .sec-name { color:{{ACCENT_LIME}}; }
+  .sec-indie .sec-desc { color:{{ACCENT_LIME}}; }
+  .sec-indie .story-link { color:{{ACCENT_LIME}}; }
+  .sec-indie .summary-label { color:{{ACCENT_LIME}}; }
+  .sec-indie .story-summary-box { border-left-color:{{ACCENT_LIME}}; }
 
-  .sec-screen .sec-header { border-color:rgba(255,153,68,0.2); }
-  .sec-screen .sec-icon { color:#ff9944; border-color:rgba(255,153,68,0.2); background:rgba(255,153,68,0.08); }
-  .sec-screen .sec-name { color:#ff9944; }
-  .sec-screen .sec-desc { color:#ff9944; }
-  .sec-screen .story-link { color:#ff9944; }
+  .sec-tech .sec-header { border-color:rgba(0,207,255,0.2); }
+  .sec-tech .sec-icon { background:#00cfff; box-shadow: 0 0 8px #00cfff; animation:pulse-tech 2s infinite; }
+  .sec-tech .sec-name { color:#00cfff; }
+  .sec-tech .sec-desc { color:#00cfff; }
+  .sec-tech .summary-label { color:#00cfff; }
+  .sec-tech .story-summary-box { border-left-color:#00cfff; }
 
-  .sec-industry .sec-header { border-color:rgba(204,136,255,0.2); }
-  .sec-industry .sec-icon { color:#cc88ff; border-color:rgba(204,136,255,0.2); background:rgba(204,136,255,0.08); }
-  .sec-industry .sec-name { color:#cc88ff; }
-  .sec-industry .sec-desc { color:#cc88ff; }
-  .sec-industry .story-link { color:#cc88ff; }
+  .sec-entertainment .sec-header { border-color:rgba(255,215,0,0.2); }
+  .sec-entertainment .sec-icon { background:#ffd700; box-shadow: 0 0 8px #ffd700; animation:pulse-entertainment 2s infinite; }
+  .sec-entertainment .sec-name { color:#ffd700; }
+  .sec-entertainment .sec-desc { color:#ffd700; }
+  .sec-entertainment .summary-label { color:#ffd700; }
+  .sec-entertainment .story-summary-box { border-left-color:#ffd700; }
 
   .story {
     display:flex; gap:16px; align-items:flex-start;
@@ -117,8 +143,8 @@
   .tag-hot { color:#ff6b6b; border-color:rgba(255,107,107,0.35); background:rgba(255,107,107,0.06); }
   .tag-new { color:{{ACCENT_COLOR}}; border-color:{{ACCENT_COLOR_BORDER}}; background:{{ACCENT_COLOR_DIM}}; }
   .tag-indie { color:#aaff44; border-color:rgba(170,255,68,0.2); background:rgba(170,255,68,0.08); }
-  .tag-screen { color:#ff9944; border-color:rgba(255,153,68,0.2); background:rgba(255,153,68,0.08); }
-  .tag-industry { color:#cc88ff; border-color:rgba(204,136,255,0.2); background:rgba(204,136,255,0.08); }
+  .tag-tech { color:#00cfff; border-color:rgba(0,207,255,0.2); background:rgba(0,207,255,0.08); }
+  .tag-entertainment { color:#ffd700; border-color:rgba(255,215,0,0.2); background:rgba(255,215,0,0.08); }
   .tag-alert { color:#ff6b6b; border-color:rgba(255,107,107,0.35); background:rgba(255,107,107,0.06); }
 
   .story-title { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:1.5px; color:{{TEXT_COLOR}}; margin-bottom:5px; line-height:1.1; }
@@ -135,11 +161,11 @@
 
   .story-summary-box {
     margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.03);
-    border-left: 2px solid {{ACCENT_COLOR}}; border-radius: 0 4px 4px 0;
+    border-left: 2px solid; border-radius: 0 4px 4px 0;
   }
   .summary-label {
     font-family: 'Share Tech Mono', monospace; font-size: 9px; letter-spacing: 1px;
-    color: {{ACCENT_COLOR}}; margin-bottom: 6px; opacity: 0.7;
+    margin-bottom: 6px; opacity: 0.7;
   }
   .story-full-summary { font-size: 13px; color: {{TEXT_COLOR}}; line-height: 1.6; opacity: 0.9; }
 

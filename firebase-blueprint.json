@@ -76,6 +76,19 @@
         "source": { "type": "string" }
       },
       "required": ["timestamp", "level", "message"]
+    },
+    "verified_game_links": {
+      "title": "Verified Game Links Cache",
+      "description": "Caches resolved Steam links and blocks hallucinatory links for stories.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "url": { "type": "string" },
+        "status": { "type": "string", "enum": ["verified", "blocked"] },
+        "addedAt": { "type": "string", "format": "date-time" },
+        "reason": { "type": "string" }
+      },
+      "required": ["title", "status", "addedAt"]
     }
   },
   "firestore": {
@@ -94,6 +107,10 @@
     "system_logs/{logId}": {
       "schema": "system_logs",
       "description": "Collection of system logs"
+    },
+    "verified_game_links/{slug}": {
+      "schema": "verified_game_links",
+      "description": "Collection of cached, verified Steam links"
     }
   }
 }

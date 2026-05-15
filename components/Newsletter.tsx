@@ -179,7 +179,7 @@ export const Newsletter: React.FC = () => {
             // join the frequency
           </div>
           <h2 className="font-display text-[clamp(32px,4.5vw,56px)] tracking-[3px] text-[#FFE033] mb-3 leading-tight" style={{ textShadow: '0 0 30px rgba(255,224,51,0.3)' }}>THE COLLECTIVE</h2>
-          <p className="text-base text-gs-muted max-w-[520px] leading-[1.6] font-medium">
+          <p className="text-base text-gs-muted max-w-[520px] leading-[1.6] font-medium mb-6">
             Subscribe to The Frequency — our newsletter built for the community. Gaming. Tech. Entertainment. Delivered to you.
           </p>
 

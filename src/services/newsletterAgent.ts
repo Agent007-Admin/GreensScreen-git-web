@@ -322,7 +322,7 @@ export class NewsletterAgent {
   /**
    * Send a test newsletter to a specific email.
    */
-  async sendTestNewsletter(email: string, targetMonth?: string, targetYear?: string, forceRefresh: boolean = false) {
+  async sendTestNewsletter(email: string, targetMonth?: string, targetYear?: string, forceRefresh: boolean = false, additionalInstructions: string = "") {
     console.log(`NewsletterAgent: Sending test newsletter to ${email}...`);
     
     const now = new Date();
@@ -330,7 +330,7 @@ export class NewsletterAgent {
     const year = targetYear || now.getFullYear().toString();
     
     // 1. Get or generate content
-    const content = await this.getMonthlyContent(month, year, forceRefresh, true);
+    const content = await this.getMonthlyContent(month, year, forceRefresh, true, additionalInstructions);
     if (!content) {
       console.error("NewsletterAgent: Monthly content generation failed.");
       return false;
@@ -424,7 +424,7 @@ export class NewsletterAgent {
   /**
    * Get or generate monthly content. Checks Firestore for a draft first.
    */
-  async getMonthlyContent(month: string, year: string, forceRefresh: boolean = false, isTest: boolean = false) {
+  async getMonthlyContent(month: string, year: string, forceRefresh: boolean = false, isTest: boolean = false, additionalInstructions: string = "") {
     const draftId = isTest ? `${month.toLowerCase()}-${year}-test` : `${month.toLowerCase()}-${year}`;
     const draftRef = doc(this.db, "newsletter_drafts", draftId);
 
@@ -441,7 +441,7 @@ export class NewsletterAgent {
     }
 
     // Generate new content
-    const content = await this.generateMonthlyContent(month, year, isTest);
+    const content = await this.generateMonthlyContent(month, year, isTest, additionalInstructions);
     if (content) {
       try {
         await setDoc(draftRef, {
@@ -474,56 +474,87 @@ export class NewsletterAgent {
     }
   }
 
-  async generateMonthlyContent(month: string, year: string, isTest: boolean = false) {
+  async generateMonthlyContent(month: string, year: string, isTest: boolean = false, additionalInstructions: string = "") {
     this.refreshAI(); // Ensure we use the latest key
     await this.logEvent("info", `Requesting Gemini generation for ${month} ${year}...`);
+    
+    // Calculate the data collection window: 16th of previous month to 15th of current month
+    // Current month is targetMonth (e.g., "May")
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const targetMonthIdx = monthNames.indexOf(month);
+    const prevMonthIdx = (targetMonthIdx - 1 + 12) % 12;
+    const prevMonthYear = prevMonthIdx === 11 ? (parseInt(year) - 1).toString() : year;
+    const prevMonthName = monthNames[prevMonthIdx];
+
+    const windowStartStr = `${prevMonthName.substring(0, 3).toUpperCase()} 16, ${prevMonthYear}`;
+    const windowEndStr = `${month.substring(0, 3).toUpperCase()} 15, ${year}`;
     
     const prompt = `
       Generate a high-energy, technical monthly newsletter for "Greens Screens Ent" for ${month} ${year}.
       The theme is "SIGNAL_ALWAYS_GREEN".
       
-      CRITICAL INSTRUCTIONS:
-      1. Use the googleSearch tool to find REAL, CURRENT gaming and tech news from ${month} ${year}.
-      2. Every link MUST be a valid, working URL to a reputable news site (e.g., IGN, Kotaku, Polygon, The Verge).
-      3. LINK RELIABILITY: Always prefer a valid "Read More" link with a true landing page. ONLY if a valid link cannot be found after searching, set "hasLink" to false and provide a "fullSummary" (approx 100 words) for "Digest Mode".
-      4. BLURB vs FULL SUMMARY (CRITICAL): 
-         - "blurb": A ultra-concise, 1-sentence "hook" (max 15 words) that grabs attention.
-         - "fullSummary": A 3-4 sentence deep-dive "Research Digest" (approx 80-100 words). It MUST contain specific research data, technical details, and unique insights not found in the blurb.
-         - PROHIBITION: The "fullSummary" MUST NOT contain the text of the "blurb". They must be unique, complementary narratives.
-      5. DO NOT use placeholder links or links that lead to 404 errors.
-      6. Limit the output to 4 sections. The "releases" and "indie" sections MUST have exactly 3 stories each. All other sections should have exactly 2 stories.
-      7. Tone: Futuristic, cyber-industrial, high-energy.
-      8. STRICT: DO NOT include any internal monologue, thought process, or commentary inside the JSON values. 
-      9. STRICT: windowStart and windowEnd MUST be short strings (e.g., "APR 01", "APR 30"). DO NOT include years or timestamps in these fields.
-      10. STRICT: Output ONLY the raw JSON object. NO PREAMBLE. NO POSTAMBLE.
-      11. NO IMAGES: Do not provide any image URLs.
-      12. One section MUST be of type "indie", highlighting high-anticipation games from smaller teams/developers that people may not be aware of but that are showing good promise.
+      DATA COLLECTION WINDOW:
+      Coverage Period: ${prevMonthName} 16, ${prevMonthYear} to ${month} 15, ${year}.
+      Use the googleSearch tool to find REAL, CURRENT gaming and tech news strictly from this time period.
+      DO NOT INCLUDE GAMES RELEASED IN PREVIOUS YEARS.
+
+      ${additionalInstructions ? `ADDITIONAL CONTEXT:\n${additionalInstructions}\n` : ''}
       
-      13. LINK VERIFICATION (CRITICAL): You MUST use the googleSearch tool for EVERY game. 
-          - Query specifically for: "site:steampowered.com/app/ [EXACT GAME TITLE]".
-          - VERIFICATION: You MUST manually (AI-logic) verify that the URL slug or App ID in the link belongs to the EXACT game mentioned in the story title. 
-          - PROHIBITION: If the link points to a DLC, a different game in a series (e.g., Forza 5 vs Forza 4), or a search results page, you MUST set "hasLink": false. 
-          - ACCURACY > COVERAGE: It is better to have NO link than an INCORRECT link. If there is ANY ambiguity, set "hasLink": false. NEVER guess.
+      SECTION ARCHITECTURE (EXACTLY 4 SECTIONS):
+      1. "releases": "Major Release" - EXCLUSIVELY new AAA games RELEASED EXACTLY within the window (${windowStartStr} - ${windowEndStr}). NO UPDATES. NO DLC.
+      2. "indie": "Indie Release" - EXCLUSIVELY new indie games RELEASED EXACTLY within the window (${windowStartStr} - ${windowEndStr}). NO UPDATES.
+      3. "tech": "Tech" (Technology in gaming - specs, dev studios, hardware stories) recently announced in this window.
+      4. "entertainment": "Entertainment" (Video game forward entertainment - movies, TV shows, etc.) announced or released in this window.
+
+      CRITICAL THEME & BRANDING:
+      - BRAND NAME: "Greens Screens Ent"
+      - TONE: "BREAKING NEWS". High-energy, urgent, technical.
+      - TIMING RULE / YEAR ENFORCEMENT: The current year is ${year}. This is non-negotiable. You MUST NOT present news or game releases from past years (e.g., 2024, 2025). Every article must cover topics relevant to the window: ${windowStartStr} to ${windowEndStr}.
+      - RELEASE WINDOW ENFORCEMENT: For "Major Release" and "Indie Release", you MUST only find games that had their VERSION 1.0 or initial release exactly between ${windowStartStr} and ${windowEndStr}. Games released outside this specific time range are STRICTLY FORBIDDEN.
+      - PROHIBITION: Do NOT include content updates, patches, season passes, or rumors for the "Release" sections. I want LAUNCH news only.
+      - ACCENT COLORS: Use colors that contrast well with a black background (#050a07). 
+        - Major Release: Neon Green (#00ff88).
+        - Indie Release: Neon Lime (#aaff44).
+        - Tech: Electric Cyan (#00cfff).
+        - Entertainment: Amber Gold (#ffd700).
+
+      CRITICAL LINK INSTRUCTIONS:
+      1. LINKS ARE FOR GAMES ONLY: Only sections of type "releases" and "indie" may contain links.
+      2. STARK PROHIBITION: Sections "tech" and "entertainment" MUST have "hasLink": false and "link": "". NO EXCEPTIONS. If you add a link to these sections, it is a critical failure.
+      3. IDENTITY LOCK & NAME-MATCH PROTOCOL (EXTREME STRICTNESS):
+         - For segments with links (releases/indie), the ONLY allowed link is a direct Steam Store profile page for the EXACT, SPECIFIC game discussed in the article.
+         - MISMATCHED LINKS ARE STRICTLY FORBIDDEN: You must NEVER link to a different game, an older version, a sequel, or another game in the same franchise.
+         - If the specific game does not have an active Steam store page, you MUST set "hasLink": false. Do NOT substitute it with another game's link.
+         - RUMOR/FUTURE GUARD: If the story covers a 'rumor', 'announcement', or 'unreleased project' that does NOT yet have a live Steam Store page, you MUST set "hasLink": false. 
+         - SEQUEL GUARD: Never link to an older installment. Linking to a past title (e.g., "Forza 5" when discussing "Forza 6") is strictly forbidden.
+         - PATH VALIDATION: The URL MUST contain "/app/" followed by a numeric ID or a name slug that specifically matches the game title word-for-word.
+         - EXACT NAME MATCH REQUIREMENT: The name of the game in the Steam URL (e.g. \`.../app/12345/Exact_Game_Name/\`) MUST word-for-word match the generated story "title" (with underscores instead of spaces). If it does not, you must drop the link and set "hasLink": false.
+         - NO WRONG LINKS: If no exact 1:1 match for the SPECIFIC newly released game is found on Steam, set "hasLink": false. Discarding a link is better than providing an incorrect one.
+
+      STORY CONTENT RULES:
+      - "blurb": A ultra-concise, 1-sentence "hook" (max 15 words).
+      - "fullSummary": A 3-4 sentence deep-dive "Research Digest" (approx 80-100 words). It MUST contain specific research data and technical details.
+      - PROHIBITION: The "fullSummary" MUST NOT contain the text of the "blurb".
+      - DO NOT use placeholder links or links that lead to 404 errors.
+      
+      STORY COUNTS:
+      - "releases" and "indie" sections MUST have exactly 3 stories each.
+      - "tech" and "entertainment" sections MUST have exactly 2 stories each.
+
+      TONE & STYLE:
+      - Futuristic, cyber-industrial, high-energy.
+      - STRICT: Output ONLY the raw JSON object. NO PREAMBLE. NO POSTAMBLE.
+      - NO IMAGES: Do not provide any image URLs.
       
       I need the following sections in JSON format:
       1. heroIntro: A brief overview (approx 50 words) of the current state of gaming and tech.
-      2. windowStart: The start date of coverage (e.g., "APR 01").
-      3. windowEnd: The end date of coverage (e.g., "APR 30").
+      2. windowStart: "${windowStartStr}"
+      3. windowEnd: "${windowEndStr}"
       4. signoffText: A closing message (approx 30 words).
-      5. accentColor: A hex color code (e.g., "#ff2d78" for pink or "#00cfff" for blue).
-      6. sections: An array of objects, each with:
-         - type: "releases" | "indie" | "industry" | "screen"
-         - name: Section title (e.g., "BIG RELEASES")
-         - desc: Section subtitle (e.g., "MAJOR TITLES · THIS WINDOW")
-         - icon: A hex code for an icon entity (e.g., "&#9654;" for play or "&#9670;" for diamond)
-         - stories: Array of objects:
-           - title: Story title
-           - blurb: A ultra-concise, 1-sentence "hook" (max 15 words).
-           - meta: Date/Platform info (e.g., "APR 12 · PS5")
-           - tag: "HOT" | "NEW" | "REMAKE" | "INDIE" | "SCREEN" | "INDUSTRY" | "ALERT"
-           - link: A direct Steam Store URL (ONLY if found).
-           - hasLink: boolean (true ONLY if a Steam Store link was found)
-           - fullSummary: string (REQUIRED for ALL stories; provide 3-4 deep-dive sentences with unique data points)
+      5. accentColor: A hex color code.
+      6. sections: An array of objects matching the 4 section types mentioned above.
+         Each section needs: "type", "name", "desc", "icon", and "stories" array.
+         Each story needs: "title", "blurb", "meta", "tag", "link", "hasLink", "fullSummary".
     `;
 
     try {
@@ -614,8 +645,153 @@ export class NewsletterAgent {
             if (s.includes(b) && s.length < b.length + 20) {
               throw new Error(`Duplication detected in story: ${story.title}. Blurb and Summary are too similar.`);
             }
+            
+            // Validation: Ensure valid Steam link
+            if (story.hasLink && story.link) {
+              if (!/^https:\/\/store\.steampowered\.com\/app\/\d+\/.*$/.test(story.link)) {
+                console.warn(`[WARNING] Invalid Steam link format generated: ${story.link}.  link.`);
+                story.hasLink = false;
+                story.link = "";
+              } else {
+                // Strong Identity Match Validation
+                const urlParts = story.link.split('/');
+                const gameNameInUrl = urlParts[5] ? urlParts[5].toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+                
+                // Find the longest word in the title
+                const titleWords = story.title.toLowerCase().split(/[^a-z0-9]+/);
+                const longestWord = titleWords.reduce((a: string, b: string) => a.length > b.length ? a : b, "");
+                
+                // If there's a game name in the URL and the longest word from the title (if > 3 chars) isn't in it:
+                if (gameNameInUrl && longestWord.length > 3 && !gameNameInUrl.includes(longestWord)) {
+                  console.warn(`[WARNING] Link identity mismatch. URL name "${urlParts[5]}" does not contain main title word "${longestWord}". Stripping link for ${story.title}.`);
+                  story.hasLink = false;
+                  story.link = "";
+                }
+              }
+            } else {
+              story.hasLink = false;
+              story.link = "";
+            }
           });
         });
+
+        // Smart Steam Link Resolver
+        for (const sec of parsed.sections) {
+          if (!sec.stories) continue;
+          
+          // Only attempt/allow links on allowed section types
+          if (sec.type !== 'releases' && sec.type !== 'indie') {
+            for (const story of sec.stories) {
+              story.hasLink = false;
+              story.link = "";
+            }
+            continue;
+          }
+
+          for (const story of sec.stories) {
+             let resolvedLink = "";
+             const safeQueryTitle = story.title.split(' - ')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+             let isCached = false;
+
+             try {
+               // 1. Check if we have a verified mapping in Firestore
+               const cacheRef = doc(this.db, 'verified_game_links', safeQueryTitle);
+               const cacheSnap = await getDoc(cacheRef);
+               
+               if (cacheSnap.exists()) {
+                 const cacheData = cacheSnap.data();
+                 if (cacheData.status === 'verified' && cacheData.url) {
+                   resolvedLink = cacheData.url;
+                   isCached = true;
+                   console.log(`[INFO] Verified cache hit for "${story.title}" -> ${resolvedLink}`);
+                 } else if (cacheData.status === 'blocked') {
+                   isCached = true;
+                   console.log(`[INFO] Link for "${story.title}" is explicitly blocked by cache.`);
+                 }
+               }
+             } catch (e: any) {
+                console.warn(`[WARNING] Error reading from link cache: ${e.message}`);
+             }
+
+             if (!isCached) {
+               try {
+                 // Extract core title from story title (e.g. remove trailing text like "- Early Access")
+                 const query = encodeURIComponent(story.title.split(' - ')[0]);
+                 const res = await fetch(`https://store.steampowered.com/api/storesearch/?term=${query}&l=english&cc=US`);
+                 
+                 if (res.ok) {
+                   const data = await res.json();
+                   if (data && data.items && data.items.length > 0) {
+                     
+                     const searchTitleMatches = (apiTitle: string, storyTitle: string) => {
+                       const normalize = (t: string) => t.toLowerCase().replace(/[^a-z0-9]/g, '');
+                       const nApi = normalize(apiTitle);
+                       const nStory = normalize(storyTitle);
+                       if (nApi === nStory) return true;
+                       
+                       if (nApi.includes(nStory) && nStory.length > 4) return true;
+                       if (nStory.includes(nApi) && nApi.length > 4) return true;
+                       
+                       // Fallback: check if the longest word in storyTitle > 4 chars is in apiTitle
+                       const words = storyTitle.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 4);
+                       if (words.length > 0) {
+                           // Check if at least one significant word matches
+                           return words.some(w => nApi.includes(w));
+                       }
+                       
+                       return false;
+                     };
+
+                     for (const item of data.items) {
+                       if (item.type === 'app' && searchTitleMatches(item.name, story.title)) {
+                         const safeSlug = item.name.replace(/[^a-zA-Z0-9_\-]/g, '_');
+                         resolvedLink = `https://store.steampowered.com/app/${item.id}/${safeSlug}/`;
+                         console.log(`[INFO] Smart resolved link for "${story.title}" -> ${resolvedLink}`);
+                         break;
+                       }
+                     }
+                   }
+                 }
+               } catch (e: any) {
+                 console.warn(`[WARNING] Error resolving Steam link for ${story.title}: ${e.message}`);
+               }
+
+               // 2. Cache the result for future runs
+               try {
+                 const cacheRef = doc(this.db, 'verified_game_links', safeQueryTitle);
+                 if (resolvedLink) {
+                    await setDoc(cacheRef, {
+                      title: story.title,
+                      url: resolvedLink,
+                      status: 'verified',
+                      addedAt: new Date().toISOString()
+                    });
+                 } else {
+                    await setDoc(cacheRef, {
+                      title: story.title,
+                      url: "",
+                      status: 'blocked',
+                      reason: 'No API match found',
+                      addedAt: new Date().toISOString()
+                    });
+                 }
+               } catch (e: any) {
+                 console.warn(`[WARNING] Error writing to link cache: ${e.message}`);
+               }
+             }
+
+             if (resolvedLink) {
+               story.hasLink = true;
+               story.link = resolvedLink;
+             } else {
+               if (story.hasLink && !isCached) {
+                 console.warn(`[WARNING] Stripping hallucinated link for "${story.title}", no valid API match found.`);
+               }
+               story.hasLink = false;
+               story.link = "";
+             }
+          }
+        }
 
         return parsed;
       } catch (parseError) {
@@ -717,7 +893,7 @@ export class NewsletterAgent {
         sectionsHtml += `
           <div class="sec sec-${sec.type}">
             <div class="sec-header">
-              <div class="sec-icon">${sec.icon}</div>
+              <div class="sec-icon"></div>
               <div class="sec-title-wrap">
                 <div class="sec-name">${sec.name}</div>
                 <div class="sec-desc">${sec.desc}</div>

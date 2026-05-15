@@ -82,6 +82,11 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // --- Collection: verified_game_links ---
+    match /verified_game_links/{slug} {
+      allow read, write: if true;
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;
