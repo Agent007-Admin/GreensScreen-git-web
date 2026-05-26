@@ -163,9 +163,46 @@ export const Newsletter: React.FC = () => {
 
   return (
     <div id="newsletter" className="relative z-10 bg-gs-surface border-y border-[rgba(255,224,51,0.2)] px-10 py-[72px] mt-[72px] overflow-hidden">
+      {/* 1. Micro Yellow Background Grid */}
+      <div 
+        className="absolute inset-0 opacity-[0.035] pointer-events-none z-0"
+        style={{
+          backgroundImage: `linear-gradient(rgba(255,224,51,0.25) 1px, transparent 1px), 
+                            linear-gradient(90deg, rgba(255,224,51,0.25) 1px, transparent 1px)`,
+          backgroundSize: '28px 28px',
+        }}
+      />
+
+      {/* 2. Neon-Yellow Sweeping Signal Laser Beam Scanline with Heartbeat Pulse */}
+      <motion.div 
+        animate={{
+          top: ["0%", "100%"],
+        }}
+        transition={{
+          duration: 6,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+        className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#FFE033] to-transparent z-0 pointer-events-none"
+      >
+        {/* Heartbeat pulse glow effect overlay */}
+        <motion.div
+          animate={{
+            opacity: [0.25, 0.95, 0.35, 1, 0.25],
+            scaleY: [1, 2.2, 1, 3.4, 1],
+          }}
+          transition={{
+            duration: 1.4,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="absolute inset-x-0 top-[-1px] h-[4px] bg-gradient-to-r from-transparent via-[#FFE033] to-transparent shadow-[0_0_15px_rgba(255,224,51,0.9)]"
+        />
+      </motion.div>
+
       <div className="absolute -right-[100px] -top-[100px] w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(255,224,51,0.05)_0%,transparent_60%)] pointer-events-none" />
       
-      <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-[72px] items-center">
+      <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-[72px] items-center relative z-10">
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -263,7 +300,7 @@ export const Newsletter: React.FC = () => {
           transition={{ duration: 0.6 }}
           className="flex flex-col gap-[10px]"
         >
-          <div className="font-mono text-[11px] text-[#C9A800] tracking-[2px] mb-1.5 uppercase">SUBSCRIBE TO THE SIGNAL</div>
+          <div className="font-mono text-[11px] text-[#C9A800] tracking-[2px] mb-1.5 uppercase">SUBSCRIBE TO THE FREQUENCY</div>
           <form onSubmit={handleSubmit} className="flex flex-col gap-[10px]">
             <input 
               type="text" 

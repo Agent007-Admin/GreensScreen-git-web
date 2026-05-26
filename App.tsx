@@ -8,23 +8,24 @@ import { SocialGrid } from './components/SocialGrid';
 import { Newsletter } from './components/Newsletter';
 import { FounderCard } from './components/FounderCard';
 import { Footer } from './components/Footer';
+import { GridBackground } from './components/GridBackground';
 
 const App: React.FC = () => {
 
   return (
     <div className="gs-page selection:bg-gs-green selection:text-gs-dark">
       <div className="scanlines" />
-      <div className="grid-bg" />
+      <GridBackground />
       
       <Navbar />
       
       <main>
         <Hero />
         <Ticker />
-        <Pillars />
-        <SegmentsGuide />
         <Newsletter />
         <SocialGrid />
+        <Pillars />
+        <SegmentsGuide />
         <FounderCard />
       </main>
       

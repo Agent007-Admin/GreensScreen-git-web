@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { GlitchTitle } from './GlitchTitle';
 
 interface SegmentCardProps {
   number: string;
@@ -13,24 +14,105 @@ interface SegmentCardProps {
 
 const SegmentCard: React.FC<SegmentCardProps> = ({ number, name, tagline, color, glow, blurb, bullets }) => {
   const cardId = `segment-card-${name.replace(/\s+/g, '-').toLowerCase()}`;
+  const [coords, setCoords] = React.useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setCoords({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+  };
+
+  const cardVariants = {
+    hidden: { 
+      scale: 1.08,
+      opacity: 0,
+      filter: 'blur(10px)'
+    },
+    visible: {
+      scale: 1,
+      opacity: 1,
+      filter: 'blur(0px)',
+      transition: {
+        duration: 1.0,
+        ease: [0.16, 1, 0.3, 1] as const
+      }
+    }
+  };
+
+  const contentVariants = {
+    hidden: {
+      opacity: 0,
+      y: 12
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: [0.16, 1, 0.3, 1] as const,
+        delay: 0.15
+      }
+    }
+  };
+
+  const lineVariants = {
+    hidden: { top: '0%', opacity: 0 },
+    visible: {
+      top: ['0%', '100%'],
+      opacity: [0, 1, 1, 0],
+      transition: {
+        duration: 1.2,
+        ease: [0.16, 1, 0.3, 1] as const
+      }
+    }
+  };
   
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className={`bg-[rgba(15,30,22,0.8)] border border-[rgba(255,255,255,0.06)] p-[28px] transition-all group ${cardId}`}
+      variants={cardVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-100px" }}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`bg-[rgba(10,20,15,0.85)] border border-[rgba(0,255,136,0.08)] p-[28px] relative overflow-hidden transition-all group ${cardId}`}
       style={{ 
         borderTop: `3px solid ${color}`,
       }}
     >
+      {/* Holographic Colored Laser Scanline */}
+      <motion.div 
+        variants={lineVariants}
+        className="absolute left-0 right-0 h-[2px] z-30 pointer-events-none"
+        style={{
+          background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
+          boxShadow: `0 0 10px ${color}`
+        }}
+      />
+
+      {/* Signature Color Cursor Spotlight */}
+      {isHovered && (
+        <div 
+          className="pointer-events-none absolute inset-0 transition-opacity duration-300"
+          style={{
+            background: `radial-gradient(350px circle at ${coords.x}px ${coords.y}px, ${color}15, transparent 80%)`,
+          }}
+        />
+      )}
+
       <style dangerouslySetInnerHTML={{ __html: `
         .${cardId}:hover {
           box-shadow: 0 0 24px ${color}14;
+          border-color: ${color}33;
         }
       `}} />
       
-      <div className="font-mono text-[11px] text-gs-muted tracking-[2px] mb-2 uppercase opacity-60">
+      <motion.div variants={contentVariants} className="relative z-10">
+        <div className="font-mono text-[11px] text-gs-muted tracking-[2px] mb-2 uppercase opacity-60">
           {number}
         </div>
         <h3 
@@ -67,6 +149,7 @@ const SegmentCard: React.FC<SegmentCardProps> = ({ number, name, tagline, color,
             );
           })}
         </ul>
+      </motion.div>
     </motion.div>
   );
 };
@@ -83,15 +166,10 @@ export const SegmentsGuide: React.FC = () => {
         >
           // GSE Content
         </motion.div>
-        <motion.h2 
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.1 }}
+        <GlitchTitle
+          text="KNOW YOUR SIGNAL"
           className="font-display text-[56px] tracking-[4px] text-gs-text mb-4"
-        >
-          KNOW YOUR SIGNAL
-        </motion.h2>
+        />
         <motion.p 
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}

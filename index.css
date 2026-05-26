@@ -103,3 +103,8 @@
   0%, 100% { opacity: 0.8; transform: scale(1); filter: drop-shadow(0 0 5px var(--gs-green)); } 
   50% { opacity: 1; transform: scale(1.2); filter: drop-shadow(0 0 12px var(--gs-green)); } 
 }
+
+@keyframes gridDriftSlow {
+  0% { background-position: 0px 0px; }
+  100% { background-position: -432px -432px; }
+}
