@@ -36,7 +36,7 @@ export const Navbar: React.FC = () => {
       </div>
       
       <ul className="hidden md:flex gap-4 list-none relative">
-        {['about', 'segments', 'newsletter', 'connect', 'team'].map((item) => {
+        {['newsletter', 'segments', 'connect', 'about', 'team'].map((item) => {
           const isHovered = hoveredItem === item;
           const label = item === 'segments' ? 'Signals' : 
                         item === 'newsletter' ? 'Collective' :
