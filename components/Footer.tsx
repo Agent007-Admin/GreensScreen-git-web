@@ -6,7 +6,7 @@ export const Footer: React.FC = () => {
       <div className="flex items-center gap-2">
         <div className="w-2 h-2 rounded-full bg-gs-green animate-pulse" />
         <div className="font-display text-lg tracking-[2px] text-gs-green">
-          GREENS <span className="text-gs-text">SCREENS </span><span className="text-gs-accent">ENT</span>
+          GREENS <span className="text-gs-text">SCREENS </span><span className="text-gs-green">ENT</span>
         </div>
       </div>
       <div className="font-mono text-[10px] text-gs-muted opacity-50 tracking-[1px] text-center md:text-left">

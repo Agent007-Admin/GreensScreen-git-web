@@ -30,7 +30,7 @@ export const Navbar: React.FC = () => {
           <span className="text-gs-green neon-text">GREENS</span>
           <span className="text-gs-text"> SCREENS</span>
           <span className="mx-2 w-[1px] h-5 bg-gs-green/20 inline-block align-middle" />
-          <span className="text-gs-accent">ENT</span>
+          <span className="text-gs-green neon-text">ENT</span>
           <span className="hidden lg:inline-block font-mono text-[9px] text-gs-muted tracking-[1px] ml-2 opacity-50">SIGNAL_GREEN</span>
         </div>
       </div>

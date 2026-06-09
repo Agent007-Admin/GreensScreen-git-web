@@ -446,6 +446,24 @@ async function startServer() {
     }
   });
 
+  // Public Welcome Email HTML Preview Route
+  app.get("/api/welcome/preview", (req, res) => {
+    try {
+      const templatePath = path.join(process.cwd(), "templates", "welcome-email.html");
+      if (!fs.existsSync(templatePath)) {
+        return res.status(404).send("Welcome email template not found.");
+      }
+      let html = fs.readFileSync(templatePath, "utf-8");
+      // Replace template placeholder with sample link
+      html = html.replace(/\{\{UNSUBSCRIBE_LINK\}\}/g, "/api/unsubscribe?email=preview@greensscreensent.com");
+      res.setHeader("Content-Type", "text/html");
+      res.send(html);
+    } catch (error: any) {
+      console.error("Error reading welcome template preview:", error);
+      res.status(500).send(`Server Error: ${error.message}`);
+    }
+  });
+
   app.post("/api/newsletter/preview", async (req, res) => {
     const { secret, month, year, forceRefresh } = req.body;
     
