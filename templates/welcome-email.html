@@ -5,148 +5,203 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="color-scheme" content="dark">
 <meta name="supported-color-schemes" content="dark">
-<title>Greens Screens Ent — Welcome Email</title>
+<title>Greens Screens Ent — Welcome To The Frequency</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  body { background: #050a07; font-family: 'Rajdhani', sans-serif; padding: 32px 20px; color: #e8f5ee; }
-
-  .email-client-bar {
-    max-width: 640px; margin: 0 auto;
-    background: #0a1410; border: 1px solid rgba(0,255,136,0.1); border-bottom: none;
-    border-radius: 8px 8px 0 0; padding: 12px 16px;
-    display: flex; align-items: center; gap: 12px;
-  }
-  .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(0,255,136,0.15); }
-  .dot-r { background: rgba(0,255,136,0.15); } .dot-y { background: rgba(0,255,136,0.15); } .dot-g { background: rgba(0,255,136,0.15); }
-  .client-subject { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: #3a5a47; letter-spacing: 1px; margin-left: 4px; }
+  body { background: #030704; font-family: 'Rajdhani', sans-serif; padding: 32px 20px; color: #e8f5ee; }
 
   .email-wrap {
-    max-width: 640px; margin: 0 auto;
+    max-width: 600px; margin: 0 auto;
     background: #050a07; border: 1px solid rgba(0,255,136,0.15);
-    border-radius: 0 0 8px 8px; overflow: hidden;
+    border-radius: 8px; overflow: hidden;
   }
 
+  /* Header Branding Section */
   .email-header {
-    background: #050a07; border-bottom: 1px solid rgba(0,255,136,0.15);
-    padding: 36px 48px 28px; position: relative; overflow: hidden;
+    background: #030704; border-bottom: 1px solid rgba(0,255,136,0.12);
+    padding: 32px 40px; position: relative; overflow: hidden;
+    text-align: left;
   }
   .email-header-grid {
     position: absolute; inset: 0;
-    background-image: linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
-    background-size: 32px 32px;
+    background-image: linear-gradient(rgba(0,255,136,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,136,0.02) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
   }
-  .email-logo { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 3px; color: #00ff88; margin-bottom: 4px; position: relative; z-index: 1; }
-  .email-logo span { color: #e8f5ee; }
-  .email-logo .acc { color: #aaff44; }
-  .email-tagline { font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 3px; color: #6b9a7a; position: relative; z-index: 1; }
-  .email-header-rule { height: 2px; background: #00ff88; margin-top: 24px; position: relative; z-index: 1; width: 48px; }
+  
+  /* Brand Logo with exact styling of GREENS SCREENS | ENT and the Dot */
+  .email-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    line-height: 1;
+    position: relative;
+    z-index: 10;
+  }
+  .logo-dot {
+    color: #00ff88;
+    margin-right: 10px;
+    font-size: 22px;
+    line-height: 1;
+    display: inline-block;
+  }
+  .logo-greens {
+    color: #00ff88;
+  }
+  .logo-screens {
+    color: #ffffff;
+    margin-left: 5px;
+  }
+  .logo-divider {
+    color: rgba(0, 255, 136, 0.25);
+    margin: 0 10px;
+    font-weight: 300;
+  }
+  .logo-ent {
+    color: #00ff88; /* ENT in true lime green fashion */
+  }
 
+  .email-tagline { 
+    font-family: 'Share Tech Mono', monospace; 
+    font-size: 9px; 
+    letter-spacing: 3px; 
+    color: #4f7d5e; 
+    margin-top: 8px;
+    position: relative; 
+    z-index: 1; 
+  }
+
+  /* Premium Frequency Out-grid */
   .email-hero {
-    background: #0a1410; border-bottom: 1px solid rgba(0,255,136,0.12);
-    padding: 48px 48px 40px; text-align: center;
+    background: #060d09; border-bottom: 1px solid rgba(255,224,51,0.12);
+    padding: 44px 40px; text-align: center;
   }
   .email-eyebrow {
-    font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 4px; color: #00ff88;
-    margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 12px;
+    font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 4px; color: #FFE033;
+    margin-bottom: 14px; display: flex; align-items: center; justify-content: center; gap: 12px;
   }
-  .email-eyebrow::before, .email-eyebrow::after { content: ''; width: 28px; height: 1px; background: #00ff88; opacity: 0.4; }
-  .email-headline { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: 4px; color: #e8f5ee; line-height: 1; margin-bottom: 6px; }
-  .email-headline .gs-green { color: #00ff88; display: block; }
-  .email-subhead { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 6px; color: #6b9a7a; margin-bottom: 28px; }
-  .email-welcome-msg { font-size: 16px; font-weight: 500; color: #a8c5b0; line-height: 1.7; max-width: 420px; margin: 0 auto; }
+  .email-eyebrow::before, .email-eyebrow::after { content: ''; width: 20px; height: 1px; background: #FFE033; opacity: 0.3; }
+  .email-headline { font-family: 'Bebas Neue', sans-serif; font-size: 46px; letter-spacing: 2px; color: #FFE033; line-height: 1.1; margin-bottom: 12px; }
+  .email-welcome-msg { font-size: 16px; font-weight: 500; color: #a4bea9; line-height: 1.6; max-width: 440px; margin: 0 auto; }
 
-  .email-body { padding: 40px 48px; background: #050a07; }
+  /* Body Content */
+  .email-body { padding: 36px 40px; background: #050a07; }
 
   .email-section-label {
-    font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 4px; color: #00ff88;
-    margin-bottom: 20px; display: flex; align-items: center; gap: 10px; opacity: 0.8;
+    font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 3px; color: #FFE033;
+    margin-bottom: 20px; display: flex; align-items: center; gap: 10px; opacity: 0.9;
   }
-  .email-section-label::after { content: ''; flex: 1; height: 1px; background: rgba(0,255,136,0.2); }
+  .email-section-label::after { content: ''; flex: 1; height: 1px; background: rgba(255,224,51,0.15); }
 
+  /* What you can expect items (No system telemetry boxes, just the content) */
   .perk-card-full {
-    background: #0f1e16; border: 1px solid rgba(0,255,136,0.12);
-    padding: 24px; position: relative; margin-bottom: 36px;
+    background: #080f0c; border: 1px solid rgba(255,224,51,0.15);
+    padding: 20px; position: relative; margin-bottom: 20px;
+    border-radius: 4px;
   }
-  .perk-card-full::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: #00ff88; opacity: 0.4; }
-  .perk-num { font-family: 'Share Tech Mono', monospace; font-size: 9px; letter-spacing: 2px; color: #00ff88; opacity: 0.5; margin-bottom: 6px; }
-  .perk-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1.5px; color: #e8f5ee; margin-bottom: 8px; }
-  .perk-desc { font-size: 14px; color: #6b9a7a; line-height: 1.6; font-weight: 500; }
+  .perk-card-full::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: #FFE033; opacity: 0.4; }
+  .perk-num { font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 2px; color: #00ff88; margin-bottom: 6px; font-weight: bold; }
+  .perk-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; color: #FFE033; margin-bottom: 6px; }
+  .perk-desc { font-size: 14px; color: #8fae96; line-height: 1.6; font-weight: 500; }
 
-  .channels-row { display: flex; gap: 10px; margin-bottom: 36px; }
-  .channel-pill { flex: 1; background: #0f1e16; border: 1px solid rgba(0,255,136,0.12); padding: 14px 12px; text-align: center; text-decoration: none; }
+  /* New responsive channels row */
+  .channels-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 32px; }
+  .channel-pill { 
+    flex: 1 1 calc(50% - 5px); 
+    background: #080f0c; 
+    border: 1px solid rgba(255,224,51,0.12); 
+    padding: 14px 10px; 
+    text-align: center; 
+    text-decoration: none;
+    border-radius: 4px;
+    min-width: 110px;
+  }
+  .channel-pill:hover { border-color: rgba(255,224,51,0.4); }
   .channel-icon { font-size: 18px; display: block; margin-bottom: 6px; }
-  .channel-name { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 1.5px; color: #e8f5ee; display: block; }
-  .channel-handle { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #00ff88; opacity: 0.7; display: block; margin-top: 2px; }
+  .channel-name { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 1.5px; color: #FFE033; display: block; }
+  .channel-handle { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #00ff88; opacity: 0.8; display: block; margin-top: 2px; }
 
-  .email-divider { height: 1px; background: rgba(0,255,136,0.1); margin: 0 0 28px; }
+  .email-divider { height: 1px; background: rgba(0,255,136,0.1); margin: 0 0 24px; }
 
-  .email-signoff { font-size: 15px; color: #a8c5b0; line-height: 1.7; font-weight: 500; margin-bottom: 20px; }
-  .email-signoff strong { color: #00ff88; font-family: 'Share Tech Mono', monospace; font-size: 13px; letter-spacing: 1px; }
+  .email-signoff { font-size: 15px; color: #9ab4a0; line-height: 1.6; font-weight: 500; margin-bottom: 8px; }
+  .email-signoff strong { color: #00ff88; font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 1px; display: block; margin-top: 16px; }
 
-  .email-footer { background: #0a1410; border-top: 1px solid rgba(0,255,136,0.1); padding: 24px 48px; text-align: center; }
-  .footer-logo-sm { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 2px; color: #00ff88; margin-bottom: 16px; }
-  .footer-logo-sm span { color: #e8f5ee; }
-  .footer-logo-sm .acc { color: #aaff44; }
+  /* Footer Styling */
+  .email-footer { background: #030704; border-top: 1px solid rgba(0,255,136,0.1); padding: 28px 40px; text-align: center; }
+  .footer-logo-sm {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 1.5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    line-height: 1;
+  }
 
   .unsub-btn {
     display: inline-block;
     font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 2px;
-    color: #3a5a47; background: transparent; border: 1px solid #1a3a28;
-    padding: 8px 20px; text-decoration: none; cursor: pointer; margin-bottom: 16px;
+    color: #4f7d5e; background: transparent; border: 1px solid rgba(0,255,136,0.15);
+    padding: 8px 18px; text-decoration: none; cursor: pointer; margin-bottom: 16px;
+    border-radius: 2px;
     transition: border-color 0.2s, color 0.2s;
   }
   .unsub-btn:hover { color: #ff6b6b; border-color: #ff6b6b; }
 
-  .unsub-note { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: #253d2e; letter-spacing: 1px; line-height: 1.8; margin-bottom: 14px; }
-  .footer-fine { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: #3a5a47; letter-spacing: 1px; line-height: 1.7; }
-  .signal-line { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: #00ff88; opacity: 0.3; letter-spacing: 2px; margin-top: 14px; }
+  .unsub-note { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: #2e4a37; letter-spacing: 1px; line-height: 1.6; margin-bottom: 14px; }
+  .footer-fine { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: #4f7d5e; letter-spacing: 1px; line-height: 1.5; }
+  .signal-line { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: #00ff88; opacity: 0.25; letter-spacing: 2px; margin-top: 12px; }
 </style>
 </head>
 <body>
-
-  <div class="email-client-bar">
-    <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
-    <span class="client-subject">SUBJECT: PLAYER ONE — WELCOME TO GREENS SCREENS ENT &nbsp;|&nbsp; FROM: hello@greensscreens.ent</span>
-  </div>
 
   <div class="email-wrap">
 
     <!-- HEADER -->
     <div class="email-header">
       <div class="email-header-grid"></div>
-      <div class="email-logo">Greens<span> Screens</span><span class="acc"> Ent</span></div>
+      <div class="email-logo">
+        <span class="logo-dot">●</span><span class="logo-greens">GREENS</span><span class="logo-screens">SCREENS</span><span class="logo-divider">|</span><span class="logo-ent">ENT</span>
+      </div>
       <div class="email-tagline">TECHNOLOGY · GAMING · ENTERTAINMENT</div>
-      <div class="email-header-rule"></div>
     </div>
 
-    <!-- HERO -->
+    <!-- HERO (FREQUENCY YELLOW OVERVIEW) -->
     <div class="email-hero">
-      <div class="email-eyebrow">INCOMING TRANSMISSION</div>
-      <div class="email-headline">
-        <span class="gs-green">PLAYER ONE,</span>
-        WELCOME TO<br>GREENS SCREENS
-      </div>
-      <div class="email-subhead">YOU'RE IN THE GAME_</div>
+      <div class="email-eyebrow">TRANSMISSION ACTIVE</div>
+      <div class="email-headline">WELCOME TO THE FREQUENCY</div>
       <p class="email-welcome-msg">
-        Your signal has been received. You're now part of the Greens Screens Ent frequency.
+        The channel is secure. Your signal has been integrated into the central collective of <strong>Greens Screens Ent</strong>. Prepare for landing.
       </p>
     </div>
 
     <!-- BODY -->
     <div class="email-body">
 
+      <!-- WHAT YOU CAN EXPECT (WITHOUT TELEMETRY OR SYSTEM LOG BOXES) -->
       <div class="email-section-label">WHAT YOU CAN EXPECT</div>
 
       <div class="perk-card-full">
         <div class="perk-num">01</div>
-        <div class="perk-title">Monthly Newsletter</div>
-        <p class="perk-desc">Gaming news, announcements, and new releases — curated and delivered to you every 15th.</p>
+        <div class="perk-title">MONTHLY SIGNAL DISPATCH</div>
+        <p class="perk-desc">Premium curated gaming reviews, structural analysis, steam announcements, and tech-news delivered on the 15th of every month.</p>
       </div>
 
-      <div class="email-section-label">FIND US ON</div>
+      <div class="perk-card-full">
+        <div class="perk-num">02</div>
+        <div class="perk-title">SUBSCRIBER GAME RELEASES & UPDATES</div>
+        <p class="perk-desc">Get modern game launch links and profile updates with zero fluff, zero tracking, and direct Store access.</p>
+      </div>
 
+      <div class="email-section-label">THE CHANNELS</div>
+
+      <!-- CHANNELS GRID WITH TIKTOK ADDED -->
       <div class="channels-row">
         <a href="https://www.instagram.com/greens.screens/" class="channel-pill">
           <span class="channel-icon">&#128247;</span>
@@ -158,31 +213,39 @@
           <span class="channel-name">YOUTUBE</span>
           <span class="channel-handle">@Greens.screens</span>
         </a>
+        <a href="https://www.tiktok.com/@greens.screens.ent" class="channel-pill">
+          <span class="channel-icon">&#127925;</span>
+          <span class="channel-name">TIKTOK</span>
+          <span class="channel-handle">@greens.screens.ent</span>
+        </a>
         <a href="https://discord.gg/rBdb9bsNaS" class="channel-pill">
           <span class="channel-icon">&#128172;</span>
           <span class="channel-name">DISCORD</span>
-          <span class="channel-handle">Join the server</span>
+          <span class="channel-handle">Join the Server</span>
         </a>
       </div>
 
       <div class="email-divider"></div>
 
       <div class="email-signoff">
-        Welcome to the frequency. Thank you for signing up — keep your eye out for the newsletter to give you up to date information on the latest in gaming and technology.<br><br>
+        We are thrilled to have you connected to the frequency. Keep an eye on your channels — the primary transmission is coming soon.
         <strong>— THE GREENS SCREENS TEAM</strong>
       </div>
 
     </div>
 
-    <!-- FOOTER -->
+    <!-- FOOTER WITH THE LIME GREEN Logo styled identically -->
     <div class="email-footer">
-      <div class="footer-logo-sm">Greens<span> Screens</span><span class="acc"> Ent</span></div>
+      <div class="footer-logo-sm">
+        <span class="logo-dot">●</span><span class="logo-greens">GREENS</span><span class="logo-screens">SCREENS</span><span class="logo-divider">|</span><span class="logo-ent">ENT</span>
+      </div>
 
-      <a href="{{UNSUBSCRIBE_LINK}}" class="unsub-btn">UNSUBSCRIBE</a>
+      <br>
+      <a href="{{UNSUBSCRIBE_LINK}}" class="unsub-btn">DISCONNECT SIGNAL</a>
 
       <div class="unsub-note">
-        Clicking unsubscribe will permanently remove your email from<br>
-        all Greens Screens Ent communications. No further emails will be sent.
+        Clicking disconnect will permanently purge your signal from<br>
+        the Greens Screens Ent collective database.
       </div>
 
       <div class="footer-fine">
