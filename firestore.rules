@@ -87,6 +87,20 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // --- Collection: collaborations ---
+    match /collaborations/{collaborationId} {
+      allow create: if
+        request.resource.data.keys().hasAll(['name', 'email', 'category', 'message', 'submittedAt', 'status']) &&
+        request.resource.data.status == 'pending' &&
+        isValidEmail(request.resource.data.email) &&
+        isValidDateString(request.resource.data.submittedAt) &&
+        request.resource.data.name is string && request.resource.data.name.size() < 256 &&
+        request.resource.data.message is string && request.resource.data.message.size() < 10000 &&
+        request.resource.data.category in ['technology', 'gaming', 'entertainment'];
+      
+      allow read, update, delete: if isAdmin();
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;

@@ -24,8 +24,8 @@ const App: React.FC = () => {
         <Ticker />
         <Newsletter />
         <SegmentsGuide />
-        <SocialGrid />
         <Pillars />
+        <SocialGrid />
         <FounderCard />
       </main>
       

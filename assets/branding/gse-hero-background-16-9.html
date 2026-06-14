@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>GSE Hero Background — 1920×1080</title>
+<style>
+  /* =============================================
+     GSE HERO BACKGROUND — 16:9 DESKTOP
+     1920 × 1080 — sits BEHIND the recorded session
+     OBS Browser Source: 1920 x 1080, bottom layer
+
+     Faithful port of the greensscreensent.com hero:
+     · 4 ambient glows (green / red / blue / yellow)
+     · 10 drifting signal orbs (R/B/Y) right-to-left
+     · subtle grid texture
+     All values match components/Hero.tsx
+  ============================================= */
+
+  :root {
+    --gs-dark:   #050a07;
+    --orb-red:   #ff3333;
+    --orb-blue:  #00d4ff;
+    --orb-gold:  #FFE033;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1920px;
+    height: 1080px;
+    background: var(--gs-dark);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* =============================================
+     GRID TEXTURE — subtle, like announcement cards
+  ============================================= */
+  .grid-texture {
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(0,255,136,0.022) 79px, rgba(0,255,136,0.022) 80px),
+      repeating-linear-gradient(0deg,  transparent, transparent 79px, rgba(0,255,136,0.022) 79px, rgba(0,255,136,0.022) 80px);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Soft vignette so edges fall away behind the session window */
+  .vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.45) 100%);
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  /* =============================================
+     AMBIENT GLOWS — exact opacities from Hero.tsx
+  ============================================= */
+  .glow { position: absolute; border-radius: 50%; z-index: 2; pointer-events: none; }
+
+  /* Center green backing glow — static */
+  .glow-green {
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 350px;
+    border-radius: 0;
+    background: radial-gradient(ellipse, rgba(0,255,136,0.05) 0%, transparent 70%);
+  }
+
+  /* Red — ON THE RADAR — gentle orbit, 22s mirror */
+  .glow-red {
+    top: 10%;
+    left: 8%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255,32,32,0.025) 0%, transparent 70%);
+    animation: orbit-red 22s ease-in-out infinite alternate;
+  }
+  @keyframes orbit-red {
+    0%   { transform: translate(-30px, -20px); }
+    33%  { transform: translate(30px, 25px); }
+    66%  { transform: translate(-15px, -30px); }
+    100% { transform: translate(-30px, -20px); }
+  }
+
+  /* Blue — LOADING... — offset orbit, 26s mirror */
+  .glow-blue {
+    top: 20%;
+    right: 5%;
+    width: 450px;
+    height: 450px;
+    background: radial-gradient(circle, rgba(0,212,255,0.025) 0%, transparent 70%);
+    animation: orbit-blue 26s ease-in-out infinite alternate;
+  }
+  @keyframes orbit-blue {
+    0%   { transform: translate(25px, 15px); }
+    33%  { transform: translate(-25px, -30px); }
+    66%  { transform: translate(30px, 20px); }
+    100% { transform: translate(25px, 15px); }
+  }
+
+  /* Yellow — CHECKPOINT — breathing pulse, 18s mirror */
+  .glow-gold {
+    bottom: 8%;
+    left: 28%;
+    width: 380px;
+    height: 380px;
+    background: radial-gradient(circle, rgba(255,224,51,0.025) 0%, transparent 70%);
+    animation: breathe-gold 18s ease-in-out infinite alternate;
+  }
+  @keyframes breathe-gold {
+    0%   { transform: scale(0.95); }
+    33%  { transform: scale(1.08); }
+    66%  { transform: scale(0.98); }
+    100% { transform: scale(0.95); }
+  }
+
+  /* =============================================
+     SIGNAL ORBS — continuous right-to-left drift
+     Outer span = horizontal travel (linear)
+     Inner span = pulse + bob (easeInOut)
+     Sizes: w-3=12px, w-2.5=10px, w-2=8px
+  ============================================= */
+  .orb {
+    position: absolute;
+    z-index: 2;
+    animation-name: drift;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+  @keyframes drift {
+    from { left: 105%; }
+    to   { left: -10%; }
+  }
+
+  .orb i {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+  }
+
+  /* Pulse + bob variants (opacity / scale / y from Hero.tsx) */
+  @keyframes pulse-up   { 0%,100% { opacity:.4;  transform: translateY(-15px) scale(.9);  } 50% { opacity:.95; transform: translateY(15px)  scale(1.2);  } }
+  @keyframes pulse-down { 0%,100% { opacity:.4;  transform: translateY(12px)  scale(.85); } 50% { opacity:.85; transform: translateY(-12px) scale(1.15); } }
+  @keyframes pulse-big  { 0%,100% { opacity:.4;  transform: translateY(-20px) scale(.9);  } 50% { opacity:.9;  transform: translateY(20px)  scale(1.2);  } }
+  @keyframes pulse-soft { 0%,100% { opacity:.35; transform: translateY(-10px) scale(.85); } 50% { opacity:.8;  transform: translateY(10px)  scale(1.15); } }
+  @keyframes pulse-inv  { 0%,100% { opacity:.4;  transform: translateY(15px)  scale(.85); } 50% { opacity:.85; transform: translateY(-15px) scale(1.15); } }
+
+  /* --- Orb 1 · RED · 12px · 38s drift, 6s pulse --- */
+  .orb-1 { top: 18%; width: 12px; height: 12px; animation-duration: 38s; animation-delay: -8s; }
+  .orb-1 i { background: var(--orb-red); box-shadow: 0 0 12px rgba(255,51,51,.9), 0 0 24px rgba(255,51,51,.55); animation-name: pulse-up; animation-duration: 6s; }
+
+  /* --- Orb 2 · BLUE · 12px · 28s drift, 5s pulse --- */
+  .orb-2 { top: 32%; width: 12px; height: 12px; animation-duration: 28s; animation-delay: -22s; }
+  .orb-2 i { background: var(--orb-blue); box-shadow: 0 0 12px rgba(0,212,255,.9), 0 0 24px rgba(0,212,255,.55); animation-name: pulse-down; animation-duration: 5s; }
+
+  /* --- Orb 3 · GOLD · 10px · 46s drift, 7s pulse --- */
+  .orb-3 { top: 48%; width: 10px; height: 10px; animation-duration: 46s; animation-delay: -35s; }
+  .orb-3 i { background: var(--orb-gold); box-shadow: 0 0 10px rgba(255,224,51,.9), 0 0 22px rgba(255,224,51,.55); animation-name: pulse-big; animation-duration: 7s; }
+
+  /* --- Orb 4 · RED · 10px · 33s drift, 5.5s pulse --- */
+  .orb-4 { top: 65%; width: 10px; height: 10px; animation-duration: 33s; animation-delay: -14s; }
+  .orb-4 i { background: var(--orb-red); box-shadow: 0 0 10px rgba(255,51,51,.9), 0 0 22px rgba(255,51,51,.55); animation-name: pulse-inv; animation-duration: 5.5s; }
+
+  /* --- Orb 5 · GOLD · 8px · 42s drift, 4s pulse --- */
+  .orb-5 { top: 26%; width: 8px; height: 8px; animation-duration: 42s; animation-delay: -28s; }
+  .orb-5 i { background: var(--orb-gold); box-shadow: 0 0 8px rgba(255,224,51,.85), 0 0 18px rgba(255,224,51,.45); animation-name: pulse-soft; animation-duration: 4s; }
+
+  /* --- Orb 6 · BLUE · 8px · 35s drift, 4.5s pulse --- */
+  .orb-6 { top: 58%; width: 8px; height: 8px; animation-duration: 35s; animation-delay: -5s; }
+  .orb-6 i { background: var(--orb-blue); box-shadow: 0 0 8px rgba(0,212,255,.85), 0 0 18px rgba(0,212,255,.45); animation-name: pulse-down; animation-duration: 4.5s; }
+
+  /* --- Orb 7 · RED · 8px · 45s drift, 5s pulse --- */
+  .orb-7 { top: 12%; width: 8px; height: 8px; animation-duration: 45s; animation-delay: -18s; }
+  .orb-7 i { background: var(--orb-red); box-shadow: 0 0 8px rgba(255,51,51,.8), 0 0 18px rgba(255,51,51,.4); animation-name: pulse-soft; animation-duration: 5s; }
+
+  /* --- Orb 8 · BLUE · 10px · 24s drift, 3.8s pulse --- */
+  .orb-8 { top: 72%; width: 10px; height: 10px; animation-duration: 24s; animation-delay: -12s; }
+  .orb-8 i { background: var(--orb-blue); box-shadow: 0 0 10px rgba(0,212,255,.9), 0 0 22px rgba(0,212,255,.5); animation-name: pulse-inv; animation-duration: 3.8s; }
+
+  /* --- Orb 9 · GOLD · 12px · 39s drift, 6.5s pulse --- */
+  .orb-9 { top: 40%; width: 12px; height: 12px; animation-duration: 39s; animation-delay: -29s; }
+  .orb-9 i { background: var(--orb-gold); box-shadow: 0 0 12px rgba(255,224,51,.95), 0 0 24px rgba(255,224,51,.55); animation-name: pulse-up; animation-duration: 6.5s; }
+
+  /* --- Orb 10 · RED · 8px · 41s drift, 4.8s pulse --- */
+  .orb-10 { top: 54%; width: 8px; height: 8px; animation-duration: 41s; animation-delay: -10s; }
+  .orb-10 i { background: var(--orb-red); box-shadow: 0 0 8px rgba(255,51,51,.8), 0 0 18px rgba(255,51,51,.4); animation-name: pulse-inv; animation-duration: 4.8s; }
+
+  /* Extra lower-band orbs for 16:9 — the website hero is short,
+     a full 1080 canvas needs coverage below 75%. Same DNA. */
+  .orb-11 { top: 84%; width: 10px; height: 10px; animation-duration: 36s; animation-delay: -20s; }
+  .orb-11 i { background: var(--orb-gold); box-shadow: 0 0 10px rgba(255,224,51,.9), 0 0 22px rgba(255,224,51,.5); animation-name: pulse-down; animation-duration: 5.2s; }
+
+  .orb-12 { top: 91%; width: 8px; height: 8px; animation-duration: 44s; animation-delay: -31s; }
+  .orb-12 i { background: var(--orb-blue); box-shadow: 0 0 8px rgba(0,212,255,.85), 0 0 18px rgba(0,212,255,.45); animation-name: pulse-soft; animation-duration: 4.2s; }
+
+  .orb-13 { top: 6%; width: 8px; height: 8px; animation-duration: 40s; animation-delay: -16s; }
+  .orb-13 i { background: var(--orb-red); box-shadow: 0 0 8px rgba(255,51,51,.8), 0 0 18px rgba(255,51,51,.4); animation-name: pulse-up; animation-duration: 5.6s; }
+</style>
+</head>
+<body>
+
+<div class="grid-texture"></div>
+
+<!-- AMBIENT SIGNAL GLOWS -->
+<div class="glow glow-green"></div>
+<div class="glow glow-red"></div>
+<div class="glow glow-blue"></div>
+<div class="glow glow-gold"></div>
+
+<!-- DRIFTING SIGNAL ORBS -->
+<div class="orb orb-1"><i></i></div>
+<div class="orb orb-2"><i></i></div>
+<div class="orb orb-3"><i></i></div>
+<div class="orb orb-4"><i></i></div>
+<div class="orb orb-5"><i></i></div>
+<div class="orb orb-6"><i></i></div>
+<div class="orb orb-7"><i></i></div>
+<div class="orb orb-8"><i></i></div>
+<div class="orb orb-9"><i></i></div>
+<div class="orb orb-10"><i></i></div>
+<div class="orb orb-11"><i></i></div>
+<div class="orb orb-12"><i></i></div>
+<div class="orb orb-13"><i></i></div>
+
+<div class="vignette"></div>
+
+<!--
+  OBS SETUP:
+  - Add Browser Source → Local file: this HTML
+  - Width: 1920, Height: 1080
+  - Drag this source to the BOTTOM of your Sources list
+    (your game/session capture sits on top of it)
+  - No URL params needed — it's always-on ambient
+-->
+
+</body>
+</html>

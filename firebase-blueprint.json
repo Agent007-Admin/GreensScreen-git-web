@@ -89,6 +89,20 @@
         "reason": { "type": "string" }
       },
       "required": ["title", "status", "addedAt"]
+    },
+    "collaborations": {
+      "title": "Collaboration Request",
+      "description": "An inquiry to collaborate with the Greens Screens brand",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "category": { "type": "string", "enum": ["technology", "gaming", "entertainment"] },
+        "message": { "type": "string" },
+        "submittedAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "reviewed", "archived"] }
+      },
+      "required": ["name", "email", "category", "message", "submittedAt", "status"]
     }
   },
   "firestore": {
@@ -111,6 +125,10 @@
     "verified_game_links/{slug}": {
       "schema": "verified_game_links",
       "description": "Collection of cached, verified Steam links"
+    },
+    "collaborations/{collaborationId}": {
+      "schema": "collaborations",
+      "description": "Collection of incoming brand collaboration requests"
     }
   }
 }

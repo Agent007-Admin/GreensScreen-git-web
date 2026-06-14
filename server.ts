@@ -420,6 +420,282 @@ async function startServer() {
     }
   });
 
+  app.post("/api/collaborate", async (req, res) => {
+    const { name, email, category, message } = req.body;
+    console.log(`Collaboration request received from ${name} (${email}) for category: ${category}`);
+
+    if (!name || typeof name !== "string" || name.trim().length === 0) {
+      return res.status(400).json({ error: "Name is required" });
+    }
+    if (!email || typeof email !== "string" || !email.includes("@")) {
+      return res.status(400).json({ error: "Valid email address is required" });
+    }
+    if (!category || !["technology", "gaming", "entertainment"].includes(category)) {
+      return res.status(400).json({ error: "Valid category is required" });
+    }
+    if (!message || typeof message !== "string" || message.trim().length === 0) {
+      return res.status(400).json({ error: "Message is required" });
+    }
+
+    try {
+      const activeDb = db || clientDb;
+      if (!activeDb) {
+        console.error("Firestore database instance is not initialized.");
+        return res.status(500).json({ error: "Database connection error. Please try again later." });
+      }
+
+      const requestData = {
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
+        category,
+        message: message.trim(),
+        submittedAt: new Date().toISOString(),
+        status: "pending"
+      };
+
+      console.log("Saving collaboration request to Firestore using Admin SDK preference...");
+      if (db) {
+        const collabRef = db.collection("collaborations").doc();
+        await collabRef.set(requestData);
+      } else {
+        const collabRef = collection(clientDb, "collaborations");
+        await addDoc(collabRef, requestData);
+      }
+      console.log("Collaboration request saved to Firestore successfully.");
+
+      // Send email alert to Agent007
+      const agentMailOptions = {
+        from: process.env.SMTP_USER || "noreply@greensscreensent.com",
+        to: "agent007@greensscreensent.com",
+        subject: `[COLLABORATION INQUIRY] New Request from ${name.trim()} (${category.toUpperCase()})`,
+        text: `Hello Agent007,
+
+You have received a new brand collaboration request!
+
+DETAILS:
+---------------------------------------------
+Name: ${name.trim()}
+Email: ${email.toLowerCase().trim()}
+Category: ${category.toUpperCase()}
+Submitted At: ${requestData.submittedAt}
+---------------------------------------------
+
+MESSAGE:
+${message.trim()}
+
+You can view active requests directly in the Firebase firestore database.
+
+Best regards,
+Greens Screens Ent Automated Notification System
+`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #1a2e21; background-color: #050a07; color: #e8f5ee; border-radius: 8px;">
+            <div style="text-align: center; border-bottom: 2px solid #00ff88; padding-bottom: 15px; margin-bottom: 20px;">
+              <h1 style="color: #00ff88; font-size: 24px; margin: 0; text-transform: uppercase; letter-spacing: 2px;">New Collaboration Inquiry</h1>
+              <p style="color: #6b9a7a; font-size: 12px; margin: 5px 0 0 0;">Greens Screens Entertainment Brand Intake</p>
+            </div>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold; color: #00ff88; width: 30%;">Name:</td>
+                <td style="padding: 8px 0; color: #e8f5ee;">${name.trim()}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold; color: #00ff88;">Email:</td>
+                <td style="padding: 8px 0; color: #e8f5ee;"><a href="mailto:${email.toLowerCase().trim()}" style="color: #00ff88; text-decoration: none;">${email.toLowerCase().trim()}</a></td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold; color: #00ff88;">Category:</td>
+                <td style="padding: 8px 0; color: #e8f5ee;"><span style="background-color: rgba(0, 255, 136, 0.1); border: 1px solid #00ff88; padding: 4px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; font-family: monospace; color: #00ff88;">${category.toUpperCase()}</span></td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold; color: #00ff88;">Submitted:</td>
+                <td style="padding: 8px 0; color: #6b9a7a; font-size: 13px;">${new Date().toLocaleString()}</td>
+              </tr>
+            </table>
+            
+            <div style="background-color: #0d1611; border: 1px solid rgba(0, 255, 136, 0.15); padding: 15px; border-radius: 6px; margin-bottom: 25px;">
+              <h3 style="color: #00ff88; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Message / Inquiry:</h3>
+              <p style="color: #e8f5ee; font-size: 14px; line-height: 1.6; white-space: pre-wrap; margin: 0;">${message.trim()}</p>
+            </div>
+            
+            <div style="text-align: center; border-top: 1px solid #1a2e21; padding-top: 15px; font-size: 11px; color: #6b9a7a;">
+              This is an automated request notification from the Greens Screens Ent Portal.<br/>
+              To manage this submission, log in to your Firebase Console.
+            </div>
+          </div>
+        `
+      };
+
+      // Send branded confirmation back to the Submitter/Client
+      const clientMailOptions = {
+        from: process.env.SMTP_USER || "noreply@greensscreensent.com",
+        to: email.toLowerCase().trim(),
+        subject: `● GREENS SCREENS | Connection Ingest Confirmed // ${category.toUpperCase()}`,
+        html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark">
+<title>Greens Screens Ent — Connection Intake Confirmed</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #030704; font-family: 'Rajdhani', sans-serif; padding: 32px 20px; color: #e8f5ee; }
+  .email-wrap {
+    max-width: 600px; margin: 0 auto;
+    background: #050a07; border: 1px solid rgba(0,255,136,0.15);
+    border-radius: 8px; overflow: hidden;
+  }
+  .email-header {
+    background: #030704; border-bottom: 1px solid rgba(0,255,136,0.12);
+    padding: 32px 40px; position: relative; overflow: hidden;
+    text-align: left;
+  }
+  .email-header-grid {
+    position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(0,255,136,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,136,0.02) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+  }
+  .email-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    line-height: 1;
+    position: relative;
+    z-index: 10;
+  }
+  .logo-dot { color: #00ff88; margin-right: 10px; font-size: 22px; line-height: 1; display: inline-block; }
+  .logo-greens { color: #00ff88; }
+  .logo-screens { color: #ffffff; margin-left: 5px; }
+  .logo-divider { color: rgba(0, 255, 136, 0.25); margin: 0 10px; font-weight: 300; }
+  .logo-ent { color: #00ff88; }
+  .email-tagline { 
+    font-family: 'Share Tech Mono', monospace; 
+    font-size: 9px; 
+    letter-spacing: 3px; 
+    color: #4f7d5e; 
+    margin-top: 8px;
+    position: relative; 
+    z-index: 1; 
+  }
+  .email-hero {
+    background: #060d09; border-bottom: 1px solid rgba(0,255,136,0.12);
+    padding: 44px 40px; text-align: center;
+  }
+  .email-eyebrow {
+    font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 4px; color: #00ff88;
+    margin-bottom: 14px; display: flex; align-items: center; justify-content: center; gap: 12px;
+  }
+  .email-eyebrow::before, .email-eyebrow::after { content: ''; width: 20px; height: 1px; background: #00ff88; opacity: 0.3; }
+  .email-headline { font-family: 'Bebas Neue', sans-serif; font-size: 38px; letter-spacing: 2px; color: #00ff88; line-height: 1.1; margin-bottom: 12px; }
+  .email-welcome-msg { font-size: 16px; font-weight: 500; color: #a4bea9; line-height: 1.6; max-width: 480px; margin: 0 auto; }
+  .email-body { padding: 36px 40px; background: #050a07; }
+  .email-section-label {
+    font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 3px; color: #00ff88;
+    margin-bottom: 20px; display: flex; align-items: center; gap: 10px; opacity: 0.9;
+  }
+  .email-section-label::after { content: ''; flex: 1; height: 1px; background: rgba(0,255,136,0.15); }
+  .receipt-box {
+    background: #080f0c; border: 1px solid rgba(0,255,136,0.2);
+    padding: 24px; border-radius: 4px; margin-bottom: 24px;
+  }
+  .receipt-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; color: #ffffff; margin-bottom: 12px;
+  }
+  .receipt-detail {
+    font-size: 14px; color: #8fae96; line-height: 1.6; margin-bottom: 8px;
+  }
+  .receipt-detail strong { color: #00ff88; }
+  .email-divider { height: 1px; background: rgba(0,255,136,0.1); margin: 24px 0; }
+  .email-signoff { font-size: 15px; color: #9ab4a0; line-height: 1.6; font-weight: 500; }
+  .email-signoff strong { color: #00ff88; font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 1px; display: block; margin-top: 16px; }
+  .email-footer { background: #030704; border-top: 1px solid rgba(0,255,136,0.1); padding: 28px 40px; text-align: center; }
+  .footer-logo-sm {
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1.5px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; line-height: 1;
+  }
+  .footer-fine { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: #4f7d5e; letter-spacing: 1px; line-height: 1.5; }
+  .signal-line { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: #00ff88; opacity: 0.25; letter-spacing: 2px; margin-top: 12px; }
+</style>
+</head>
+<body>
+  <div class="email-wrap">
+    <div class="email-header">
+      <div class="email-header-grid"></div>
+      <div class="email-logo">
+        <span class="logo-dot">●</span><span class="logo-greens">GREENS</span><span class="logo-screens">SCREENS</span><span class="logo-divider">|</span><span class="logo-ent">ENT</span>
+      </div>
+      <div class="email-tagline">TECHNOLOGY · GAMING · ENTERTAINMENT</div>
+    </div>
+    <div class="email-hero">
+      <div class="email-eyebrow">ALLY TRANSMISSION SECURED</div>
+      <div class="email-headline">CONNECTION INGESTED // REVIEW ACTIVE</div>
+      <p class="email-welcome-msg">
+        Hello <strong>${name.trim()}</strong>,<br/>
+        We have safely received your collaboration proposal. Your details have passed initial intake checks and are queued for live review by <strong>Agent007</strong>.
+      </p>
+    </div>
+    <div class="email-body">
+      <div class="email-section-label">SUBMISSION DETAILS</div>
+      <div class="receipt-box">
+        <div class="receipt-title">Intake Receipt Summary</div>
+        <p class="receipt-detail"><strong>Category:</strong> ${category.toUpperCase()}</p>
+        <p class="receipt-detail"><strong>Intake Email:</strong> ${email.toLowerCase().trim()}</p>
+        <p class="receipt-detail"><strong>Status:</strong> Under Review</p>
+        <p class="receipt-detail"><strong>Date Ingested:</strong> ${new Date().toLocaleString()}</p>
+      </div>
+      <p style="font-size: 14px; color: #8fae96; line-height: 1.6;">
+        We review and assess all incoming pitches based on criteria such as design synergy, technical capabilities, and playtest windows. Once reviewed, we will connect back directly via this email address. Thank you for reaching out to team up.
+      </p>
+      <div class="email-divider"></div>
+      <div class="email-signoff">
+        We appreciate your interest in collaborating. Keep your signal clear.
+        <strong>— THE GREENS SCREENS TEAM</strong>
+      </div>
+    </div>
+    <div class="email-footer">
+      <div class="footer-logo-sm">
+        <span class="logo-dot">●</span><span class="logo-greens">GREENS</span><span class="logo-screens">SCREENS</span><span class="logo-divider">|</span><span class="logo-ent">ENT</span>
+      </div>
+      <div class="footer-fine">
+        &copy; 2026 Greens Screens Ent · All rights reserved
+      </div>
+      <div class="signal-line">ALLY_CONNECTED_202</div>
+    </div>
+  </div>
+</body>
+</html>
+`
+      };
+
+      transporter.sendMail(agentMailOptions, (error, info) => {
+        if (error) {
+          console.error("Nodemailer failed to send email alert to agent007:", error);
+        } else {
+          console.log("Nodemailer successfully sent email alert to agent007:", info.response);
+        }
+      });
+
+      transporter.sendMail(clientMailOptions, (error, info) => {
+        if (error) {
+          console.error("Nodemailer failed to send connection confirmation to client:", error);
+        } else {
+          console.log("Nodemailer successfully sent connection confirmation to client:", info.response);
+        }
+      });
+
+      res.json({ success: true, message: "Collaboration request submitted successfully. We will review files and connect back to you!" });
+    } catch (error: any) {
+      console.error("Collaboration submission error details:", error);
+      res.status(500).json({ error: `Failed to submit collaboration request: ${error.message || 'Unknown error'}` });
+    }
+  });
+
   app.get("/api/unsubscribe", async (req, res) => {
     const { email } = req.query;
     if (!email || typeof email !== "string") {
