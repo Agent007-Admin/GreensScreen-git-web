@@ -53,11 +53,12 @@ export const Pillars: React.FC = () => {
     };
 
     setFormData(prev => {
+      const trimmedMsg = prev.message.trim();
       const isEmptyOrTemplate = 
-        !prev.message.trim() || 
-        prev.message === starterMessages.technology || 
-        prev.message === starterMessages.gaming || 
-        prev.message === starterMessages.entertainment;
+        !trimmedMsg || 
+        trimmedMsg === starterMessages.technology.trim() || 
+        trimmedMsg === starterMessages.gaming.trim() || 
+        trimmedMsg === starterMessages.entertainment.trim();
 
       return {
         ...prev,
@@ -78,11 +79,12 @@ export const Pillars: React.FC = () => {
     };
 
     setFormData(prev => {
+      const trimmedMsg = prev.message.trim();
       const isEmptyOrTemplate = 
-        !prev.message.trim() || 
-        prev.message === starterMessages.technology || 
-        prev.message === starterMessages.gaming || 
-        prev.message === starterMessages.entertainment;
+        !trimmedMsg || 
+        trimmedMsg === starterMessages.technology.trim() || 
+        trimmedMsg === starterMessages.gaming.trim() || 
+        trimmedMsg === starterMessages.entertainment.trim();
 
       return {
         ...prev,
@@ -228,13 +230,15 @@ export const Pillars: React.FC = () => {
               <motion.button
                 onClick={() => handCategoryClick('technology')}
                 whileHover={{ 
-                  scale: 1.05,
-                  backgroundColor: "rgba(0, 255, 136, 0.15)",
+                  scale: 1.08,
+                  backgroundColor: "#00ff88",
+                  color: "#030704",
                   borderColor: "#00ff88",
-                  boxShadow: "0 0 20px rgba(0, 255, 136, 0.35)"
+                  boxShadow: "0 0 25px rgba(0, 255, 136, 0.75)",
+                  y: -2
                 }}
                 whileTap={{ scale: 0.95 }}
-                className="w-full md:w-auto bg-gs-dark border border-gs-green/40 text-gs-green font-mono text-xs tracking-[2px] px-6 py-3 transition-colors duration-300 uppercase cursor-pointer btn-clip flex items-center justify-center gap-2 relative overflow-hidden group/btn font-bold"
+                className="w-full md:w-auto bg-gs-dark border-2 border-gs-green text-gs-green font-mono text-xs tracking-[2px] px-8 py-3.5 transition-all duration-200 uppercase cursor-pointer btn-clip flex items-center justify-center gap-2 relative overflow-hidden group/btn font-bold"
               >
                 Team Up? <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform duration-200" />
               </motion.button>
@@ -280,13 +284,15 @@ export const Pillars: React.FC = () => {
               <motion.button
                 onClick={() => handCategoryClick('gaming')}
                 whileHover={{ 
-                  scale: 1.05,
-                  backgroundColor: "rgba(0, 255, 136, 0.15)",
+                  scale: 1.08,
+                  backgroundColor: "#00ff88",
+                  color: "#030704",
                   borderColor: "#00ff88",
-                  boxShadow: "0 0 20px rgba(0, 255, 136, 0.35)"
+                  boxShadow: "0 0 25px rgba(0, 255, 136, 0.75)",
+                  y: -2
                 }}
                 whileTap={{ scale: 0.95 }}
-                className="w-full md:w-auto bg-gs-dark border border-gs-green/40 text-gs-green font-mono text-xs tracking-[2px] px-6 py-3 transition-colors duration-300 uppercase cursor-pointer btn-clip flex items-center justify-center gap-2 relative overflow-hidden group/btn font-bold"
+                className="w-full md:w-auto bg-gs-dark border-2 border-gs-green text-gs-green font-mono text-xs tracking-[2px] px-8 py-3.5 transition-all duration-200 uppercase cursor-pointer btn-clip flex items-center justify-center gap-2 relative overflow-hidden group/btn font-bold"
               >
                 Team Up? <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform duration-200" />
               </motion.button>
@@ -332,13 +338,15 @@ export const Pillars: React.FC = () => {
               <motion.button
                 onClick={() => handCategoryClick('entertainment')}
                 whileHover={{ 
-                  scale: 1.05,
-                  backgroundColor: "rgba(0, 255, 136, 0.15)",
+                  scale: 1.08,
+                  backgroundColor: "#00ff88",
+                  color: "#030704",
                   borderColor: "#00ff88",
-                  boxShadow: "0 0 20px rgba(0, 255, 136, 0.35)"
+                  boxShadow: "0 0 25px rgba(0, 255, 136, 0.75)",
+                  y: -2
                 }}
                 whileTap={{ scale: 0.95 }}
-                className="w-full md:w-auto bg-gs-dark border border-gs-green/40 text-gs-green font-mono text-xs tracking-[2px] px-6 py-3 transition-colors duration-300 uppercase cursor-pointer btn-clip flex items-center justify-center gap-2 relative overflow-hidden group/btn font-bold"
+                className="w-full md:w-auto bg-gs-dark border-2 border-gs-green text-gs-green font-mono text-xs tracking-[2px] px-8 py-3.5 transition-all duration-200 uppercase cursor-pointer btn-clip flex items-center justify-center gap-2 relative overflow-hidden group/btn font-bold"
               >
                 Team Up? <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform duration-200" />
               </motion.button>

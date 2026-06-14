@@ -438,7 +438,7 @@ async function startServer() {
     }
 
     try {
-      const activeDb = db || clientDb;
+      const activeDb = clientDb || db;
       if (!activeDb) {
         console.error("Firestore database instance is not initialized.");
         return res.status(500).json({ error: "Database connection error. Please try again later." });
@@ -453,13 +453,16 @@ async function startServer() {
         status: "pending"
       };
 
-      console.log("Saving collaboration request to Firestore using Admin SDK preference...");
-      if (db) {
+      console.log("Saving collaboration request to Firestore...");
+      if (clientDb) {
+        const collabRef = collection(clientDb, "collaborations");
+        await addDoc(collabRef, requestData);
+      } else if (db) {
         const collabRef = db.collection("collaborations").doc();
         await collabRef.set(requestData);
       } else {
-        const collabRef = collection(clientDb, "collaborations");
-        await addDoc(collabRef, requestData);
+        console.error("No database instance is initialized.");
+        return res.status(500).json({ error: "Database connection error. Please try again later." });
       }
       console.log("Collaboration request saved to Firestore successfully.");
 
