@@ -61,6 +61,10 @@ export class NewsletterAgent {
     const timestamp = new Date().toISOString();
     console.log(`[${level.toUpperCase()}] NewsletterAgent: ${message}`, details || "");
     
+    if (!this.db || (this.db as any).mock) {
+      return;
+    }
+    
     try {
       const logsRef = collection(this.db, "system_logs");
       await addDoc(logsRef, {
@@ -149,6 +153,10 @@ export class NewsletterAgent {
       const unsubLink = `${this.baseUrl}/api/unsubscribe?email=${encodeURIComponent(subscriber.email)}`;
       htmlContent = htmlContent.replace(/{{UNSUBSCRIBE_LINK}}/g, unsubLink);
 
+      if (!this.checkAndRegisterEmailSend(subscriber.email)) {
+        return;
+      }
+
       await this.transporter.sendMail({
         from: `"Greens Screens Ent" <${process.env.SMTP_USER}>`,
         to: subscriber.email,
@@ -228,6 +236,9 @@ export class NewsletterAgent {
 
       for (const sub of subscribers) {
         try {
+          if (!this.checkAndRegisterEmailSend(sub.email)) {
+            continue;
+          }
           const unsubLink = `${this.baseUrl}/api/unsubscribe?email=${encodeURIComponent(sub.email)}`;
           const personalizedHtml = htmlTemplate.replace(/{{UNSUBSCRIBE_LINK}}/g, unsubLink);
 
@@ -339,10 +350,24 @@ export class NewsletterAgent {
     // 2. Build HTML from template
     const htmlTemplate = this.buildMonthlyHtml(content, month, year, true);
 
+    // Save a copy of the HTML to the project root for local review and automated QA validation
+    try {
+      const savePath = path.join(process.cwd(), `draft-newsletter-${month.toLowerCase()}-${year}.html`);
+      fs.writeFileSync(savePath, htmlTemplate, "utf-8");
+      console.log(`NewsletterAgent: Saved backup draft HTML to ${savePath}`);
+    } catch (fsErr: any) {
+      console.error('NewsletterAgent: Failed to write draft HTML backup to disk:', fsErr.message);
+    }
+
     // 3. Send email
     if (this.transporter) {
-      const subject = `[TEST] THE FREQUENCY | ${month.toUpperCase()} ${year}`;
+      // Append a unique random reference ID to the subject to prevent Gmail thread collapsing
+      const refToken = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const subject = `[TEST] THE FREQUENCY | ${month.toUpperCase()} ${year} (REF: ${refToken})`;
       try {
+        if (!this.checkAndRegisterEmailSend(email)) {
+          return false;
+        }
         const unsubLink = `${this.baseUrl}/api/unsubscribe?email=${encodeURIComponent(email)}`;
         const personalizedHtml = htmlTemplate.replace(/{{UNSUBSCRIBE_LINK}}/g, unsubLink);
 
@@ -425,6 +450,10 @@ export class NewsletterAgent {
    * Get or generate monthly content. Checks Firestore for a draft first.
    */
   async getMonthlyContent(month: string, year: string, forceRefresh: boolean = false, isTest: boolean = false, additionalInstructions: string = "") {
+    if (!this.db || (this.db as any).mock) {
+      console.log(`NewsletterAgent: Database is mock or unconfigured. Generating fresh content for ${month} ${year} directly...`);
+      return await this.generateMonthlyContent(month, year, isTest, additionalInstructions);
+    }
     const draftId = isTest ? `${month.toLowerCase()}-${year}-test` : `${month.toLowerCase()}-${year}`;
     const draftRef = doc(this.db, "newsletter_drafts", draftId);
 
@@ -489,82 +518,153 @@ export class NewsletterAgent {
     const windowStartStr = `${prevMonthName.substring(0, 3).toUpperCase()} 16, ${prevMonthYear}`;
     const windowEndStr = `${month.substring(0, 3).toUpperCase()} 15, ${year}`;
     
-    const prompt = `
-      Generate a high-energy, technical monthly newsletter for "Greens Screens Ent" for ${month} ${year}.
-      The theme is "SIGNAL_ALWAYS_GREEN".
+    // Retrieve previous newsletter topics to avoid duplicate content
+    let previousTopics: string[] = [];
+    if (this.db && !(this.db as any).mock) {
+      try {
+        const newslettersRef = collection(this.db, "newsletters");
+        const q = query(newslettersRef, limit(10));
+        const snapshot = await getDocs(q);
+        snapshot.forEach((docSnap: any) => {
+          try {
+            const data = docSnap.data();
+            if (data && data.content) {
+              const newsletterData = JSON.parse(data.content);
+              if (newsletterData && newsletterData.sections) {
+                newsletterData.sections.forEach((sec: any) => {
+                  if (sec.stories) {
+                    sec.stories.forEach((story: any) => {
+                      if (story.title) previousTopics.push(story.title);
+                    });
+                  }
+                });
+              }
+            }
+          } catch (err) {
+            // Ignore parse errors
+          }
+        });
+      } catch (e: any) {
+        console.warn("[WARNING] Failed to fetch previous newsletters from Firestore:", e.message);
+      }
+    }
+    
+    // Static fallback to guarantee avoidance of May 2026 topics
+    const fallbackMayTopics = [
+      "Directive 8020", "PRAGMATA", "Subnautica 2", "Wax Heads", "Mixtape", 
+      "Duck Side of the Moon", "ASUS ROG Strix SCAR 18 (2026)", 
+      "NVIDIA RTX 5060 9GB Transition", "Mortal Kombat 2 Premiere", "Devil May Cry Anime Season 2"
+    ];
+    previousTopics = Array.from(new Set([...previousTopics, ...fallbackMayTopics]));
+
+    // Step 1: Research Phase (with Google Search Grounding, no JSON constraint)
+    const researchPrompt = `
+      You are an expert gaming, technology, and media researcher for "Greens Screens Ent" newsletter.
+      The current year is ${year}. This is non-negotiable.
       
       DATA COLLECTION WINDOW:
       Coverage Period: ${prevMonthName} 16, ${prevMonthYear} to ${month} 15, ${year}.
-      Use the googleSearch tool to find REAL, CURRENT gaming and tech news strictly from this time period.
-      DO NOT INCLUDE GAMES RELEASED IN PREVIOUS YEARS.
-
-      ${additionalInstructions ? `ADDITIONAL CONTEXT:\n${additionalInstructions}\n` : ''}
+      Use the googleSearch tool to find REAL, ACTIVE, CURRENT launches and major stories strictly during this period.
       
-      SECTION ARCHITECTURE (EXACTLY 4 SECTIONS):
-      1. "releases": "Major Release" - EXCLUSIVELY new AAA games RELEASED EXACTLY within the window (${windowStartStr} - ${windowEndStr}). NO UPDATES. NO DLC.
-      2. "indie": "Indie Release" - EXCLUSIVELY new indie games RELEASED EXACTLY within the window (${windowStartStr} - ${windowEndStr}). NO UPDATES.
-      3. "tech": "Tech" (Technology in gaming - specs, dev studios, hardware stories) recently announced in this window.
-      4. "entertainment": "Entertainment" (Video game forward entertainment - movies, TV shows, etc.) announced or released in this window.
+      STRICT EXCLUSION LIST (DO NOT INCLUDE OR REUSE ANY OF THESE TOPICS/GAMES FROM PREVIOUS RUNS):
+      ${previousTopics.map(t => `- "${t}"`).join("\n")}
+      
+      You MUST NOT feature any games, tech products, or movies/TV shows listed above. Each newsletter must cover COMPLETELY NEW achievements, announcements, releases, and hardware stories. Do NOT recycle or repeat these topics under any circumstances.
 
-      CRITICAL THEME & BRANDING:
+      STRICT CONTEXT AND INSTRUCTIONS:
+      - LATENCY OPTIMIZATION: Keep Google Search queries to a strict minimum (at most 2 search queries total, e.g. "new video game releases June 2026") to avoid multi-turn agentic latency. Do not perform extensive search iterations.
       - BRAND NAME: "Greens Screens Ent"
-      - TONE: "BREAKING NEWS". High-energy, urgent, technical.
-      - TIMING RULE / YEAR ENFORCEMENT: The current year is ${year}. This is non-negotiable. You MUST NOT present news or game releases from past years (e.g., 2024, 2025). Every article must cover topics relevant to the window: ${windowStartStr} to ${windowEndStr}.
-      - RELEASE WINDOW ENFORCEMENT: For "Major Release" and "Indie Release", you MUST only find games that had their VERSION 1.0 or initial release exactly between ${windowStartStr} and ${windowEndStr}. Games released outside this specific time range are STRICTLY FORBIDDEN.
-      - PROHIBITION: Do NOT include content updates, patches, season passes, or rumors for the "Release" sections. I want LAUNCH news only.
-      - ACCENT COLORS: Use colors that contrast well with a black background (#050a07). 
-        - Major Release: Neon Green (#00ff88).
-        - Indie Release: Neon Lime (#aaff44).
-        - Tech: Electric Cyan (#00cfff).
-        - Entertainment: Amber Gold (#ffd700).
+      - TONE: "BREAKING NEWS". High-energy, urgent, technical. Cyberpunk / signal theme.
+      - TIME COHERENCE & STRICT CUTOFF: The target date window is strictly ${prevMonthName} 16, ${prevMonthYear} to ${month} 15, ${year}. You MUST NOT present any games, news, or releases scheduled for after ${month} 15, ${year} (e.g. June 16, 2026 onwards is strictly forbidden). Presenting unreleased or future items is considered a critical error.
+      - NO ULTRA-MAINSTREAM FRANCHISES: For the AAA "releases" section, do NOT feature ultra-mainstream, household-name franchises like 'Forza', 'James Bond / 007', 'Call of Duty', 'FIFA', 'EA Sports', 'Grand Theft Auto', or similar ultra-saturated media titles. Focus on high-quality, exciting AAA/Double-A launches from premier/prestige developers (such as Atlus, Square Enix, Capcom, Obsidian, FromSoftware, Remedy, etc.) that appeal to active core gamers but aren't household names.
+      - YOU MUST NOT present news or game releases from past years or future hypothetical dates.
+      - Every story must cover topics relevant to the window: ${prevMonthName} 16, ${prevMonthYear} to ${month} 15, ${year}.
 
-      CRITICAL LINK INSTRUCTIONS:
-      1. LINKS ARE FOR GAMES ONLY: Only sections of type "releases" and "indie" may contain links.
-      2. STARK PROHIBITION: Sections "tech" and "entertainment" MUST have "hasLink": false and "link": "". NO EXCEPTIONS. If you add a link to these sections, it is a critical failure.
-      3. IDENTITY LOCK & NAME-MATCH PROTOCOL (EXTREME STRICTNESS):
-         - For segments with links (releases/indie), the ONLY allowed link is a direct Steam Store profile page for the EXACT, SPECIFIC game discussed in the article.
-         - MISMATCHED LINKS ARE STRICTLY FORBIDDEN: You must NEVER link to a different game, an older version, a sequel, or another game in the same franchise.
-         - If the specific game does not have an active Steam store page, you MUST set "hasLink": false. Do NOT substitute it with another game's link.
-         - RUMOR/FUTURE GUARD: If the story covers a 'rumor', 'announcement', or 'unreleased project' that does NOT yet have a live Steam Store page, you MUST set "hasLink": false. 
-         - SEQUEL GUARD: Never link to an older installment. Linking to a past title (e.g., "Forza 5" when discussing "Forza 6") is strictly forbidden.
-         - PATH VALIDATION: The URL MUST contain "/app/" followed by a numeric ID or a name slug that specifically matches the game title word-for-word.
-         - EXACT NAME MATCH REQUIREMENT: The name of the game in the Steam URL (e.g. \`.../app/12345/Exact_Game_Name/\`) MUST word-for-word match the generated story "title" (with underscores instead of spaces). If it does not, you must drop the link and set "hasLink": false.
-         - NO WRONG LINKS: If no exact 1:1 match for the SPECIFIC newly released game is found on Steam, set "hasLink": false. Discarding a link is better than providing an incorrect one.
+      ${additionalInstructions ? `ADDITIONAL CONTEXT FROM USER:\n${additionalInstructions}\n` : ''}
 
-      STORY CONTENT RULES:
-      - "blurb": A ultra-concise, 1-sentence "hook" (max 15 words).
-      - "fullSummary": A 3-4 sentence deep-dive "Research Digest" (approx 80-100 words). It MUST contain specific research data and technical details.
-      - PROHIBITION: The "fullSummary" MUST NOT contain the text of the "blurb".
-      - DO NOT use placeholder links or links that lead to 404 errors.
-      
-      STORY COUNTS:
-      - "releases" and "indie" sections MUST have exactly 3 stories each.
-      - "tech" and "entertainment" sections MUST have exactly 2 stories each.
+      SECTION RESEARCH TASKS:
+      1. Major Release ("releases"):
+         - Find EXACTLY 3 major AAA/Double-A role-playing, action, strategy, or adventure games that had their physical/digital VERSION 1.0 or initial consumer LAUNCH/RELEASE exactly between ${windowStartStr} and ${windowEndStr}.
+         - Strictly exclude ultra-mainstream titles (e.g., 'Forza', '007').
+         - Do NOT include major updates, seasonal patches, expansions, beta launches, or DLC. Only parent base game launches.
+         - Find their exact Steam Store release links if available.
+      2. Indie Release ("indie"):
+         - Find EXACTLY 3 indie games (from independent developers) that launched/released VERSION 1.0 exactly between ${windowStartStr} and ${windowEndStr}.
+         - Limit titles to base games. Find their exact Steam store release links if available on Steam.
+      3. Tech ("tech"):
+         - Find EXACTLY 2 breakthrough technology announcements directly impacting gaming (e.g., new GPUs, developer engines, studio acquisitions, server features) occurring inside this period.
+      4. Entertainment ("entertainment"):
+         - Find EXACTLY 2 movies, TV series, or multimedia releases/announcements closely tied to or based on video game franchises during this period.
 
-      TONE & STYLE:
-      - Futuristic, cyber-industrial, high-energy.
-      - STRICT: Output ONLY the raw JSON object. NO PREAMBLE. NO POSTAMBLE.
-      - NO IMAGES: Do not provide any image URLs.
-      
-      I need the following sections in JSON format:
-      1. heroIntro: A brief overview (approx 50 words) of the current state of gaming and tech.
-      2. windowStart: "${windowStartStr}"
-      3. windowEnd: "${windowEndStr}"
-      4. signoffText: A closing message (approx 30 words).
-      5. accentColor: A hex color code.
-      6. sections: An array of objects matching the 4 section types mentioned above.
-         Each section needs: "type", "name", "desc", "icon", and "stories" array.
-         Each story needs: "title", "blurb", "meta", "tag", "link", "hasLink", "fullSummary".
+      FOR EACH RESEARCHED ITEM, WRITE:
+      - Title of article / game
+      - Tag (e.g. Action RPG, CPU Hardware, Anim Series)
+      - Date or metadata (e.g. Published on June 1, 2026)
+      - A concise 1-sentence hook / blurb (max 15 words)
+      - A deeply thorough 3-4 sentence "Research Digest" (approx 80-100 words) loaded with specific technical specifications, release platforms, studio names, and statistical/factual data from your search. Do NOT reuse the hook/blurb text in the digest.
     `;
 
     try {
-      const response = await this.withRetry(async () => {
-        console.log("NewsletterAgent: Calling Gemini API with googleSearch...");
+      const researchResponse = await this.withRetry(async () => {
+        console.log("NewsletterAgent: Step 1: Calling Gemini API for Research with googleSearch...");
         return await this.ai.models.generateContent({
-          model: "gemini-flash-latest",
-          contents: prompt,
+          model: "gemini-3.5-flash",
+          contents: researchPrompt,
           config: {
-            tools: [{ googleSearch: {} }],
+            tools: [{ googleSearch: {} }]
+          }
+        });
+      });
+
+      const researchReport = researchResponse.text || "";
+      if (!researchReport) {
+        throw new Error("Research report returned from Gemini was empty.");
+      }
+      
+      await this.logEvent("info", "Research complete. Compiling structured JSON newsletter...");
+      console.log("Research report outcome length:", researchReport.length);
+
+      // Step 2: Structuring & Compilation Phase (with JSON Schema, no search tool)
+      const structuringPrompt = `
+        You are a structured compiler for "Greens Screens Ent" newsletter.
+        You must convert the provided research report into a fully formatted, valid JSON object matching the requested schema.
+        
+        STRICTLY RETAIN ALL RESEARCH DATA, FACTUAL DETAILS, STATISTICS, AND METADATA FROM THE RESEARCH REPORT.
+        
+        TIMING & COVERAGE:
+        - windowStart: "${windowStartStr}"
+        - windowEnd: "${windowEndStr}"
+        - accentColor: "#00ff88"
+        - heroIntro: A high-energy cyberpunk style overview of the state of play in ${month} ${year} (approx 50 words).
+        - signoffText: A compelling short signature sign-off for Greens Screens (approx 30 words).
+        
+        ACCENT COLORS RULES FOR JSON SECTIONS:
+        - Major Release ("releases"): Neon Green (#00ff88) - EXACTLY 3 stories.
+        - Indie Release ("indie"): Neon Lime (#aaff44) - EXACTLY 3 stories.
+        - Tech ("tech"): Electric Cyan (#00cfff) - EXACTLY 2 stories.
+        - Entertainment ("entertainment"): Amber Gold (#ffd700) - EXACTLY 2 stories.
+
+        STORY SCHEMA REQUIREMENTS:
+        - "title": Exact title.
+        - "blurb": The 1-sentence hook (max 15 words).
+        - "fullSummary": The 80-100 words detailed research digest. Do NOT put the blurb in fullSummary.
+        - "meta": Date/metadata.
+        - "tag": Segment tag.
+        - "link": Steam Store profile page URL if available for "releases" and "indie". Leave Empty for "tech" and "entertainment".
+        - "hasLink": boolean indicating if a valid Steam URL was successfully researched. For "tech" and "entertainment" MUST always be false.
+
+        RESEARCH REPORT TO PROCESS:
+        \`\`\`
+        ${researchReport}
+        \`\`\`
+      `;
+
+      const response = await this.withRetry(async () => {
+        console.log("NewsletterAgent: Step 2: Running structured compilation...");
+        return await this.ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: structuringPrompt,
+          config: {
             responseMimeType: "application/json",
             responseSchema: {
               type: Type.OBJECT,
@@ -675,7 +775,9 @@ export class NewsletterAgent {
           });
         });
 
-        // Smart Steam Link Resolver
+        // Smart Steam Link Resolver - Fully Parallelized with Promise.all and Timeout Guards
+        const linkResolutionPromises: Promise<void>[] = [];
+
         for (const sec of parsed.sections) {
           if (!sec.stories) continue;
           
@@ -689,109 +791,128 @@ export class NewsletterAgent {
           }
 
           for (const story of sec.stories) {
-             let resolvedLink = "";
-             const safeQueryTitle = story.title.split(' - ')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-             let isCached = false;
+            linkResolutionPromises.push((async () => {
+              let resolvedLink = "";
+              const safeQueryTitle = story.title.split(' - ')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+              let isCached = false;
 
-             try {
-               // 1. Check if we have a verified mapping in Firestore
-               const cacheRef = doc(this.db, 'verified_game_links', safeQueryTitle);
-               const cacheSnap = await getDoc(cacheRef);
-               
-               if (cacheSnap.exists()) {
-                 const cacheData = cacheSnap.data();
-                 if (cacheData.status === 'verified' && cacheData.url) {
-                   resolvedLink = cacheData.url;
-                   isCached = true;
-                   console.log(`[INFO] Verified cache hit for "${story.title}" -> ${resolvedLink}`);
-                 } else if (cacheData.status === 'blocked') {
-                   isCached = true;
-                   console.log(`[INFO] Link for "${story.title}" is explicitly blocked by cache.`);
-                 }
-               }
-             } catch (e: any) {
+              try {
+                // 1. Check if we have a verified mapping in Firestore
+                let cacheSnap: any = null;
+                if (this.db && !(this.db as any).mock) {
+                  const cacheRef = doc(this.db, 'verified_game_links', safeQueryTitle);
+                  cacheSnap = await getDoc(cacheRef);
+                }
+                
+                if (cacheSnap && cacheSnap.exists()) {
+                  const cacheData = cacheSnap.data();
+                  if (cacheData.status === 'verified' && cacheData.url) {
+                    resolvedLink = cacheData.url;
+                    isCached = true;
+                    console.log(`[INFO] Verified cache hit for "${story.title}" -> ${resolvedLink}`);
+                  } else if (cacheData.status === 'blocked') {
+                    isCached = true;
+                    console.log(`[INFO] Link for "${story.title}" is explicitly blocked by cache.`);
+                  }
+                }
+              } catch (e: any) {
                 console.warn(`[WARNING] Error reading from link cache: ${e.message}`);
-             }
+              }
 
-             if (!isCached) {
-               try {
-                 // Extract core title from story title (e.g. remove trailing text like "- Early Access")
-                 const query = encodeURIComponent(story.title.split(' - ')[0]);
-                 const res = await fetch(`https://store.steampowered.com/api/storesearch/?term=${query}&l=english&cc=US`);
-                 
-                 if (res.ok) {
-                   const data = await res.json();
-                   if (data && data.items && data.items.length > 0) {
-                     
-                     const searchTitleMatches = (apiTitle: string, storyTitle: string) => {
-                       const normalize = (t: string) => t.toLowerCase().replace(/[^a-z0-9]/g, '');
-                       const nApi = normalize(apiTitle);
-                       const nStory = normalize(storyTitle);
-                       if (nApi === nStory) return true;
-                       
-                       if (nApi.includes(nStory) && nStory.length > 4) return true;
-                       if (nStory.includes(nApi) && nApi.length > 4) return true;
-                       
-                       // Fallback: check if the longest word in storyTitle > 4 chars is in apiTitle
-                       const words = storyTitle.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 4);
-                       if (words.length > 0) {
-                           // Check if at least one significant word matches
-                           return words.some(w => nApi.includes(w));
-                       }
-                       
-                       return false;
-                     };
+              if (!isCached) {
+                try {
+                  // Extract core title from story title (e.g. remove trailing text like "- Early Access")
+                  const query = encodeURIComponent(story.title.split(' - ')[0]);
+                  
+                  // Defensive timeout: Abort fetch if Steam API hangs (4-second timeout limit)
+                  const controller = new AbortController();
+                  const fetchTimeoutId = setTimeout(() => controller.abort(), 4000);
+                  
+                  const res = await fetch(`https://store.steampowered.com/api/storesearch/?term=${query}&l=english&cc=US`, {
+                    signal: controller.signal
+                  });
+                  clearTimeout(fetchTimeoutId);
+                  
+                  if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.items && data.items.length > 0) {
+                      
+                      const searchTitleMatches = (apiTitle: string, storyTitle: string) => {
+                        const normalize = (t: string) => t.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        const nApi = normalize(apiTitle);
+                        const nStory = normalize(storyTitle);
+                        if (nApi === nStory) return true;
+                        
+                        if (nApi.includes(nStory) && nStory.length > 4) return true;
+                        if (nStory.includes(nApi) && nApi.length > 4) return true;
+                        
+                        // Fallback: check if the longest word in storyTitle > 4 chars is in apiTitle
+                        const words = storyTitle.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 4);
+                        if (words.length > 0) {
+                          return words.some(w => nApi.includes(w));
+                        }
+                        
+                        return false;
+                      };
 
-                     for (const item of data.items) {
-                       if (item.type === 'app' && searchTitleMatches(item.name, story.title)) {
-                         const safeSlug = item.name.replace(/[^a-zA-Z0-9_\-]/g, '_');
-                         resolvedLink = `https://store.steampowered.com/app/${item.id}/${safeSlug}/`;
-                         console.log(`[INFO] Smart resolved link for "${story.title}" -> ${resolvedLink}`);
-                         break;
-                       }
-                     }
-                   }
-                 }
-               } catch (e: any) {
-                 console.warn(`[WARNING] Error resolving Steam link for ${story.title}: ${e.message}`);
-               }
+                      for (const item of data.items) {
+                        if (item.type === 'app' && searchTitleMatches(item.name, story.title)) {
+                          const safeSlug = item.name.replace(/[^a-zA-Z0-9_\-]/g, '_');
+                          resolvedLink = `https://store.steampowered.com/app/${item.id}/${safeSlug}/`;
+                          console.log(`[INFO] Smart resolved link for "${story.title}" -> ${resolvedLink}`);
+                          break;
+                        }
+                      }
+                    }
+                  }
+                } catch (e: any) {
+                  console.warn(`[WARNING] Error resolving Steam link for ${story.title}: ${e.message}`);
+                }
 
-               // 2. Cache the result for future runs
-               try {
-                 const cacheRef = doc(this.db, 'verified_game_links', safeQueryTitle);
-                 if (resolvedLink) {
-                    await setDoc(cacheRef, {
-                      title: story.title,
-                      url: resolvedLink,
-                      status: 'verified',
-                      addedAt: new Date().toISOString()
-                    });
-                 } else {
-                    await setDoc(cacheRef, {
-                      title: story.title,
-                      url: "",
-                      status: 'blocked',
-                      reason: 'No API match found',
-                      addedAt: new Date().toISOString()
-                    });
-                 }
-               } catch (e: any) {
-                 console.warn(`[WARNING] Error writing to link cache: ${e.message}`);
-               }
-             }
+                // 2. Cache the result for future runs
+                if (this.db && !(this.db as any).mock) {
+                  try {
+                    const cacheRef = doc(this.db, 'verified_game_links', safeQueryTitle);
+                    if (resolvedLink) {
+                      await setDoc(cacheRef, {
+                        title: story.title,
+                        url: resolvedLink,
+                        status: 'verified',
+                        addedAt: new Date().toISOString()
+                      });
+                    } else {
+                      await setDoc(cacheRef, {
+                        title: story.title,
+                        url: "",
+                        status: 'blocked',
+                        reason: 'No API match found',
+                        addedAt: new Date().toISOString()
+                      });
+                    }
+                  } catch (e: any) {
+                    console.warn(`[WARNING] Error writing to link cache: ${e.message}`);
+                  }
+                }
+              }
 
-             if (resolvedLink) {
-               story.hasLink = true;
-               story.link = resolvedLink;
-             } else {
-               if (story.hasLink && !isCached) {
-                 console.warn(`[WARNING] Stripping hallucinated link for "${story.title}", no valid API match found.`);
-               }
-               story.hasLink = false;
-               story.link = "";
-             }
+              if (resolvedLink) {
+                story.hasLink = true;
+                story.link = resolvedLink;
+              } else {
+                if (story.hasLink && !isCached) {
+                  console.warn(`[WARNING] Stripping hallucinated link for "${story.title}", no valid API match found.`);
+                }
+                story.hasLink = false;
+                story.link = "";
+              }
+            })());
           }
         }
+
+        // Await all parallel resolution promises
+        const beforePromiseAll = Date.now();
+        await Promise.all(linkResolutionPromises);
+        console.log(`[INFO] All parallel Steam link checks completed in ${Date.now() - beforePromiseAll}ms`);
 
         return parsed;
       } catch (parseError) {
@@ -821,6 +942,14 @@ export class NewsletterAgent {
     if (!fs.existsSync(templatePath)) return "Template not found";
 
     let html = fs.readFileSync(templatePath, "utf-8");
+
+    // Add random salt / unique micro-tokens to defeat Gmail duplicate email clipping & "..." folding
+    const randomSalt = Math.random().toString(36).substring(2, 10).toUpperCase();
+    const inboxDefeatTokenTop = `<div style="display:none !important; mso-hide:all; max-height:0px; overflow:hidden; font-size:1px; line-height:1px; color:#050a0d; opacity:0;">[Transmission Signal: ${randomSalt}]</div>`;
+    const inboxDefeatTokenBottom = `<div style="display:none !important; mso-hide:all; max-height:0px; overflow:hidden; font-size:1px; line-height:1px; color:#050a0d; opacity:0;">[Transmission Signature End: GS-${randomSalt}]</div>`;
+    
+    html = html.replace("<body>", `<body>\n${inboxDefeatTokenTop}`);
+    html = html.replace("</body>", `${inboxDefeatTokenBottom}\n</body>`);
 
     // Helper to convert hex to rgba
     const hexToRgba = (hex: string, alpha: number) => {
@@ -911,5 +1040,42 @@ export class NewsletterAgent {
     html = html.replace(/{{SECTIONS}}/g, sectionsHtml);
 
     return html;
+  }
+
+  /**
+   * Cooldown check to prevent sending multiple emails to the same address within a 10-minute window.
+   */
+  private checkAndRegisterEmailSend(targetEmail: string): boolean {
+    const email = targetEmail.trim().toLowerCase();
+    const now = Date.now();
+    const cooldownMs = 10 * 60 * 1000; // 10 minutes
+
+    const cachePath = path.join(process.cwd(), "last_sent_emails.json");
+    let registry: Record<string, number> = {};
+
+    if (fs.existsSync(cachePath)) {
+      try {
+        registry = JSON.parse(fs.readFileSync(cachePath, "utf-8"));
+      } catch (err) {
+        // Safe to ignore or reset corrupt file
+      }
+    }
+
+    const lastSent = registry[email];
+    if (lastSent && (now - lastSent) < cooldownMs) {
+      const remainingSec = Math.ceil((cooldownMs - (now - lastSent)) / 1000);
+      const remainingMin = Math.ceil(remainingSec / 60);
+      console.warn(`[RATE LIMIT] Email send to ${email} blocked. An email was already sent to this address within the last 10 minutes. Cooldown remaining: ${remainingMin}m (${remainingSec}s).`);
+      return false;
+    }
+
+    // Register success
+    registry[email] = now;
+    try {
+      fs.writeFileSync(cachePath, JSON.stringify(registry, null, 2), "utf-8");
+    } catch (err: any) {
+      console.error("Failed to write email rate-limit registry:", err.message);
+    }
+    return true;
   }
 }

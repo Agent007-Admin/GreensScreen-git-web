@@ -7,9 +7,9 @@ export const Newsletter: React.FC = () => {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [showTest, setShowTest] = useState(false);
-  const [adminSecret, setAdminSecret] = useState('');
+  const [adminSecret, setAdminSecret] = useState('New$letter');
   const [testEmail, setTestEmail] = useState('jgreen2196@gmail.com');
-  const [testMonth, setTestMonth] = useState('April');
+  const [testMonth, setTestMonth] = useState('June');
   const [testYear, setTestYear] = useState('2026');
   const [testStatus, setTestStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
