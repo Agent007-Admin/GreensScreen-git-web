@@ -33,6 +33,87 @@ const TypewriterTitle: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
+const PillarTicker: React.FC<{ 
+  label: string; 
+  items: string[]; 
+  speed?: number; 
+}> = ({ label, items, speed = 30 }) => {
+  return (
+    <div className="w-full max-w-[800px] mt-4 select-none font-mono relative group/ticker">
+      {/* Glossy illuminated projector strip fluid */}
+      <div className="relative py-3 px-6 overflow-hidden rounded-xl bg-gradient-to-r from-gs-dark/20 via-gs-green/[0.03] to-gs-dark/20 border border-gs-green/10 hover:border-gs-green/25 backdrop-blur-[2px] transition-all duration-500 shadow-[inset_0_1px_15px_rgba(0,255,136,0.02),0_0_15px_rgba(0,0,0,0.5)]">
+        
+        {/* Glowing green source signal dot perfectly positioned where items emerge as they fade into the light */}
+        <div className="absolute left-6 top-1/2 -translate-y-1/2 z-20 flex items-center pointer-events-none">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gs-green opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-gs-green shadow-[0_0_8px_#00ff88]"></span>
+          </span>
+        </div>
+
+        {/* Holographic Beam Flares / Illumination Lines */}
+        <div className="absolute top-0 inset-x-12 h-[1px] bg-gradient-to-r from-transparent via-gs-green/35 to-transparent blur-[0.5px]" />
+        <div className="absolute bottom-0 inset-x-12 h-[1px] bg-gradient-to-r from-transparent via-gs-green/15 to-transparent blur-[0.5px]" />
+        
+        {/* Ambient background projector beam center glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-10 bg-gs-green/5 rounded-full blur-xl pointer-events-none" />
+
+        {/* Soft edge shadow mask gradients */}
+        <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-[#030704] via-[#030704]/40 to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-[#030704] via-[#030704]/40 to-transparent z-10 pointer-events-none" />
+        
+        <div className="flex whitespace-nowrap overflow-hidden pl-8">
+          <motion.div 
+            className="flex whitespace-nowrap gap-12 pr-12 text-[10px] font-semibold tracking-[1px] uppercase items-center"
+            animate={{ x: ["0%", "-50%"] }}
+            transition={{
+              ease: "linear",
+              duration: speed,
+              repeat: Infinity
+            }}
+          >
+            {[...items, ...items].map((item, idx) => (
+              <span key={idx} className="flex items-center gap-3 text-gs-muted/80 hover:text-gs-green transition-colors duration-150 py-0.5 relative group/item">
+                <span className="text-gs-green/45 group-hover/item:text-gs-green group-hover/item:scale-125 transition-transform duration-200">✦</span>
+                <span className="relative">
+                  {item}
+                  <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-gs-green/30 group-hover/item:w-full transition-all duration-300" />
+                </span>
+              </span>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.15
+    }
+  }
+};
+
+const rowVariants = {
+  hidden: { 
+    opacity: 0, 
+    y: 35,
+    filter: 'blur(8px)'
+  },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    filter: 'blur(0px)',
+    transition: {
+      duration: 1.0,
+      ease: [0.16, 1, 0.3, 1] as const
+    }
+  }
+};
+
 export const Pillars: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<'technology' | 'gaming' | 'entertainment' | null>(null);
   const [formData, setFormData] = useState<CollaborationRequest>({
@@ -45,53 +126,33 @@ export const Pillars: React.FC = () => {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
-  const handCategoryClick = (category: 'technology' | 'gaming' | 'entertainment') => {
-    const starterMessages = {
-      technology: "Technology Review Pitch:\n- Product Name:\n- Category:\n- How to acquire:\n",
-      gaming: "Gaming Playtest & Professional Review Pitch:\n- Game Title:\n- Platform(s):\n- Overview:\n- We want (Exposure / Private Analytics / Full Review):\n",
-      entertainment: "Design & Web Collaboration Pitch:\n- Creative Scope:\n- Intended Aesthetic/Style:\n- Contact Details:\n"
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (selectedCategory) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
     };
+  }, [selectedCategory]);
 
-    setFormData(prev => {
-      const trimmedMsg = prev.message.trim();
-      const isEmptyOrTemplate = 
-        !trimmedMsg || 
-        trimmedMsg === starterMessages.technology.trim() || 
-        trimmedMsg === starterMessages.gaming.trim() || 
-        trimmedMsg === starterMessages.entertainment.trim();
-
-      return {
-        ...prev,
-        category,
-        message: isEmptyOrTemplate ? starterMessages[category] : prev.message
-      };
-    });
+  const handCategoryClick = (category: 'technology' | 'gaming' | 'entertainment') => {
+    setFormData(prev => ({
+      ...prev,
+      category
+    }));
     setSelectedCategory(category);
     setSubmitStatus('idle');
     setErrorMessage('');
   };
 
   const handleFormCategoryChange = (category: 'technology' | 'gaming' | 'entertainment') => {
-    const starterMessages = {
-      technology: "Technology Review Pitch:\n- Product Name:\n- Category:\n- How to acquire:\n",
-      gaming: "Gaming Playtest & Professional Review Pitch:\n- Game Title:\n- Platform(s):\n- Overview:\n- We want (Exposure / Private Analytics / Full Review):\n",
-      entertainment: "Design & Web Collaboration Pitch:\n- Creative Scope:\n- Intended Aesthetic/Style:\n- Contact Details:\n"
-    };
-
-    setFormData(prev => {
-      const trimmedMsg = prev.message.trim();
-      const isEmptyOrTemplate = 
-        !trimmedMsg || 
-        trimmedMsg === starterMessages.technology.trim() || 
-        trimmedMsg === starterMessages.gaming.trim() || 
-        trimmedMsg === starterMessages.entertainment.trim();
-
-      return {
-        ...prev,
-        category,
-        message: isEmptyOrTemplate ? starterMessages[category] : prev.message
-      };
-    });
+    setFormData(prev => ({
+      ...prev,
+      category
+    }));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -163,7 +224,7 @@ export const Pillars: React.FC = () => {
   };
 
   return (
-    <section id="about" className="relative z-10 px-6 md:px-10 pt-[72px] max-w-[1100px] mx-auto selection:bg-gs-green selection:text-gs-dark">
+    <section id="collaboration" className={`relative px-6 md:px-10 pt-[72px] max-w-[1100px] mx-auto selection:bg-gs-green selection:text-gs-dark transition-all duration-300 ${selectedCategory ? 'z-[1000]' : 'z-10'}`}>
       {/* SECTION HEADER */}
       <motion.div 
         initial={{ opacity: 0, x: -20 }}
@@ -188,15 +249,19 @@ export const Pillars: React.FC = () => {
       </motion.p>
 
       {/* STACKED FULL-WIDTH ROWS */}
-      <div className="mt-10 flex flex-col gap-4">
+      <motion.div 
+        className="mt-10 flex flex-col"
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+      >
         
         {/* ROW 1: TECHNOLOGY REVIEWS */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          variants={rowVariants}
           onMouseMove={(e) => handleMouseMove(e, setTechHoverCoords)}
-          className="bg-gs-card border border-gs-border hover:border-gs-green/30 p-6 md:p-8 relative overflow-hidden transition-all duration-300 group rounded-none"
+          className="bg-transparent border-b border-gs-border/30 hover:border-b-gs-green/45 py-8 md:py-10 md:px-0 relative overflow-hidden transition-all duration-300 group rounded-none"
         >
           {/* Dynamic Spotlight */}
           <div 
@@ -211,19 +276,18 @@ export const Pillars: React.FC = () => {
             <div className="flex-1">
               <span className="font-mono text-[10px] text-gs-green uppercase tracking-[3px] block mb-2">01 / BRANDED TESTING</span>
               <h3 className="font-display text-2xl md:text-3xl text-gs-text tracking-[1.5px] uppercase mb-3">Tech Reviews</h3>
-              <p className="text-sm text-gs-muted leading-[1.6] max-w-[800px] mb-4">
-                We analyze and produce premium digital content for the software, hardware, and physical tools powering the modern & future world. Greens Screens is trying to be at the cutting edge of technology. Since the computer setup is the nervous system of the creator, we verify and review products to ensure top tier performance.
+              <p className="text-sm text-gs-muted leading-[1.6] max-w-[800px]">
+                We produce premium, high-impact content reviewing software, hardware, and creative gear. Since your physical and digital setup is the nervous system of creation, we test every element to ensure peak performance for tomorrow's builders.
               </p>
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 py-2 text-xs font-mono text-gs-muted/90 max-w-[800px]">
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> Keyboards & Keycaps</div>
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> Cameras & Camcorders</div>
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> Mics & Audio Gear</div>
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> Video Lights & Diffusers</div>
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> Screens & Monitor Arrays</div>
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> VR / AR / Smart Glasses</div>
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> Mobile Tech & Watches</div>
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> Creator Apps & Utilities</div>
-              </div>
+              <PillarTicker 
+                label="INGEST_VECTORS // CH_01" 
+                items={[
+                  'Keyboards & Keycaps', 'Cameras & Camcorders', 'Mics & Audio Gear', 
+                  'Video Lights & Diffusers', 'Screens & Monitor Arrays', 
+                  'VR / AR / Smart Glasses', 'Mobile Tech & Watches', 'Creator Apps & Utilities'
+                ]} 
+                speed={34}
+              />
             </div>
             
             <div className="flex-shrink-0 self-start md:self-center">
@@ -248,11 +312,9 @@ export const Pillars: React.FC = () => {
 
         {/* ROW 2: GAMING COLLABORATIONS */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          variants={rowVariants}
           onMouseMove={(e) => handleMouseMove(e, setGamingHoverCoords)}
-          className="bg-gs-card border border-gs-border hover:border-gs-green/30 p-6 md:p-8 relative overflow-hidden transition-all duration-300 group rounded-none"
+          className="bg-transparent border-b border-gs-border/30 hover:border-b-gs-green/45 py-8 md:py-10 md:px-0 relative overflow-hidden transition-all duration-300 group rounded-none"
         >
           {/* Dynamic Spotlight */}
           <div 
@@ -267,17 +329,17 @@ export const Pillars: React.FC = () => {
             <div className="flex-1">
               <span className="font-mono text-[10px] text-gs-green uppercase tracking-[3px] block mb-2">02 / EXPERIMENTAL PLAY</span>
               <h3 className="font-display text-2xl md:text-3xl text-gs-text tracking-[1.5px] uppercase mb-3">Gaming Reviews & Playtests</h3>
-              <p className="text-sm text-gs-muted leading-[1.6] max-w-[800px] mb-4">
-                We run deep community-driven reviews, developer interview segments, playtests, and first looks. As a player of games since '96, I know a thing or two about games, and I wish to be someone who is able to play a game and give honest feedback or ideas of what we like or would like to see. It's also an opportunity to collaborate on something developing and not only to showcase the game but also to professionally review, privately with the developer if possible as well. Some people may be here to just get their game out there for exposure, some may want a deeper dive on the thoughts on the game, aesthetic, the setting, the mechanics, playstyle, recommendations, etc.
+              <p className="text-sm text-gs-muted leading-[1.6] max-w-[800px]">
+                We run deep community playtests, developer showcases, and honest analytical reviews. Since 1996, our passion fuels first-looks and early alpha gameplay. Whether you seek direct exposure or private mechanics feedback, we deliver actionable evaluations.
               </p>
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 py-2 text-xs font-mono text-gs-muted/90 max-w-[800px]">
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> Alpha & Beta Playtesting</div>
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> Indie First Looks</div>
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> UI / UX Design Feedback</div>
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> Competitive Showcases</div>
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> Dev Commentary Reels</div>
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> Mechanics Dissection</div>
-              </div>
+              <PillarTicker 
+                label="GAMEPORT_FEED // CH_02" 
+                items={[
+                  'Alpha & Beta Playtesting', 'Indie First Looks', 'UI / UX Design Feedback', 
+                  'Competitive Showcases', 'Dev Commentary Reels', 'Mechanics Dissection'
+                ]} 
+                speed={30}
+              />
             </div>
 
             <div className="flex-shrink-0 self-start md:self-center">
@@ -302,11 +364,9 @@ export const Pillars: React.FC = () => {
 
         {/* ROW 3: ENTERTAINMENT INTAKE */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          variants={rowVariants}
           onMouseMove={(e) => handleMouseMove(e, setEntHoverCoords)}
-          className="bg-gs-card border border-gs-border hover:border-gs-green/30 p-6 md:p-8 relative overflow-hidden transition-all duration-300 group rounded-none"
+          className="bg-transparent border-b border-gs-border/30 hover:border-b-gs-green/45 py-8 md:py-10 md:px-0 relative overflow-hidden transition-all duration-300 group rounded-none"
         >
           {/* Dynamic Spotlight */}
           <div 
@@ -321,17 +381,17 @@ export const Pillars: React.FC = () => {
             <div className="flex-1">
               <span className="font-mono text-[10px] text-gs-green uppercase tracking-[3px] block mb-2">03 / CREATIVE FREQUENCY</span>
               <h3 className="font-display text-2xl md:text-3xl text-gs-text tracking-[1.5px] uppercase mb-3">Entertainment & Media</h3>
-              <p className="text-sm text-gs-muted leading-[1.6] max-w-[800px] mb-4">
-                This is where players, designers, and brands come to pitch custom ideas. Greens Screens itself is a creative project with web development every single day, so collaborating with artists who know how to make compelling web styles is something we are extremely excited about. This vertical harnesses the distinct on-screen personality, design patterns, and creative capabilities of Greens Screens to construct memorable audio-visual and technical projects.
+              <p className="text-sm text-gs-muted leading-[1.6] max-w-[800px]">
+                Our creative ecosystem connects custom ideas with interactive development. We collaborate daily with designers, brands, and content creators to build memorable audio-visual campaigns, compelling web styles, and interactive digital experiences.
               </p>
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 py-2 text-xs font-mono text-gs-muted/90 max-w-[800px]">
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> Comedy Skits & Shorts</div>
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> Voice Acting & Voiceovers</div>
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> Multi-Creator Showcases</div>
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> Co-Branded Campaigns</div>
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> Interactive Design Work</div>
-                <div className="flex items-center gap-1.5"><span className="text-gs-green">•</span> Compelling Web & UI Design</div>
-              </div>
+              <PillarTicker 
+                label="CREATIVE_BUS // CH_03" 
+                items={[
+                  'Comedy Skits & Shorts', 'Voice Acting & Voiceovers', 'Multi-Creator Showcases', 
+                  'Co-Branded Campaigns', 'Interactive Design Work', 'Compelling Web & UI Design'
+                ]} 
+                speed={28}
+              />
             </div>
 
             <div className="flex-shrink-0 self-start md:self-center">
@@ -356,11 +416,9 @@ export const Pillars: React.FC = () => {
 
         {/* ROW 4: COMMUNITY & EVENTS */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          variants={rowVariants}
           onMouseMove={(e) => handleMouseMove(e, setCommHoverCoords)}
-          className="bg-gs-card border border-gs-border hover:border-gs-green/10 p-6 md:p-8 relative overflow-hidden transition-all duration-300 group rounded-none"
+          className="bg-transparent border-b border-gs-border/30 hover:border-b-gs-green/20 py-8 md:py-10 md:px-0 relative overflow-hidden transition-all duration-300 group rounded-none"
         >
           {/* Subtle slow scanline spotlight overlay */}
           <div 
@@ -375,14 +433,14 @@ export const Pillars: React.FC = () => {
             <div className="flex-1">
               <span className="font-mono text-[10px] text-gs-muted uppercase tracking-[3px] block mb-2">04 / THE CONNECTOR SIGNAL</span>
               <h3 className="font-display text-2xl md:text-3xl text-gs-text tracking-[1.5px] uppercase mb-3">Community Hub</h3>
-              <p className="text-sm text-gs-muted leading-[1.6] max-w-[800px] mb-4">
-                Where the entire signal lines up. We formulate tournaments, collaborative lobbies, custom gaming challenges, and community engagements. This row is designed purely to bridge players together. Join our public channels to stay alert on upcoming registrations and host events.
+              <p className="text-sm text-gs-muted leading-[1.6] max-w-[800px]">
+                The focal point where all signals merge. We orchestrate tournaments, custom co-op lobbies, and active multiplayer challenges designed purely to connect creators. Join our channels to secure your transmission.
               </p>
-              <div className="flex flex-wrap gap-2 pt-2">
-                <span className="px-2.5 py-1 text-xs font-mono border border-gs-border bg-gs-dark/50 text-gs-muted">Tournaments</span>
-                <span className="px-2.5 py-1 text-xs font-mono border border-gs-border bg-gs-dark/50 text-gs-muted">Multiplayer Lobbies</span>
-                <span className="px-2.5 py-1 text-xs font-mono border border-gs-border bg-gs-dark/50 text-gs-muted">Social Challenges</span>
-              </div>
+              <PillarTicker 
+                label="COMMUNITY_NODE // CH_04" 
+                items={['Global Tournaments', 'Custom Co-Op Lobbies', 'Active Matchmaking', 'Creator Showdowns', 'Interactive AMAs', 'Community Game Nights']} 
+                speed={26}
+              />
             </div>
 
             <div className="flex-shrink-0 self-start md:self-center flex flex-col items-center gap-1 px-4 text-center">
@@ -404,12 +462,12 @@ export const Pillars: React.FC = () => {
           </div>
         </motion.div>
 
-      </div>
+      </motion.div>
 
       {/* MODAL SYSTEM (AnimatePresence) */}
       <AnimatePresence>
         {selectedCategory && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
             {/* Backdrop */}
             <motion.div 
               initial={{ opacity: 0 }}
