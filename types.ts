@@ -34,3 +34,18 @@ export interface Laureate {
   role: string;
   desc: string;
 }
+
+export interface BetaGame {
+  id: string;
+  title: string;
+  type: 'Open Beta' | 'Closed Beta' | 'Playtest' | 'Demo';
+  platforms: string[];
+  genres: string[];
+  desc: string;
+  start: string; // ISO date string YYYY-MM-DD
+  end: string;   // ISO date string YYYY-MM-DD
+  link: string;
+  spotlight?: boolean;
+  gseNote?: string;
+  indieBreakout?: boolean;
+}

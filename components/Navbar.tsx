@@ -12,15 +12,41 @@ export const Navbar: React.FC = () => {
   });
 
   const scrollTo = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    if (id === 'beta-radar') {
+      window.history.pushState(null, '', '/beta-radar');
+      window.dispatchEvent(new Event('popstate'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (window.location.pathname !== '/') {
+      window.history.pushState(null, '', '/');
+      window.dispatchEvent(new Event('popstate'));
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
+    } else {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleLogoClick = () => {
+    if (window.location.pathname !== '/') {
+      window.history.pushState(null, '', '/');
+      window.dispatchEvent(new Event('popstate'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-9 h-14 bg-gs-dark/90 backdrop-blur-xl border-b border-gs-border">
       <div 
         className="flex items-center gap-3 cursor-pointer group"
-        onClick={() => scrollTo('hero')}
+        onClick={handleLogoClick}
       >
         <div className="relative flex items-center justify-center">
           <div className="w-2.5 h-2.5 rounded-full bg-gs-green " />
@@ -36,13 +62,14 @@ export const Navbar: React.FC = () => {
       </div>
       
       <ul className="hidden md:flex gap-4 list-none relative">
-        {['newsletter', 'segments', 'collaboration', 'connect', 'team'].map((item) => {
+        {['newsletter', 'beta-radar', 'collaboration', 'segments', 'connect', 'team'].map((item) => {
           const isHovered = hoveredItem === item;
           const label = item === 'segments' ? 'Signals' : 
                         item === 'newsletter' ? 'Collective' :
                         item === 'collaboration' ? 'Collaboration' :
+                        item === 'beta-radar' ? 'Beta Radar' :
                         item;
-                        
+                         
           return (
             <li 
               key={item}

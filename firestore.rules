@@ -101,6 +101,12 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // --- Collection: beta_radar_games ---
+    match /beta_radar_games/{gameId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;

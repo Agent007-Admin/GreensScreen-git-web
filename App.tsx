@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { Ticker } from './components/Ticker';
@@ -9,8 +9,22 @@ import { Newsletter } from './components/Newsletter';
 import { FounderCard } from './components/FounderCard';
 import { Footer } from './components/Footer';
 import { GridBackground } from './components/GridBackground';
+import { BetaRadar } from './components/BetaRadar';
 
 const App: React.FC = () => {
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    window.addEventListener('popstate', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+    };
+  }, []);
+
+  const isBetaRadarRoute = currentPath === '/beta-radar';
 
   return (
     <div className="gs-page selection:bg-gs-green selection:text-gs-dark">
@@ -20,13 +34,20 @@ const App: React.FC = () => {
       <Navbar />
       
       <main>
-        <Hero />
-        <Ticker />
-        <Newsletter />
-        <SegmentsGuide />
-        <Pillars />
-        <SocialGrid />
-        <FounderCard />
+        {isBetaRadarRoute ? (
+          <BetaRadar />
+        ) : (
+          <>
+            <Hero />
+            <Ticker />
+            <Newsletter />
+            <BetaRadar />
+            <Pillars />
+            <SegmentsGuide />
+            <SocialGrid />
+            <FounderCard />
+          </>
+        )}
       </main>
       
       <Footer />

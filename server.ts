@@ -6,6 +6,7 @@ import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
 import { NewsletterAgent } from "./src/services/newsletterAgent.ts";
+import { runBetaRadarShuffle } from "./src/services/betaRadarShuffle.ts";
 import cron from "node-cron";
 import { fileURLToPath } from "url";
 import path from "path";
@@ -157,6 +158,28 @@ async function startServer() {
       await newsletterAgent.processNewSubscribers();
     } catch (e) {
       console.error("Cron: Error processing new subscribers:", e);
+    }
+  });
+
+  // 4. Biweekly Beta Radar shuffle (Every 2 weeks on Wednesdays at midnight)
+  cron.schedule("0 0 * * 3", async () => {
+    try {
+      console.log("Cron: Checking biweekly schedule for Beta Radar shuffle...");
+      
+      // Determine if current week number of the year is even or odd to achieve biweekly rhythm
+      const currentDate = new Date();
+      const firstDayOfYear = new Date(currentDate.getFullYear(), 0, 1);
+      const pastDaysOfYear = (currentDate.getTime() - firstDayOfYear.getTime()) / 86400000;
+      const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+      
+      if (weekNumber % 2 === 0) {
+        console.log(`Cron: Week ${weekNumber} is even. Initiating Beta Radar shuffle...`);
+        await runBetaRadarShuffle(clientDb, geminiKey || "");
+      } else {
+        console.log(`Cron: Week ${weekNumber} is odd. Skipping this Wednesday to maintain biweekly cadence.`);
+      }
+    } catch (e) {
+      console.error("Cron: Error running Beta Radar shuffle:", e);
     }
   });
 
@@ -827,6 +850,23 @@ Greens Screens Ent Automated Notification System
     } catch (error) {
       console.error(`NewsletterAgent: Manual release failed:`, error);
       res.status(500).json({ error: `Failed to release ${targetMonth} newsletter` });
+    }
+  });
+
+  app.post("/api/beta-radar/shuffle", async (req, res) => {
+    const { secret } = req.body;
+    
+    if (secret !== process.env.ADMIN_SECRET) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      console.log("API: Manual trigger of Beta Radar shuffle initiated...");
+      await runBetaRadarShuffle(clientDb, geminiKey || "");
+      res.json({ success: true, message: "Beta Radar shuffle job completed successfully." });
+    } catch (error: any) {
+      console.error("API: Manual Beta Radar shuffle failed:", error);
+      res.status(500).json({ error: `Beta Radar shuffle failed: ${error.message || error}` });
     }
   });
 

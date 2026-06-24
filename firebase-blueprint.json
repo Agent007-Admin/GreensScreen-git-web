@@ -103,6 +103,26 @@
         "status": { "type": "string", "enum": ["pending", "reviewed", "archived"] }
       },
       "required": ["name", "email", "category", "message", "submittedAt", "status"]
+    },
+    "beta_radar_games": {
+      "title": "Beta Radar Game",
+      "description": "A curated game playtest, beta, or demo featured on the GSE Beta Radar",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "type": { "type": "string", "enum": ["Open Beta", "Closed Beta", "Playtest", "Demo"] },
+        "platforms": { "type": "array" },
+        "genres": { "type": "array" },
+        "desc": { "type": "string" },
+        "start": { "type": "string", "format": "date" },
+        "end": { "type": "string", "format": "date" },
+        "link": { "type": "string" },
+        "spotlight": { "type": "boolean" },
+        "gseNote": { "type": "string" },
+        "indieBreakout": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "type", "platforms", "genres", "desc", "start", "end", "link"]
     }
   },
   "firestore": {
@@ -129,6 +149,10 @@
     "collaborations/{collaborationId}": {
       "schema": "collaborations",
       "description": "Collection of incoming brand collaboration requests"
+    },
+    "beta_radar_games/{gameId}": {
+      "schema": "beta_radar_games",
+      "description": "Collection of active game playtests, betas, and demos displayed on the Beta Radar"
     }
   }
 }
